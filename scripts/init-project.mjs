@@ -10,6 +10,8 @@ import path from 'node:path';
 import readline from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 import { syncSkillsToArchetype, listSkills } from './skills-manager.mjs';
+import { installHooks } from './install-hooks.mjs';
+import { scaffoldProject } from './scaffolder.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -113,7 +115,7 @@ Active milestone: **MVP Core Scaffolding & Initial Feature Loop**
 /**
  * Initialize project with options
  */
-export function initProject({ preset, name, desc, dev1, dev2 }) {
+export function initProject({ preset, name, desc, dev1, dev2, scaffold = true }) {
   if (!fs.existsSync(BLUEPRINT_PATH)) {
     throw new Error(`project-blueprint.json not found at ${BLUEPRINT_PATH}`);
   }
@@ -186,10 +188,27 @@ export function initProject({ preset, name, desc, dev1, dev2 }) {
 `;
   fs.writeFileSync(HANDOFF_MD_PATH, handoffMd, 'utf-8');
 
+  // 6. Scaffold starter code into src/
+  let scaffoldResult = null;
+  if (scaffold !== false) {
+    scaffoldResult = scaffoldProject({
+      preset,
+      name: blueprint.project.name,
+      desc: blueprint.project.description,
+      dev1: dev1 || 'Dev 1',
+      dev2: dev2 || 'Dev 2',
+      root: REPO_ROOT
+    });
+  }
+
+  // 7. Install git pre-commit hook
+  installHooks();
+
   return {
     success: true,
     project: blueprint.project,
-    syncResult
+    syncResult,
+    scaffoldResult
   };
 }
 
@@ -204,6 +223,7 @@ export async function main() {
   let dev1 = null;
   let dev2 = null;
   let isNonInteractive = false;
+  let shouldScaffold = true;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--preset' && args[i + 1]) preset = args[++i];
@@ -212,6 +232,7 @@ export async function main() {
     if (args[i] === '--dev1' && args[i + 1]) dev1 = args[++i];
     if (args[i] === '--dev2' && args[i + 1]) dev2 = args[++i];
     if (args[i] === '--non-interactive') isNonInteractive = true;
+    if (args[i] === '--skip-scaffold') shouldScaffold = false;
   }
 
   try {

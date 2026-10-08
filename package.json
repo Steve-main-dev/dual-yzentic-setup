@@ -11,7 +11,8 @@
     "skill:enable": "node scripts/skills-manager.mjs enable",
     "skill:disable": "node scripts/skills-manager.mjs disable",
     "skill:sync": "node scripts/skills-manager.mjs sync",
-    "init:project": "node scripts/init-project.mjs"
+    "init:project": "node scripts/init-project.mjs",
+    "hook:install": "node scripts/install-hooks.mjs"
   },
   "keywords": [
     "ai-agents",

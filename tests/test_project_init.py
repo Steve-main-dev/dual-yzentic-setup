@@ -40,6 +40,11 @@ class TestProjectInit(unittest.TestCase):
                     if not target.exists():
                         archived.rename(target)
 
+        # Clean up scaffolded src directory
+        src_dir = self.root / "src"
+        if src_dir.exists():
+            shutil.rmtree(src_dir)
+
     def test_invalid_preset_fails_gracefully(self):
         cmd = [
             "node", str(self.script),
