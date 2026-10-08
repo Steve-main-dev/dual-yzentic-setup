@@ -8,7 +8,7 @@
 
 **Tech Stack:** Markdown, YAML frontmatter, Python 3 (`unittest` standard library for verification).
 
-**Spec:** [`docs/superpowers/specs/2026-09-25-ai-driven-development-design.md`](file:///C:/Users/Admin/Yzen/Yzentic-setup/docs/superpowers/specs/2026-09-25-ai-driven-development-design.md)
+**Spec:** [`docs/superpowers/specs/2026-09-25-ai-driven-development-design.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/superpowers/specs/2026-09-25-ai-driven-development-design.md)
 
 ## Global Constraints
 

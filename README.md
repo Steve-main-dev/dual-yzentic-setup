@@ -1,49 +1,91 @@
-# Yzentic-setup
+# Dual-Agent Hackathon Setup (Claude Pro + Antigravity)
 
-**Universal AI-Driven Development Foundation**
+**Autonomous Pair-Programming Environment Optimized for 24-Hour Hackathons & Claude Pro Token Preservation**
 
-A standardized, multi-agent development environment designed for autonomous coding agents—including **Google Antigravity**, **Anthropic Claude Code**, **Cursor AI**, and **Stably Orca**—built on the **Superpowers** engineering operating system and progressive domain skills.
-
----
-
-## 🌟 Key Architecture & Highlights
-
-* **Single Source of Truth ([`AGENTS.md`](./AGENTS.md)):** Unified root behavioral rules, non-interactive execution standards, zero secret exposure, and task tracking.
-* **Platform Native Pointers:** Lightweight compatibility links for [Claude Code](./CLAUDE.md), [Gemini CLI / Antigravity](./GEMINI.md), and [Cursor](./.cursorrules).
-* **Superpowers Engineering Operating System:** Formalized Red-Green-Refactor TDD cycles, systematic root-cause debugging, brainstorming gates, and pre-completion evidence checks.
-* **Progressive Skills Architecture ([`.agents/skills/`](./.agents/skills/)):** 21 modular domain skills triggered on-demand (covering webapp testing, OWASP security reviews, secret management with Varlock, MCP server creation, and Orca orchestration).
-* **Engineering Handbook & Workflows ([`docs/ai/`](./docs/ai/)):**
-  - [`docs/ai/agent-handbook.md`](./docs/ai/agent-handbook.md): Complete "When to Use What" skills selection guide and CLI cheat-sheets.
-  - [`docs/ai/workflows.md`](./docs/ai/workflows.md): TDD workflows, branching strategies, and task tracking protocols.
-  - [`docs/ai/architecture.md`](./docs/ai/architecture.md): Modular decomposition boundaries and lifecycle specs.
-  - [`docs/specs/`](./docs/specs/): Dedicated home for approved feature specifications.
+This repository provides a coordinated dual-agent development architecture where **Claude Code** acts as **The Builder** (Planning & Implementation) and **Google Antigravity** acts as **The Gatekeeper** (Test Authoring, Headless Verification & Error Distillation).
 
 ---
 
-## 🚀 Running Verification Tests
+## 🚀 The Dual-Terminal Workflow
 
-This repository features an automated self-verification test suite that validates root rules, skill YAML frontmatter schemas, documentation structure, and markdown link integrity:
+```text
+┌──────────────────────────────────────┐    ┌──────────────────────────────────────┐
+│  TERMINAL 1: CLAUDE CODE (Builder)   │    │  TERMINAL 2: ANTIGRAVITY (QA Gate)   │
+│  - Plans features & UI architecture  │    │  - Runs test suites & Playwright E2E │
+│  - Implements source code in src/    │    │  - Absorbs verbose terminal/DOM logs │
+│  - Runs: npm run verify:agent        │    │  - Distills failures to <= 25 lines  │
+│  - Uses: /caveman & /ponytail        │    │  - Uses: webapp-testing, archify     │
+└──────────────────┬───────────────────┘    └──────────────────┬───────────────────┘
+                   │                                           │
+                   └──────────────► .agents/sync/ ◄────────────┘
+                              (handoff.json & handoff.md)
+```
 
-```powershell
-# Run the automated verification test suite
-py -m unittest discover tests -v
+1. **Open Split Terminals:**
+   - Left Pane: run `claude`
+   - Right Pane: run `agy`
+2. **Build Code:** Claude implements feature code in `src/`.
+3. **Verify via Baton:** Claude executes:
+   ```bash
+   npm run verify:agent
+   ```
+4. **Iterate Cleanly:** If tests fail, Claude receives a concise 5-10 line failure diagnostic. If tests pass, the baton stamps `verified` in [`.agents/sync/handoff.json`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/sync/handoff.json).
+
+---
+
+## ⚡ 3-Tier Execution Lanes
+
+`scripts/baton.mjs` automatically inspects touched files to prevent wasting time and tokens on full test suite runs:
+
+- **Tier 1 (Express / Fast-Track):** Micro-edits (CSS/Tailwind, copy, markdown, static assets). Full test suites are **bypassed**; passes in < 1 second.
+- **Tier 2 (Scoped Lane):** Single component or route change. Runs only the matching scoped test file.
+- **Tier 3 (Architectural Lane):** DB schemas, migrations, auth, or core multi-file features. Runs full regression suite.
+
+**Manual Overrides:**
+```bash
+npm run verify:agent -- --tier 1
+npm run verify:agent -- --tier 2 --scope tests/auth.test.ts
+npm run verify:agent -- --tier 3
 ```
 
 ---
 
-## 📂 Repository Directory Layout
+## 🗺️ Team Sync: The Universal Living Plan
 
-```text
-Yzentic-setup/
-├── AGENTS.md                  # Universal agent contract and behavioral rules
-├── GEMINI.md                  # Antigravity & Gemini CLI pointer
-├── CLAUDE.md                  # Claude Code pointer
-├── .cursorrules               # Cursor AI pointer
-├── .agents/
-│   └── skills/                # 21 on-demand domain skills
-├── docs/
-│   ├── ai/                    # Agent handbook, workflows, and architecture
-│   ├── rules/                 # Web development domain rules (requirements, frontend, backend)
-│   └── specs/                 # Feature designs and technical specifications
-└── tests/                     # Automated link, schema, and rule integrity tests
+In a 2-developer team, [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md) is the single source of truth:
+- **`P0` (Must-Have for Demo):** Core loop needed for judges.
+- **`P1` (High Impact Polish):** Enhancements that elevate the demo.
+- **`P2` (Post-Hackathon Stretch):** Ideas to park until after judging.
+- **Ownership:** Every item is tagged `Owner: Dev 1` or `Owner: Dev 2` to prevent git collisions.
+
+---
+
+## 🧰 Hackathon Skill Arsenal
+
+| Skill | Trigger / Command | Hackathon Impact |
+| :--- | :--- | :--- |
+| **[`caveman`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/caveman/SKILL.md)** | `/caveman` | Strips conversational fluff; **saves ~70% output tokens on Claude Pro** |
+| **[`ponytail`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/ponytail/SKILL.md)** | `/ponytail` | "Lazy senior dev" mode: smallest code change, **zero bloated libraries** |
+| **[`ui-ux-pro-max`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/ui-ux-pro-max/SKILL.md)** | `/ui-ux-pro-max` | Design system intelligence across React, Tailwind, and Shadcn |
+| **[`impeccable`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/impeccable/SKILL.md)** | `/impeccable polish`, `bolder` | High-polish UI finishing pass by Paul Bakaus |
+| **[`archify`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/archify/SKILL.md)** | `/archify` | Generates interactive architecture and sequence diagrams for pitch slides |
+| **[`pitch-architect`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/pitch-architect/SKILL.md)** | `/pitch-architect` | 3-minute hackathon pitch deck, live demo script, and judge Q&A prep |
+| **[`demo-seed-data`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/demo-seed-data/SKILL.md)** | `/demo-seed-data` | Populates UI with avatars, realistic trends, and dynamic chart data |
+
+---
+
+## 🛠️ CLI Commands
+
+```bash
+# Verify current changes with auto-detected tier
+npm run verify:agent
+
+# Check active synchronization status
+npm run sync:status
+
+# Reset handoff state to idle
+npm run sync:reset
+
+# Run full project test suite
+python3 -m unittest discover tests
 ```

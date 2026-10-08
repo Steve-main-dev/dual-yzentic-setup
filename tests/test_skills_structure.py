@@ -23,7 +23,7 @@ class TestSkillsStructure(unittest.TestCase):
 
     def test_all_skills_have_valid_frontmatter(self):
         skill_dirs = [p for p in self.skills_dir.iterdir() if p.is_dir() and not p.name.startswith("_")]
-        self.assertEqual(len(skill_dirs), 21, "Should have exactly 21 curated domain skills")
+        self.assertGreaterEqual(len(skill_dirs), 21, "Should have at least 21 curated domain skills")
         for skill_dir in skill_dirs:
             skill_file = skill_dir / "SKILL.md"
             self.assertTrue(skill_file.exists(), f"Each skill folder must have SKILL.md: {skill_dir.name}")

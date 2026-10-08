@@ -6,7 +6,7 @@ This document establishes the mandatory standards for specifying, scoping, and v
 
 ## Overview
 
-In professional web development, ambiguous requirements are the primary source of bugs and rework. Every feature specification—whether authored in [`docs/specs/`](file:///C:/Users/Admin/Yzen/Yzentic-setup/docs/specs/) or planned via the [`blueprint`](file:///C:/Users/Admin/Yzen/Yzentic-setup/.agents/skills/blueprint/SKILL.md) skill—must clearly define both functional behavior and edge states prior to touching implementation code.
+In professional web development, ambiguous requirements are the primary source of bugs and rework. Every feature specification—whether authored in [`docs/specs/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/) or planned via the [`blueprint`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/blueprint/SKILL.md) skill—must clearly define both functional behavior and edge states prior to touching implementation code.
 
 ---
 

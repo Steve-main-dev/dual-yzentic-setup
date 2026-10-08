@@ -183,7 +183,7 @@ Add Section *"Model Context Protocol (MCP) Integrations"*:
 
 Add `skill-seeker` to the Domain & Tooling Skills table:
 ```markdown
-| **On-demand documentation ingestion & skill synthesis** | [`skill-seeker`](file:///C:/Users/Admin/Yzen/Yzentic-setup/.agents/skills/skill-seeker/SKILL.md) | Convert documentation sites, GitHub repos, and PDFs into staged, validated agent skills |
+| **On-demand documentation ingestion & skill synthesis** | [`skill-seeker`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/skill-seeker/SKILL.md) | Convert documentation sites, GitHub repos, and PDFs into staged, validated agent skills |
 ```
 
 - [ ] **Step 3: Commit**

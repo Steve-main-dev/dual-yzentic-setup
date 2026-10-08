@@ -12,9 +12,9 @@
 This specification establishes a standardized, cross-platform foundation for AI-driven software development within the `Yzentic-setup` repository. 
 
 Rather than relying on tool-specific or monolithic configurations that bloat the agent context window, this design implements a modular, hierarchical architecture. It provides:
-1. Universal root rules via [`AGENTS.md`](file:///C:/Users/Admin/Yzen/Yzentic-setup/AGENTS.md) with lightweight compatibility links for platform-native discovery (`GEMINI.md`, `CLAUDE.md`, `.cursorrules`).
-2. Progressive disclosure skills located in [`.agents/skills/`](file:///C:/Users/Admin/Yzen/Yzentic-setup/.agents/skills/) to load execution workflows only when explicitly triggered.
-3. Structured AI-friendly documentation and engineering guidelines in [`docs/ai/`](file:///C:/Users/Admin/Yzen/Yzentic-setup/docs/ai/) and [`docs/specs/`](file:///C:/Users/Admin/Yzen/Yzentic-setup/docs/specs/).
+1. Universal root rules via [`AGENTS.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/AGENTS.md) with lightweight compatibility links for platform-native discovery (`GEMINI.md`, `CLAUDE.md`, `.cursorrules`).
+2. Progressive disclosure skills located in [`.agents/skills/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/) to load execution workflows only when explicitly triggered.
+3. Structured AI-friendly documentation and engineering guidelines in [`docs/ai/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/ai/) and [`docs/specs/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/).
 
 ---
 
@@ -50,7 +50,7 @@ Yzentic-setup/
 
 ### 3.1 Universal Rules Layer
 
-* **[`AGENTS.md`](file:///C:/Users/Admin/Yzen/Yzentic-setup/AGENTS.md):**
+* **[`AGENTS.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/AGENTS.md):**
   - **Behavioral Tenets:**
     - *Evidence Before Assertions:* Every claim of success, bug fix, or task completion must cite deterministic command output (test results, exit codes, build status).
     - *Navigable Links:* All references to file paths and code symbols must use standard `file://` markdown hyperlinks.
@@ -62,9 +62,9 @@ Yzentic-setup/
     - Explicit directions to `.agents/skills/` and `docs/ai/` guides.
 
 * **Compatibility Pointers:**
-  - **[`GEMINI.md`](file:///C:/Users/Admin/Yzen/Yzentic-setup/GEMINI.md):** Imports/directs Antigravity and Gemini CLI agents to adhere to `AGENTS.md`.
-  - **[`CLAUDE.md`](file:///C:/Users/Admin/Yzen/Yzentic-setup/CLAUDE.md):** Directs Claude Code to `AGENTS.md` and provides quick-command shortcuts.
-  - **[`.cursorrules`](file:///C:/Users/Admin/Yzen/Yzentic-setup/.cursorrules):** Informs Cursor agent models to follow conventions in `AGENTS.md`.
+  - **[`GEMINI.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/GEMINI.md):** Imports/directs Antigravity and Gemini CLI agents to adhere to `AGENTS.md`.
+  - **[`CLAUDE.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/CLAUDE.md):** Directs Claude Code to `AGENTS.md` and provides quick-command shortcuts.
+  - **[`.cursorrules`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.cursorrules):** Informs Cursor agent models to follow conventions in `AGENTS.md`.
 
 ---
 

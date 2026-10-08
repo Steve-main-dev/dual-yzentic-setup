@@ -1,5 +1,6 @@
-import unittest
+import os
 import re
+import unittest
 from pathlib import Path
 
 class TestDocsIntegrity(unittest.TestCase):
@@ -34,7 +35,10 @@ class TestDocsIntegrity(unittest.TestCase):
             links = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", content)
             for text, url in links:
                 if url.startswith("file:///"):
-                    path_str = url.replace("file:///", "").replace("/", "\\")
+                    if os.name == "nt":
+                        path_str = url.replace("file:///", "").replace("/", "\\")
+                    else:
+                        path_str = url.replace("file://", "")
                     p = Path(path_str)
                     self.assertTrue(p.exists(), f"Broken file link in {f.name}: {url}")
                 elif not url.startswith(("http://", "https://", "#", "mailto:")):

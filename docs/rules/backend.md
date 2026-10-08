@@ -58,7 +58,7 @@ Backend services and API routes built with **Node/Bun**, **Next.js Route Handler
   - `X-Content-Type-Options: nosniff`
   - `X-Frame-Options: DENY`
 - **Zero Raw SQL / Injection Defense:** Always use parameterized ORM queries. Never concatenate raw strings into SQL queries.
-- **Secret Hygiene:** Never commit credentials or API keys. Always manage secrets via [`varlock`](file:///C:/Users/Admin/Yzen/Yzentic-setup/.agents/skills/varlock/SKILL.md) and review changes against [`owasp-security`](file:///C:/Users/Admin/Yzen/Yzentic-setup/.agents/skills/owasp-security/SKILL.md).
+- **Secret Hygiene:** Never commit credentials or API keys. Always manage secrets via [`varlock`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/varlock/SKILL.md) and review changes against [`owasp-security`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/owasp-security/SKILL.md).
 
 ---
 
