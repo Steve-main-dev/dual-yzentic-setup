@@ -41,6 +41,7 @@ if [ $EXIT_CODE -ne 0 ]; then
   exit $EXIT_CODE
 fi
 
+git add .agents/sync/handoff.json 2>/dev/null
 exit 0
 `;
 
