@@ -94,13 +94,17 @@ git commit -m "feat(sync): initialize handoff.json and handoff.md schema"
   - `writeSyncState(state: SyncState, filePath?: string): void`
   - `checkCircuitBreaker(state: SyncState): boolean`
   - `distillDiagnostics(rawOutput: string): string`
+  - `detectExecutionTier(modifiedFiles: string[]): number`
+  - `resolveTestExecution(tier: number, scope?: string): { command: string, isExpress: boolean }`
 
-- [ ] **Step 1: Write failing unit tests for baton state and circuit breaker**
+- [ ] **Step 1: Write failing unit tests for baton state, circuit breaker, and execution tiers**
 
 In `tests/test_baton_runner.py`, add tests that verify:
 1. `readSyncState()` loads state or auto-heals when missing.
 2. `checkCircuitBreaker()` throws or halts when `turn_count >= 5`.
 3. `distillDiagnostics()` truncates outputs longer than 25 lines and extracts error lines.
+4. `detectExecutionTier()` returns `1` for cosmetic/markdown/CSS files, `2` for a single component/test file, and `3` for schema/multi-file changes.
+5. CLI arguments `--tier 1`, `--tier 2 --scope <path>`, and `--tier 3` override auto-detection correctly.
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -110,10 +114,13 @@ Expected: FAIL (script does not exist).
 - [ ] **Step 3: Implement `scripts/baton.mjs`**
 
 Implement ESM Node script providing:
-- CLI argument parsing (`verify`, `status`, `reset`).
-- State management with atomic write.
-- Subprocess execution of the configured test command (default: `npm test` or `python3 -m unittest discover tests`).
-- Output distillation capturing error diffs, max 25 lines.
+- CLI argument parsing (`verify`, `status`, `reset`, `--tier`, `--scope`).
+- Git diff inspection for auto-detecting Tier 1 (fast-track), Tier 2 (scoped), or Tier 3 (full).
+- Fast-track execution for Tier 1: runs syntax/sanity check, skips heavy test runners, sets status `verified` immediately.
+- Scoped execution for Tier 2: runs only the specified/affected test file.
+- Full execution for Tier 3: runs complete test suite.
+- State management with atomic write to `handoff.json`.
+- Output distillation capturing error diffs, maximum 25 lines.
 - Updating `.agents/sync/handoff.json` and `.agents/sync/handoff.md`.
 
 Add `scripts` to `package.json`:
@@ -134,7 +141,7 @@ Expected: PASS.
 
 ```bash
 git add scripts/baton.mjs package.json tests/test_baton_runner.py
-git commit -m "feat(baton): implement scripts/baton.mjs and npm scripts"
+git commit -m "feat(baton): implement scripts/baton.mjs with tiered execution lanes"
 ```
 
 ---

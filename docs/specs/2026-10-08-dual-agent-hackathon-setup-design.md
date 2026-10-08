@@ -142,6 +142,22 @@ stateDiagram-v2
    Antigravity isolates stderr/stdout and returns a strict maximum of 25 lines of distilled diagnostics to Claude's terminal.
 3. **Non-Interactive Execution:**
    The baton invokes Antigravity using headless CLI flags (`agy --non-interactive -p "..."` or test script execution), preventing terminal hangs.
+4. **Tiered Execution Lanes & Intelligent Auto-Detection:**
+   To prevent wasting compute, time, and tokens on full test suite runs for minor adjustments, `scripts/baton.mjs` supports 3 operational tiers:
+   - **Tier 1: Express Lane (Micro / Cosmetic / Fast-Track):**
+     - *Auto-Detection:* When touched files in git diff are strictly CSS/Tailwind, markdown, static copy, or assets.
+     - *Execution:* Bypasses test suites entirely. Runs an immediate diff/syntax sanity check and marks status `verified` in < 1 second.
+   - **Tier 2: Scoped Lane (Component / Isolated Fix):**
+     - *Auto-Detection:* When a single source file (or file + corresponding test) is modified.
+     - *Execution:* Executes only the scoped test file (e.g. `tests/auth.test.ts`), skipping unrelated tests.
+   - **Tier 3: Architectural Deep Lane (Full Regression):**
+     - *Auto-Detection:* When database schemas, migrations, auth middleware, or > 3 core files are touched.
+     - *Execution:* Runs full regression suite and build check.
+   - *Manual Override:* Both agents and developers can explicitly pass flags:
+     - `npm run verify:agent -- --tier 1`
+     - `npm run verify:agent -- --tier 2 --scope tests/auth.test.ts`
+     - `npm run verify:agent -- --tier 3`
+
 
 ---
 
