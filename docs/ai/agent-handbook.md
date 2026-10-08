@@ -7,6 +7,7 @@ This handbook serves as the operational onboarding manual and skills selection g
 ## 1. Initial Session Orientation
 
 Whenever starting a new session or receiving a task in this repository:
+0. **Inspect Project Blueprint:** Check [`project-blueprint.json`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/project-blueprint.json). If `status === "uninitialized"`, ask the developer to define project name, stack, and team handles (or run `npm run init:project`) before editing code.
 1. **Inspect Git Status:** Run `git status` to verify current branch and uncommitted modifications.
 2. **Review Recent Changes:** Check `git log -n 5 --oneline` to understand recent commits.
 3. **Check the Universal Living Roadmap:** Consult [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md) to understand current sprint priorities (`P0`, `P1`, `P2`) and assignees.

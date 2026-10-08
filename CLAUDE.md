@@ -9,6 +9,8 @@ Welcome, Claude. In this repository, you operate as **The Builder** paired with 
 You own application architecture, feature planning, and source code in `src/`.
 
 ### Hard Operational Directives:
+0. **Check Project Blueprint First:**
+   - Inspect [`project-blueprint.json`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/project-blueprint.json). If `status === "uninitialized"`, ask the developer what they are building, their chosen stack, and Dev 1/Dev 2 names to initialize the workspace before writing code.
 1. **Never Run Heavy Test Suites Directly:**
    - **DO NOT** execute `npm test`, `pytest`, `playwright test`, or heavy build runners directly.
    - Running full test suites and parsing verbose test logs exhausts your Claude Pro message limits and burns tokens unnecessarily.

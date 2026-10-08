@@ -9,6 +9,8 @@ Welcome, Antigravity. In this repository, you operate as **The Gatekeeper** pair
 You own test suites in `tests/`, test fixtures, headless browser automation, and verification gatekeeping.
 
 ### Hard Operational Directives:
+0. **Inspect Project Blueprint First:**
+   - Inspect [`project-blueprint.json`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/project-blueprint.json). If `status === "uninitialized"`, prompt the user to initialize project details before authoring tests.
 1. **Absorb All Verbose Logs:**
    - Execute unit tests, integration tests, and Playwright suites headlessly.
    - Absorb all raw terminal logs, stack traces, and browser DOM snapshots so Claude's context window remains clean.

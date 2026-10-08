@@ -39,6 +39,7 @@ class TestRulesIntegrity(unittest.TestCase):
         self.assertIn("verify:agent", content)
         self.assertIn("caveman", content)
         self.assertIn("ponytail", content)
+        self.assertIn("project-blueprint.json", content)
 
     def test_gemini_rule_contract(self):
         gemini_md = self.root / "GEMINI.md"
@@ -46,6 +47,7 @@ class TestRulesIntegrity(unittest.TestCase):
         content = gemini_md.read_text(encoding="utf-8")
         self.assertIn("Gatekeeper", content)
         self.assertIn("handoff", content)
+        self.assertIn("project-blueprint.json", content)
 
     def test_agents_rule_contract(self):
         agents_md = self.root / "AGENTS.md"
@@ -53,6 +55,14 @@ class TestRulesIntegrity(unittest.TestCase):
         content = agents_md.read_text(encoding="utf-8")
         self.assertIn("docs/PLAN.md", content)
         self.assertIn(".agents/sync", content)
+        self.assertIn("project-blueprint.json", content)
+        self.assertIn("init:project", content)
+
+    def test_handbook_initial_orientation_blueprint(self):
+        handbook = self.root / "docs" / "ai" / "agent-handbook.md"
+        self.assertTrue(handbook.exists(), "docs/ai/agent-handbook.md must exist")
+        content = handbook.read_text(encoding="utf-8")
+        self.assertIn("project-blueprint.json", content)
 
 if __name__ == "__main__":
     unittest.main()
