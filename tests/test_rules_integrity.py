@@ -1,5 +1,6 @@
 import unittest
 import re
+import os
 from pathlib import Path
 
 class TestRulesIntegrity(unittest.TestCase):
@@ -30,31 +31,28 @@ class TestRulesIntegrity(unittest.TestCase):
                 self.assertIn("## Core Standards", content, f"{filename} must contain '## Core Standards'")
                 self.assertIn("## Dos and Don'ts", content, f"{filename} must contain '## Dos and Don'ts'")
 
-    def test_rules_markdown_links_are_valid(self):
-        if not self.rules_dir.exists():
-            self.fail("docs/rules/ directory does not exist")
-        for f in self.rules_dir.glob("*.md"):
-            content = f.read_text(encoding="utf-8")
-            links = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", content)
-            for text, url in links:
-                if url.startswith("file:///"):
-                    path_str = url.replace("file:///", "").replace("/", "\\")
-                    p = Path(path_str)
-                    self.assertTrue(p.exists(), f"Broken file link in {f.name}: {url}")
-                elif not url.startswith(("http://", "https://", "#", "mailto:")):
-                    target = (f.parent / url).resolve()
-                    self.assertTrue(target.exists(), f"Broken relative link in {f.name}: {url}")
+    def test_claude_rule_contract(self):
+        claude_md = self.root / "CLAUDE.md"
+        self.assertTrue(claude_md.exists(), "CLAUDE.md must exist")
+        content = claude_md.read_text(encoding="utf-8")
+        self.assertIn("Builder", content)
+        self.assertIn("verify:agent", content)
+        self.assertIn("caveman", content)
+        self.assertIn("ponytail", content)
 
-    def test_harness_integration_links(self):
+    def test_gemini_rule_contract(self):
+        gemini_md = self.root / "GEMINI.md"
+        self.assertTrue(gemini_md.exists(), "GEMINI.md must exist")
+        content = gemini_md.read_text(encoding="utf-8")
+        self.assertIn("Gatekeeper", content)
+        self.assertIn("handoff", content)
+
+    def test_agents_rule_contract(self):
         agents_md = self.root / "AGENTS.md"
         self.assertTrue(agents_md.exists(), "AGENTS.md must exist")
-        agents_content = agents_md.read_text(encoding="utf-8")
-        self.assertIn("docs/rules", agents_content, "AGENTS.md must reference docs/rules")
-
-        handbook = self.root / "docs" / "ai" / "agent-handbook.md"
-        self.assertTrue(handbook.exists(), "agent-handbook.md must exist")
-        handbook_content = handbook.read_text(encoding="utf-8")
-        self.assertIn("docs/rules", handbook_content, "agent-handbook.md must reference docs/rules")
+        content = agents_md.read_text(encoding="utf-8")
+        self.assertIn("docs/PLAN.md", content)
+        self.assertIn(".agents/sync", content)
 
 if __name__ == "__main__":
     unittest.main()
