@@ -163,8 +163,48 @@ The dual-agent setup is complete and verified when:
 1. `.agents/sync/` directory contains initialized `handoff.json` and `handoff.md` templates.
 2. `scripts/baton.ts` is implemented and executable via `npm run verify:agent`.
 3. `CLAUDE.md`, `GEMINI.md`, and `AGENTS.md` are updated with the persona contracts and link formats.
-4. An automated test script validates:
+4. `docs/PLAN.md` is initialized as the Universal Living Roadmap for the 2-developer team.
+5. An automated test script validates:
    - Baton turn-count incrementation.
    - Circuit breaker halting at `turn_count >= 5`.
    - Correct exit codes (0 for pass, 1 for fail).
    - Markdown links integrity across the repo.
+
+---
+
+## 8. Two-Developer Collaboration & The Universal Living Plan (`docs/PLAN.md`)
+
+To keep **both human developers and their AI agents synchronized** in a fast-paced 24-hour hackathon, the repository includes a single source of truth: [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md).
+
+### The Synchronized Team Model
+- **Dev 1 (You) + Claude Code:** Primarily driving core architecture, UI, and features.
+- **Dev 2 (Teammate) + AI Agent (Claude/Antigravity/Cursor):** Driving complementary endpoints, database models, integrations, or testing.
+
+### Handling New Features & Scope Creep
+When a teammate wants to add a new feature outside the original scope:
+1. **Rule of the Universal Plan:** No rogue code without a ticket in [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md). Either developer or their agent can add a proposed item to the plan.
+2. **Feature Classification & Prioritization:**
+   - **P0 (Must-Have for Demo):** Core user loop required for judges to understand the product.
+   - **P1 (High Impact Polish):** Enhancements that elevate the demo if time permits.
+   - **P2 (Post-Hackathon Stretch):** Ideas that look great but will blow the 24-hour deadline if attempted now.
+3. **Owner Assignment:** Each feature explicitly declares an owner (`Owner: Dev 1` or `Owner: Dev 2`), preventing two developers from working on the same files simultaneously.
+
+### Iterative Revision & On-Demand Skill Triggering
+In a 24-hour sprint, the plan is **living and iterative**, not carved in stone:
+- **Frequent Revisions are Expected:** When a feature is finished or scope pivots, check off the task in [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md) and commit.
+- **On-Demand Skill Tagging:** Every feature task in `docs/PLAN.md` can declare which skill to invoke when building it:
+  ```markdown
+  - [ ] **Feature: Landing Page Hero & Value Prop**
+    - Owner: Dev 1
+    - Priority: P0
+    - Skills: `ui-ux-pro-max`, `ponytail`
+    - Status: In Progress
+  
+  - [ ] **Feature: Interactive Architecture Diagram**
+    - Owner: Dev 2
+    - Priority: P1
+    - Skills: `archify`
+    - Status: Backlog
+  ```
+- **Git Sync Cadence:** Both developers pull before starting a new task and push immediately upon completing a slice (`git commit -m "feat: complete user auth (P0)"`). Because both agents inspect [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md) and `.agents/sync/`, neither agent hallucinates obsolete requirements.
+
