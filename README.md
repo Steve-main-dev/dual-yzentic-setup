@@ -6,6 +6,32 @@ This repository provides a coordinated dual-agent development architecture where
 
 ---
 
+## 🌱 Starting a New Project / Fresh Clone Setup
+
+Immediately after cloning this repository for a new project or hackathon, run the project tailoring wizard:
+
+```bash
+npm run init:project
+```
+
+The wizard prompts for:
+1. **Project Name & 1-Line Pitch** (updates [`package.json`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/package.json) and [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md)).
+2. **Project Archetype:**
+   - `[1] fullstack-web`: Next.js / Vite + Backend + Database (keeps 11 core web skills).
+   - `[2] ai-agent-app`: FastAPI / Node + Prompt engineering & agentic eval (keeps AI pipeline skills).
+   - `[3] frontend-dashboard`: Vite + React + Tailwind + Charts & Presentations.
+   - `[4] minimal-hackathon`: Ultra-lean core suite (7 essential skills).
+3. **Developer Handles:** Assigns `Dev 1` and `Dev 2` responsibilities in [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md).
+
+> **Context Optimization:** Unselected skills are **soft-deleted** into [`.agents/skills-archive/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills-archive/) so agents only scan active skills, saving hundreds of context tokens. You can restore any skill instantly:
+> ```bash
+> npm run skill:enable <skill-name>    # e.g., npm run skill:enable slides
+> npm run skill:disable <skill-name>   # move back to archive
+> npm run skill:list                  # view active vs archived
+> ```
+
+---
+
 ## 🚀 The Dual-Terminal Workflow
 
 ```text
@@ -77,6 +103,15 @@ In a 2-developer team, [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yz
 ## 🛠️ CLI Commands
 
 ```bash
+# Initialize a new project from clone
+npm run init:project
+
+# Skills management & soft-delete archival
+npm run skill:list
+npm run skill:enable <skill-name>
+npm run skill:disable <skill-name>
+npm run skill:sync [archetype]
+
 # Verify current changes with auto-detected tier
 npm run verify:agent
 
