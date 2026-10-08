@@ -38,7 +38,7 @@
 - Consumes: None (root configuration)
 - Produces: `project-blueprint.json` with status `uninitialized`, project metadata, and 4 archetypes (`fullstack-web`, `ai-agent-app`, `frontend-dashboard`, `minimal-hackathon`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/test_blueprint_schema.py
@@ -64,21 +64,21 @@ class TestBlueprintSchema(unittest.TestCase):
             self.assertIn("rules_preset", data["archetypes"][expected])
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python3 -m unittest tests/test_blueprint_schema.py`
 Expected: FAIL (`AssertionError: project-blueprint.json must exist`)
 
-- [ ] **Step 3: Implement `project-blueprint.json`**
+- [x] **Step 3: Implement `project-blueprint.json`**
 
 Create `project-blueprint.json` at repo root with the schema and archetype definitions from the spec.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python3 -m unittest tests/test_blueprint_schema.py`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add project-blueprint.json tests/test_blueprint_schema.py
@@ -99,7 +99,7 @@ git commit -m "feat(blueprint): add project blueprint manifest and schema test"
 - Consumes: `project-blueprint.json` (archetype `keep_skills`)
 - Produces: `enableSkill(name)`, `disableSkill(name)`, `listSkills()`, `syncSkillsToArchetype(archetype)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/test_skills_manager.py
@@ -122,12 +122,12 @@ class TestSkillsManager(unittest.TestCase):
         self.assertIn("archived", data)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python3 -m unittest tests/test_skills_manager.py`
 Expected: FAIL (Cannot find module `scripts/skills-manager.mjs`)
 
-- [ ] **Step 3: Implement `scripts/skills-manager.mjs` and update `tests/test_skills_structure.py`**
+- [x] **Step 3: Implement `scripts/skills-manager.mjs` and update `tests/test_skills_structure.py`**
 
 Implement `enableSkill`, `disableSkill`, `listSkills`, and `syncSkillsToArchetype` in `scripts/skills-manager.mjs`.
 Add scripts to `package.json`:
@@ -138,12 +138,12 @@ Add scripts to `package.json`:
 
 Update `tests/test_skills_structure.py` so total domain skill count is calculated across `.agents/skills` plus `.agents/skills-archive`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python3 -m unittest tests/test_skills_manager.py tests/test_skills_structure.py`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/skills-manager.mjs package.json tests/test_skills_manager.py tests/test_skills_structure.py
@@ -163,7 +163,7 @@ git commit -m "feat(skills): add skills manager with reversible archival engine"
 - Consumes: `project-blueprint.json`, `scripts/skills-manager.mjs`, `docs/rules/`, `docs/PLAN.md`
 - Produces: `initProject({ preset, name, description, dev1, dev2 })`, resets sync bus, marks blueprint `initialized`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # tests/test_project_init.py
@@ -192,12 +192,12 @@ class TestProjectInit(unittest.TestCase):
         self.assertEqual(res.returncode, 0, f"init-project failed: {res.stderr}")
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python3 -m unittest tests/test_project_init.py`
 Expected: FAIL (Cannot find module `scripts/init-project.mjs`)
 
-- [ ] **Step 3: Implement `scripts/init-project.mjs`**
+- [x] **Step 3: Implement `scripts/init-project.mjs`**
 
 Implement project tailoring logic:
 - Parse CLI arguments (`--preset`, `--name`, `--desc`, `--dev1`, `--dev2`, `--non-interactive`).
@@ -210,12 +210,12 @@ Implement project tailoring logic:
 - Set `project-blueprint.json` status to `initialized`.
 - Add `"init:project": "node scripts/init-project.mjs"` to `package.json`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python3 -m unittest tests/test_project_init.py`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/init-project.mjs package.json tests/test_project_init.py
@@ -237,27 +237,27 @@ git commit -m "feat(init): add interactive and scripted project tailoring wizard
 - Consumes: `project-blueprint.json`
 - Produces: Updated behavioral contracts directing agents to verify blueprint status on Turn 1.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add assertions in `tests/test_rules_integrity.py` verifying that `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `docs/ai/agent-handbook.md` contain references to `project-blueprint.json` and the `npm run init:project` command.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python3 -m unittest tests/test_rules_integrity.py`
 Expected: FAIL
 
-- [ ] **Step 3: Update agent instruction files**
+- [x] **Step 3: Update agent instruction files**
 
 - Add Section in `AGENTS.md`: "Fresh Project Intake Gate"
 - Update `CLAUDE.md` and `GEMINI.md` with instructions to detect `uninitialized` blueprint and prompt the user.
 - Update `docs/ai/agent-handbook.md` Section 1 ("Initial Session Orientation") to include blueprint inspection.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python3 -m unittest tests/test_rules_integrity.py`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add AGENTS.md CLAUDE.md GEMINI.md docs/ai/agent-handbook.md tests/test_rules_integrity.py
@@ -277,7 +277,7 @@ git commit -m "docs(agents): add fresh clone intake gate across agent contracts"
 - Consumes: Complete project blueprint, skills manager, and init scripts.
 - Produces: Passing E2E test simulating a fresh clone, archetype customization, skill restoration, and roadmap reset.
 
-- [ ] **Step 1: Write the E2E simulation test**
+- [x] **Step 1: Write the E2E simulation test**
 
 Author `tests/test_e2e_project_blueprint.py` simulating:
 1. Blueprint initialization check.
@@ -286,21 +286,21 @@ Author `tests/test_e2e_project_blueprint.py` simulating:
 4. Restoring an archived skill using `node scripts/skills-manager.mjs enable <skill>`.
 5. Verifying `docs/PLAN.md` has clean starter tasks.
 
-- [ ] **Step 2: Run test to verify behavior**
+- [x] **Step 2: Run test to verify behavior**
 
 Run: `python3 -m unittest tests/test_e2e_project_blueprint.py`
 Expected: PASS
 
-- [ ] **Step 3: Update `README.md`**
+- [x] **Step 3: Update `README.md`**
 
 Add "Starting a New Project / Fresh Clone Setup" section explaining `npm run init:project` and `npm run skill:enable`.
 
-- [ ] **Step 4: Run full regression test suite**
+- [x] **Step 4: Run full regression test suite**
 
 Run: `python3 -m unittest discover tests`
 Expected: 100% tests passing (all ~37 tests green).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/test_e2e_project_blueprint.py README.md
