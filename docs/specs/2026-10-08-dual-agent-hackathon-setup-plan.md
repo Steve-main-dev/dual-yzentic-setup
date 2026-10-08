@@ -38,16 +38,16 @@
 **Interfaces:**
 - Produces: Default JSON state and Markdown template consumed by `scripts/baton.mjs`.
 
-- [ ] **Step 1: Write the failing test for sync schemas**
+- [x] **Step 1: Write the failing test for sync schemas**
 
 Create `tests/test_sync_schema.py` validating that `.agents/sync/handoff.json` exists, is valid JSON, contains `version`, `status`, `active_agent`, `turn_count`, `max_turns`, and that `.agents/sync/handoff.md` exists with required headings.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python3 -m unittest tests/test_sync_schema.py`
 Expected: FAIL (files missing).
 
-- [ ] **Step 3: Create `.agents/sync/handoff.json` and `.agents/sync/handoff.md`**
+- [x] **Step 3: Create `.agents/sync/handoff.json` and `.agents/sync/handoff.md`**
 
 Initialize `.agents/sync/handoff.json`:
 ```json
@@ -65,12 +65,12 @@ Initialize `.agents/sync/handoff.json`:
 ```
 Initialize `.agents/sync/handoff.md` template matching Section 4 of the spec.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python3 -m unittest tests/test_sync_schema.py`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add .agents/sync/ tests/test_sync_schema.py
@@ -97,7 +97,7 @@ git commit -m "feat(sync): initialize handoff.json and handoff.md schema"
   - `detectExecutionTier(modifiedFiles: string[]): number`
   - `resolveTestExecution(tier: number, scope?: string): { command: string, isExpress: boolean }`
 
-- [ ] **Step 1: Write failing unit tests for baton state, circuit breaker, and execution tiers**
+- [x] **Step 1: Write failing unit tests for baton state, circuit breaker, and execution tiers**
 
 In `tests/test_baton_runner.py`, add tests that verify:
 1. `readSyncState()` loads state or auto-heals when missing.
@@ -106,12 +106,12 @@ In `tests/test_baton_runner.py`, add tests that verify:
 4. `detectExecutionTier()` returns `1` for cosmetic/markdown/CSS files, `2` for a single component/test file, and `3` for schema/multi-file changes.
 5. CLI arguments `--tier 1`, `--tier 2 --scope <path>`, and `--tier 3` override auto-detection correctly.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python3 -m unittest tests/test_baton_runner.py`
 Expected: FAIL (script does not exist).
 
-- [ ] **Step 3: Implement `scripts/baton.mjs`**
+- [x] **Step 3: Implement `scripts/baton.mjs`**
 
 Implement ESM Node script providing:
 - CLI argument parsing (`verify`, `status`, `reset`, `--tier`, `--scope`).
@@ -132,12 +132,12 @@ Add `scripts` to `package.json`:
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python3 -m unittest tests/test_baton_runner.py`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/baton.mjs package.json tests/test_baton_runner.py
@@ -155,28 +155,28 @@ git commit -m "feat(baton): implement scripts/baton.mjs with tiered execution la
 **Interfaces:**
 - Produces: The living sync roadmap for Dev 1 and Dev 2.
 
-- [ ] **Step 1: Write failing test for `docs/PLAN.md`**
+- [x] **Step 1: Write failing test for `docs/PLAN.md`**
 
 Create `tests/test_plan_integrity.py` asserting that `docs/PLAN.md` exists and contains required sections: "Mission & Hackathon Objective", "Current Sprint Focus", "P0: Must-Have for Demo", "P1: High Impact Polish", "P2: Post-Hackathon Stretch", and "Rules for Adding Features".
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python3 -m unittest tests/test_plan_integrity.py`
 Expected: FAIL (`docs/PLAN.md` not found).
 
-- [ ] **Step 3: Create `docs/PLAN.md`**
+- [x] **Step 3: Create `docs/PLAN.md`**
 
 Create `docs/PLAN.md` with:
 - Frontmatter and goal declaration.
 - Task items with Priority (`P0`, `P1`, `P2`), Owner (`Dev 1`, `Dev 2`), Status (`[ ] Backlog`, `[▶] In Progress`, `[x] Completed`), and link references.
 - Instructions for adding new features mid-hackathon to prevent rogue uncoordinated work.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python3 -m unittest tests/test_plan_integrity.py`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/PLAN.md tests/test_plan_integrity.py
@@ -197,7 +197,7 @@ git commit -m "docs(plan): initialize universal living roadmap docs/PLAN.md"
 **Interfaces:**
 - Produces: Authoritative system prompts directing Claude Code to act as Builder and Antigravity to act as Gatekeeper.
 
-- [ ] **Step 1: Update rule tests in `tests/test_rules_integrity.py`**
+- [x] **Step 1: Update rule tests in `tests/test_rules_integrity.py`**
 
 Assert that:
 1. `CLAUDE.md` explicitly forbids running raw test runners and directs to `npm run verify:agent`.
@@ -205,24 +205,24 @@ Assert that:
 3. `AGENTS.md` references `docs/PLAN.md` and `.agents/sync/`.
 4. All Markdown links in `CLAUDE.md`, `GEMINI.md`, and `AGENTS.md` resolve to valid files.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `python3 -m unittest tests/test_rules_integrity.py`
 Expected: FAIL (rules not updated).
 
-- [ ] **Step 3: Update `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, and `docs/ai/agent-handbook.md`**
+- [x] **Step 3: Update `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, and `docs/ai/agent-handbook.md`**
 
 - In `CLAUDE.md`: Detail the Builder persona, token defense with `/caveman` and `/ponytail`, and `npm run verify:agent`.
 - In `GEMINI.md`: Detail the Gatekeeper persona, test suite execution, error distillation.
 - In `AGENTS.md`: Update task tiering to reference the dual-agent baton workflow and `docs/PLAN.md`.
 - In `docs/ai/agent-handbook.md`: Add the newly installed skills (`caveman`, `ponytail`, `ui-ux-pro-max`, `impeccable`, `archify`, `pitch-architect`, `demo-seed-data`) to the Skills Quick-Selection Guide.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `python3 -m unittest tests/test_rules_integrity.py`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add CLAUDE.md GEMINI.md AGENTS.md docs/ai/agent-handbook.md tests/test_rules_integrity.py
@@ -241,19 +241,19 @@ git commit -m "chore(rules): update CLAUDE.md, GEMINI.md, AGENTS.md for dual-age
 **Interfaces:**
 - Verifies the complete loop: Claude creates task -> Baton runs test -> Records result -> Returns proper code.
 
-- [ ] **Step 1: Write E2E simulation test**
+- [x] **Step 1: Write E2E simulation test**
 
 In `tests/test_e2e_baton_flow.py`:
 1. Simulate a passing test run: `npm run verify:agent` succeeds, status is updated to `verified`, exit code is 0.
 2. Simulate a failing test run: `npm run verify:agent` catches failure, updates status to `verification_failed`, records diff in `handoff.md`, increments `turn_count`, exit code is 1.
 3. Simulate circuit breaker: after 5 fails, halts with circuit breaker message.
 
-- [ ] **Step 2: Run E2E test and verify it passes**
+- [x] **Step 2: Run E2E test and verify it passes**
 
 Run: `python3 -m unittest tests/test_e2e_baton_flow.py`
 Expected: PASS.
 
-- [ ] **Step 3: Update `README.md` with Hackathon Quickstart Guide**
+- [x] **Step 3: Update `README.md` with Hackathon Quickstart Guide**
 
 Document:
 - Dual-terminal workflow: left terminal `claude`, right terminal `agy`.
@@ -261,12 +261,12 @@ Document:
 - How to update `docs/PLAN.md`.
 - Quick cheat-sheet of skills (`/caveman`, `/ponytail`, `/impeccable polish`, `/archify`).
 
-- [ ] **Step 4: Run full test suite**
+- [x] **Step 4: Run full test suite**
 
 Run: `python3 -m unittest discover tests`
 Expected: All tests PASS (exit code 0).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add README.md tests/test_e2e_baton_flow.py
