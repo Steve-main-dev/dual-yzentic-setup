@@ -65,21 +65,16 @@ Measured on 2026-10-11 with `agy` 1.3.3 on Windows, in a scratch directory. Four
 
 New module `scripts/agy.mjs`. One function:
 
-`launchAgy({ prompt, allowEdits = false, model, timeoutSeconds = 300, root }) -> { ok, response, usage, deniedActions, reason }`
+`launchAgy({ prompt, allowEdits = false, timeoutSeconds = 300, root }) -> { ok, response, usage, deniedActions, reason }`
 
-- Runs `agy --print <prompt> --output-format json --print-timeout <n>s`, adding `--mode accept-edits` when `allowEdits` is true and `--model <id>` when a model is given. It is spawned without a shell, in `root`.
+- Runs `agy --print <prompt> --output-format json --print-timeout <n>s`, adding `--mode accept-edits` when `allowEdits` is true, and always `--model <id>`. It is spawned without a shell, in `root`.
 - The executable defaults to `agy` and is overridable with `BATON_AGY_CMD`. Tests set this to a stub.
 - `ok` is true only when stdout parses as JSON, `status` is `SUCCESS`, and `response` is non-empty. Otherwise `reason` is one of `not_installed`, `timeout`, `denied` (non-empty `denied_actions`), or `failed` (with the first lines of output).
 - Each call appends one entry to a `delegations` list in `handoff.json`: job name, `ok`, `reason`, duration, and `total_tokens`. The list keeps the last 20 entries. `npm run sync:status` prints the token total.
 - Prompts carry file paths, never file contents, so they stay far below the Windows command-line limit.
 
-### Models
-Two defaults, each overridable by environment variable:
-
-| Use | Default | Override |
-| :--- | :--- | :--- |
-| Read-only, speed matters (scout, diagnosis) | `gemini-3.8-flash-low` | `BATON_AGY_MODEL_FAST` |
-| Judgement matters (writing tests, review) | Antigravity's own default (no `--model` flag) | `BATON_AGY_MODEL_DEEP` |
+### Model
+Every job uses `gemini-3.8-flash-high`, passed as `--model`. It is overridable with `BATON_AGY_MODEL`. The probe measured `gemini-3.8-flash-low` and Antigravity's default model, not this one, so its time and token cost per launch are not yet known; the `delegations` log will show them from the first real run.
 
 ### Scope Guard
 Used after every launch. Before launching, record the change set from `git status --porcelain` plus a content hash of each changed file. Afterwards:
@@ -97,7 +92,7 @@ Out-of-scope files are reported by name. They are never reverted, because a reve
 
 `npm run scout -- "<task description>"`, implemented in `scripts/scout.mjs`.
 
-- Launches read-only on the fast model. The prompt gives the task description, `docs/PLAN.md`, and `project.source_spec` when the blueprint has one. It asks for: the files to change; the files to read first; for each, the relevant function or line range and one line on why; and existing patterns to follow. At most 40 lines, in a fixed format, with no prose introduction.
+- Launches read-only. The prompt gives the task description, `docs/PLAN.md`, and `project.source_spec` when the blueprint has one. It asks for: the files to change; the files to read first; for each, the relevant function or line range and one line on why; and existing patterns to follow. At most 40 lines, in a fixed format, with no prose introduction.
 - Writes the response to `.agents/sync/scout.md` (overwritten each run, git-ignored) and prints it.
 - If the launch is not `ok`, prints one line saying the scout was unavailable and why, and exits 0. The Builder then explores as today.
 
@@ -120,7 +115,7 @@ Runs inside `npm run verify:agent`. Logic lives in `scripts/gatekeeper.mjs`; `ba
 
 **Source file.** A changed file that is not a test file, not cosmetic by the baton's existing Tier 1 rule, and not under `.agents/`.
 
-The launch uses `allowEdits: true` on the deep model. The prompt gives: the Gatekeeper role from [`GEMINI.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/GEMINI.md); the changed source files; `project.source_spec` and `docs/PLAN.md`; the test command from `project.verify.test`, so tests suit the runner, including Playwright where the project uses it; and the rules: write or update tests covering the listed changes, touch test files only, run nothing, and where code contradicts the spec, test to the spec and say so in one line.
+The launch uses `allowEdits: true`. The prompt gives: the Gatekeeper role from [`GEMINI.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/GEMINI.md); the changed source files; `project.source_spec` and `docs/PLAN.md`; the test command from `project.verify.test`, so tests suit the runner, including Playwright where the project uses it; and the rules: write or update tests covering the listed changes, touch test files only, run nothing, and where code contradicts the spec, test to the spec and say so in one line.
 
 While it runs, `handoff.json` has `active_agent: "antigravity"`. It is set back to `claude` whatever the outcome.
 
@@ -135,7 +130,7 @@ An out-of-scope change from Section 3 fails verification with `status: "gatekeep
 When the test command fails on Tier 2 or 3 and the Gatekeeper is not disabled:
 
 - The baton writes the full test output to `.agents/sync/last-failure.log` (git-ignored).
-- It launches read-only on the fast model. The prompt gives the log path and, when they exist, `test-results/` and `playwright-report/`. It asks for a root-cause note of at most 15 lines: failing test, file and line, expected against actual, and the most likely cause in the source.
+- It launches read-only. The prompt gives the log path and, when they exist, `test-results/` and `playwright-report/`. It asks for a root-cause note of at most 15 lines: failing test, file and line, expected against actual, and the most likely cause in the source.
 - The baton prints that note in place of its keyword-filtered excerpt, and writes it to `handoff.md`.
 - If the launch is not `ok`, the baton prints its existing excerpt, as today.
 
@@ -154,7 +149,7 @@ The hook generated by `scripts/install-hooks.mjs` sets `BATON_GATEKEEPER=0`. A c
 `npm run review -- [--base <ref>]`, implemented in `scripts/review.mjs`.
 
 - `--base` defaults to the merge base with `main`. The script writes `git diff <base>..HEAD` to `.agents/sync/review.diff` (git-ignored), because Antigravity cannot run git itself.
-- Launches read-only on the deep model. The prompt gives the diff path, `project.source_spec`, and the newest `*-plan.md` in `docs/specs/` when one exists. It asks for findings in three groups (Critical, Important, Minor), each with file and line, what is wrong, and why it matters; then a one-line verdict. At most 60 lines.
+- Launches read-only. The prompt gives the diff path, `project.source_spec`, and the newest `*-plan.md` in `docs/specs/` when one exists. It asks for findings in three groups (Critical, Important, Minor), each with file and line, what is wrong, and why it matters; then a one-line verdict. At most 60 lines.
 - Writes the response to `.agents/sync/review.md` and prints it.
 - If the launch is not `ok`, prints one line saying so and exits 1, so the caller knows no review happened.
 
@@ -177,7 +172,7 @@ The review is advisory. The Builder re-grades each finding, fixes what stands, a
 
 Python `unittest` in `tests/`, driving the Node scripts through `subprocess`, against temp fixture repos initialised with `git init`. **No test launches the real `agy`.** A stub executable, set through `BATON_AGY_CMD`, records its arguments and is scripted per case to: print a success JSON; write a test file; write or modify a source file; print a `denied_actions` JSON; print non-JSON; sleep past the timeout.
 
-- **Launcher:** flags for each combination of `allowEdits` and model; each `reason`; the `delegations` log and its 20-entry cap; `not_installed` when the executable is missing.
+- **Launcher:** flags with and without `allowEdits`; the default model and the `BATON_AGY_MODEL` override; each `reason`; the `delegations` log and its 20-entry cap; `not_installed` when the executable is missing.
 - **Scope guard:** read-only launches reject any change; edit launches accept test files and reject others; a further-modified already-changed file is caught by the hash; nothing is reverted.
 - **Scout:** the prompt contains the task, plan, and spec paths; the brief is written and printed; an unavailable launch exits 0.
 - **Gatekeeper:** each row of the Section 5.1 table; file classification for each pattern; `active_agent` restored after success, failure, and timeout; the diagnosis note replaces the excerpt, and the excerpt returns when the launch is not `ok`.
