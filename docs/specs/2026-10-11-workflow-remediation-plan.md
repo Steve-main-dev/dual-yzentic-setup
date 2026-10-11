@@ -258,6 +258,33 @@ New constraints from the developer: the setup is **not for hackathons** and is f
 
 ---
 
+### Task 9: Fixes from the Antigravity review
+
+- [ ] **Status**
+
+Findings from `npm run review` on this branch (2026-10-12), re-graded by the planner.
+
+**Files:**
+- Modify: `scripts/changes.mjs`, `scripts/gatekeeper.mjs`, `scripts/baton.mjs`, `scripts/review.mjs`
+- Tests: `tests/test_changes.py`, `tests/test_gatekeeper.py`, `tests/test_review.py`
+
+**Decisions:**
+1. **Disappearing files are changes.** In `checkScope`, a path also counts as changed when it is in `before` and missing from `after` (deleted, or restored to its committed content). Such a path is always `outOfScope`, in both modes.
+2. **Configuration is not source.** `isSourceFile` is also false for: any path with a segment that starts with `.` (dot-directories and dotfiles); a file named `package.json` or `project-blueprint.json` at any depth; and the lockfiles `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lockb`, `uv.lock`, `poetry.lock`, `Cargo.lock`, `go.sum`.
+3. **Scope violations are recorded.** `state.gatekeeper` gains `out_of_scope` (an array, empty when there is none), set by the write step and by the diagnosis step. The Verification Report in `handoff.md` lists those files under the line `Out of scope (not reverted):` and says `Not launched.` only when no launch happened. A violation during diagnosis keeps the status `verification_failed` (the run has already failed), and the baton prints the files to stderr under `[Baton] The Gatekeeper changed files during a read-only diagnosis:`.
+4. **Review honours npm's swallowed flags.** `review.mjs` reads `npm_config_base`, `npm_config_spec`, and `npm_config_plan` when the flags are absent, and prints `[Review] Reviewing <base>..HEAD` before launching. Its prompt gains the sentence `Give line numbers from the file itself, not positions in the diff file.`, placed before the plain-paths rule, which stays last.
+
+**Tests (each must fail before the change):**
+- `test_changes.py`: an untracked file in `before` that is deleted is out of scope in both modes; a tracked file modified in `before` and restored to its committed content is out of scope; each configuration path in decision 2 is not source, while `src/app.js` and `config/settings.py` are.
+- `test_gatekeeper.py`: a change set of only `package.json` and `.gitignore` at Tier 2 launches nothing; a write-step violation leaves `gatekeeper.out_of_scope == ["src/rogue.js"]` and a `handoff.md` that names the file and does not contain `Not launched.`; a diagnosis-step violation (failing test command, a test file already changed so only the diagnosis launches, stub mode `write_source`) exits 1 with status `verification_failed`, records `src/rogue.js` in `gatekeeper.out_of_scope`, lists it in `handoff.md`, and prints the stderr heading.
+- `test_review.py`: `npm_config_base` in the environment selects the base when `--base` is absent, and `--base` wins when both are given; stdout contains the `Reviewing` line; the recorded prompt contains the line-number sentence and still ends with the plain-paths rule.
+
+**Verify:** `--scope` on each of the three test files, plus `tests/test_scout.py` and `tests/test_e2e_baton_flow.py`.
+
+**Commit:** `fix(agy): close scope-guard gaps and stop launching for configuration changes`
+
+---
+
 ### Task 8: Enforcement hooks and documentation (planner)
 
 - [ ] **Status**
