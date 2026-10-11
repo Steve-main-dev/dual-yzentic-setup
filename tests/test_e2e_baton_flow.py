@@ -157,6 +157,38 @@ class TestE2EBatonFlow(unittest.TestCase):
         self.assertEqual(res.returncode, 1)
         self.assertIn("--root", res.stderr)
 
+    def test_missing_sync_directory_is_created(self):
+        # A project that is not a template clone has no .agents/sync directory yet
+        bare_tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        self.addCleanup(bare_tmp.cleanup)
+        bare = Path(bare_tmp.name)
+        bare.joinpath("README.md").write_text("# bare" + chr(10), encoding="utf-8")
+        repo_fixture.git_init(bare)
+
+        res = self.baton(bare, "status")
+
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertNotIn("Unexpected error", res.stderr)
+        self.assertTrue(bare.joinpath(".agents", "sync", "handoff.json").exists())
+
+    def test_baton_state_is_never_part_of_the_change_set(self):
+        # Without the template's .gitignore, the state files are untracked; they must not count as changes
+        bare_tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        self.addCleanup(bare_tmp.cleanup)
+        bare = Path(bare_tmp.name)
+        bare.joinpath("README.md").write_text("# bare" + chr(10), encoding="utf-8")
+        repo_fixture.git_init(bare)
+        self.baton(bare, "status")  # creates .agents/sync/handoff.json, untracked and not ignored
+
+        code = f"""
+        import {{ resolveChangeSet }} from './scripts/changes.mjs';
+        console.log(JSON.stringify(resolveChangeSet({json.dumps(str(bare))})));
+        """
+        res = repo_fixture.run_node(code)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        change_set = json.loads(res.stdout)
+        self.assertEqual([f for f in change_set["files"] if f.startswith(".agents/sync/")], [])
+
 
 if __name__ == "__main__":
     unittest.main()

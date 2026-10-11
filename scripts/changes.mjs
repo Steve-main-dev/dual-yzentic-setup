@@ -43,6 +43,10 @@ function git(root, args) {
   return execFileSync('git', args, { cwd: root, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] });
 }
 
+// The scripts' own local state (handoff, briefs, logs). Never a change, whether or not it is git-ignored.
+const LOCAL_STATE = /^\.agents\/sync\/(?!session\.md$)/;
+const isTrackedWork = (file) => !LOCAL_STATE.test(file);
+
 /**
  * Files with uncommitted changes, one entry per file (untracked directories are expanded).
  * Uses -z output so paths are never quoted; a rename lists only its new path.
@@ -57,7 +61,7 @@ export function getUncommittedFiles(root = REPO_ROOT) {
       files.push(entry.slice(3));
       if (/[RC]/.test(entry.slice(0, 2))) i++; // -z lists the rename source as a separate entry
     }
-    return files;
+    return files.filter(isTrackedWork);
   } catch {
     return [];
   }
@@ -68,7 +72,7 @@ export function getUncommittedFiles(root = REPO_ROOT) {
  */
 export function getLastCommitFiles(root = REPO_ROOT) {
   try {
-    return git(root, ['show', '--name-only', '--format=', '-z', 'HEAD']).split('\0').filter(Boolean);
+    return git(root, ['show', '--name-only', '--format=', '-z', 'HEAD']).split('\0').filter(Boolean).filter(isTrackedWork);
   } catch {
     return [];
   }

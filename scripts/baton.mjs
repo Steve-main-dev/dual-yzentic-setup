@@ -6,7 +6,7 @@
  * Provides 3 execution tiers (Express / Scoped / Full) and circuit breaker protection.
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
@@ -65,6 +65,7 @@ export function readSyncState(filePath = SYNC_JSON_PATH) {
  */
 export function writeSyncState(state, filePath = SYNC_JSON_PATH) {
   const content = JSON.stringify(state, null, 2) + '\n';
+  mkdirSync(dirname(filePath), { recursive: true });
   writeFileSync(filePath, content, 'utf-8');
 }
 
