@@ -115,18 +115,18 @@ Exports `validateManifest(blueprint, { root })`, returning an array of problem s
 6. Render `docs/PLAN.md` from `roadmap` and `team`.
 7. Write `name` and `description` to `package.json`, slugifying the name as `init-project.mjs` does.
 8. Reset the sync bus (`handoff.json`, `handoff.md`) with task id `INIT-01`.
-9. Install the git hook via `installHooks()`.
+9. Install the git hook via `installHooks({ root })`, only when `root` contains a `.git` directory.
 10. Set `status: "initialized"` and write the blueprint. This is last, so a failure part-way leaves the blueprint uninitialized and the command re-runnable.
 
-CLI: `node scripts/tailor.mjs [--dry-run] [--force]`. It prints the change set, exits 0 on success and 1 with the problem list on failure. `package.json` gains `"tailor": "node scripts/tailor.mjs"`.
+CLI: `node scripts/tailor.mjs [--dry-run] [--force] [--root <path>]`. It prints the change set, exits 0 on success and 1 with the problem list on failure. `package.json` gains `"tailor": "node scripts/tailor.mjs"`.
 
-All paths resolve from a `root` parameter defaulting to the repo root, so tests can run against a temp copy.
+All paths resolve from a `root` parameter defaulting to the repo root, so tests can run against a temp fixture repo. The existing scripts hardcode the repo root, so `listSkills`, `enableSkill`, `disableSkill`, and `installHooks` each gain an optional `{ root }` argument with the same default.
 
 ### 5.2 `scripts/skills-manager.mjs`
-Add `syncSkillsToList(names)`: archive every active skill not in `names`, restore every archived skill in `names`, and return `{ active_count, archived_count, disabled, enabled }`. It throws before moving anything if a name exists in neither directory. `syncSkillsToArchetype` becomes a wrapper that looks up `keep_skills` and calls it, preserving its current return shape.
+Add `syncSkillsToList(names)`: archive every active skill not in `names`, restore every archived skill in `names`, and return `{ active_count, archived_count, disabled, enabled }`. It throws before moving anything if a name exists in neither directory. A name is only recognised if it matches `^[a-z0-9][a-z0-9-]*$`, which excludes `_staging` and path traversal. `syncSkillsToArchetype` becomes a wrapper that looks up `keep_skills` and calls it, preserving its current return shape.
 
 ### 5.3 `scripts/roadmap.mjs` (new, extracted)
-`generateRoadmap` moves out of [`scripts/init-project.mjs`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/scripts/init-project.mjs) and takes a `tasks` array instead of hardcoding tasks. `init-project.mjs` passes its current six placeholder tasks, so its output is unchanged. Tasks are grouped under the existing `P0` / `P1` / `P2` headings, owners resolve to team names, and every task starts as `[ ]` with `Status: Backlog`. A priority with no tasks keeps its heading with "None yet." beneath it, because [`tests/test_plan_integrity.py`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/tests/test_plan_integrity.py) requires the sections.
+`generateRoadmap` moves out of [`scripts/init-project.mjs`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/scripts/init-project.mjs) and takes a `tasks` array instead of hardcoding tasks. `init-project.mjs` passes its current six placeholder tasks, so its output is unchanged. Tasks are grouped under the existing `P0` / `P1` / `P2` headings, owners resolve to team names, and every task starts as `[ ]` with `Status: Backlog`. The P2 heading is `## P2: Post-Hackathon Stretch`, replacing the wizard's current `## P2: Post-Hackathon / Stretch Goals`, which the plan-integrity test does not accept. A priority with no tasks keeps its heading with "None yet." beneath it, because [`tests/test_plan_integrity.py`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/tests/test_plan_integrity.py) requires the sections.
 
 ### 5.4 `scripts/baton.mjs`
 `resolveTestExecution(tier, scope)` gains a third parameter, `verify`, read from `project.verify` in the blueprint by the caller:
@@ -135,7 +135,7 @@ Add `syncSkillsToList(names)`: archive every active skill not in `names`, restor
 - Without a scope and with `verify.test`: use it.
 - Otherwise: today's behaviour, unchanged.
 
-A missing or unparseable blueprint is treated as no `verify`.
+A missing or unparseable blueprint is treated as no `verify`, and so is a blueprint whose `status` is not `"initialized"`: the agent writes the manifest before `tailor` runs, and the baton must not switch commands until it has.
 
 ---
 
@@ -184,7 +184,7 @@ Frontmatter matches the existing local skills (`name`, `description`, `version`)
 
 ## 10. Testing
 
-Python `unittest` in `tests/`, in the style of [`tests/test_e2e_project_blueprint.py`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/tests/test_e2e_project_blueprint.py), each case running the Node scripts against a temp copy of the repo:
+Python `unittest` in `tests/`, driving the Node scripts through `subprocess` as the existing tests do. Unlike the existing end-to-end tests, which mutate the real repo and restore it, each case runs against a small fixture repo built in a temp directory and passed with `--root`:
 
 - **Validation:** each row of the field rules table has a failing case; all problems are reported together; a failing manifest leaves the tree byte-identical.
 - **Skill sync:** explicit list archives the rest; restores from the archive; always-kept skills survive an empty list; an unknown name moves nothing.
