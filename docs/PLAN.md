@@ -1,115 +1,97 @@
 # Universal Living Roadmap & Feature Plan
 
-> **For Dev 1, Dev 2, and AI Agents:** This document is the single source of truth for the project. No feature is implemented without an entry here. Keep it updated after every completed task.
+> **For the developer and the AI agents:** This document is the single source of truth for the project. No feature is implemented without an entry here. Keep it updated after every completed task.
 
-- **Sprint Deadline:** 24-Hour Hackathon Submission
-- **Last Synchronized:** 2026-10-08
-- **Sync Protocol:** [`scripts/baton.mjs`](../scripts/baton.mjs) via `npm run verify:agent`
+- **Project:** dual-yzentic-setup (template; no project started yet)
+- **Last Synchronized:** 2026-10-11
+- **Verification:** [`scripts/baton.mjs`](../scripts/baton.mjs) via `npm run verify:agent`
 
 ---
 
-## Mission & Hackathon Objective
+## Mission & Objective
 
-Build, test, and deliver an MVP for judge demonstration within 24 hours. Focus ruthlessly on the primary user journey, visually stunning aesthetics, and rock-solid demo data.
+Provide a single-developer workflow in which Claude Code plans and writes source code, and Antigravity scouts the codebase, writes and diagnoses tests, and reviews branches. Starting a real project replaces this file: `npm run tailor` or `npm run init:project` regenerates it.
 
 ---
 
 ## Rules for Adding Features
 
-1. **No Rogue Work:** When either developer (or their AI agent) wants to add an idea, log it below with Priority, Owner, and initial status `[ ] Backlog`.
-2. **Prioritization Tiers:**
-   - **`P0` (Must-Have for Demo):** The core loop required for judges to understand and experience the product.
-   - **`P1` (High Impact Polish):** Visual enhancers, seed data, and animations that elevate demo day.
-   - **`P2` (Post-Hackathon Stretch):** Features that can wait until after judging.
-3. **Owner Assignment:** Always declare `Owner: Dev 1` or `Owner: Dev 2` to prevent git collisions.
-4. **Git Sync Cadence:** Pull before starting a task; commit and push immediately upon completing a task (`git commit -m "feat: [feature name]"`).
+1. **Log it first:** Add every new idea below with a Priority and the status `[ ] Backlog` before any code is written.
+2. **Priorities:**
+   - **`P0` (Must-Have):** Required for the core user journey to work.
+   - **`P1` (Should-Have):** Improves the core journey: polish, seed data, secondary flows.
+   - **`P2` (Later):** Parked until P0 and P1 are done.
+3. **One task at a time:** Finish, verify with `npm run verify:agent`, and commit a task before starting the next.
 
 ---
 
-## Current Sprint Focus
+## Current Focus
 
-Active milestone: **MVP Core Scaffolding & Dual-Agent Setup**
+Active milestone: **Workflow remediation**
 
 ---
 
-## P0: Must-Have for Demo
+## P0: Must-Have
 
-- [x] **Task 0.1: Dual-Agent Synchronization Bus & Baton Setup**
+- [x] **Task 0.1: Dual-Agent Sync Bus & Baton**
   - **Priority:** P0
-  - **Owner:** Dev 1 (Antigravity & Claude)
-  - **Status:** In Progress
-  - **Description:** Implement `scripts/baton.mjs`, `.agents/sync/`, and persona rules for token defense.
+  - **Status:** Done
+  - **Description:** `scripts/baton.mjs`, `.agents/sync/`, and the Builder and Gatekeeper rule files.
 
 - [x] **Task 0.2: Spec-Driven Setup Tailoring (`tailor-setup` skill)**
   - **Priority:** P0
-  - **Owner:** Dev 1
   - **Status:** Done
-  - **Description:** Skill plus `npm run tailor` that tailors skills, roadmap, rules, scaffold, and baton commands from a brainstormed spec. Design: [`docs/specs/2026-10-11-tailor-setup-design.md`](specs/2026-10-11-tailor-setup-design.md).
+  - **Description:** Skill plus `npm run tailor` that tailors skills, roadmap, rules, scaffold, and baton commands from a brainstormed spec. Design: [`2026-10-11-tailor-setup-design.md`](specs/2026-10-11-tailor-setup-design.md).
 
 - [ ] **Task 0.3: Antigravity Delegation (Scout, Gatekeeper, Review)**
   - **Priority:** P0
-  - **Owner:** Dev 1
-  - **Status:** Backlog
-  - **Description:** Scripts launch Antigravity headlessly to scout the codebase, write and diagnose tests on `npm run verify:agent`, and review branches, moving that work off Claude quota. Design: [`docs/specs/2026-10-11-antigravity-delegation-design.md`](specs/2026-10-11-antigravity-delegation-design.md).
+  - **Status:** In Progress
+  - **Description:** Scripts launch Antigravity headlessly to scout the codebase, write and diagnose tests on `npm run verify:agent`, and review branches. Design: [`2026-10-11-antigravity-delegation-design.md`](specs/2026-10-11-antigravity-delegation-design.md).
 
 - [x] **Task 0.4: Token Budget Rules & Sonnet Builder Agent**
   - **Priority:** P0
-  - **Owner:** Dev 1
   - **Status:** Done
-  - **Description:** Process sized by tier, plan tasks delegated to the `builder` agent on Sonnet, and one task per session with a written handoff in `.agents/sync/session.md`. Rules: [`CLAUDE.md`](../CLAUDE.md) section 3.
+  - **Description:** Process sized by tier, plan tasks delegated to the `builder` agent on Sonnet, and one task per session with a handoff in `.agents/sync/session.md`. Rules: [`CLAUDE.md`](../CLAUDE.md) section 3.
 
-- [ ] **Task 1.1: Core Application Shell & Routing**
+- [ ] **Task 0.5: Workflow Remediation**
   - **Priority:** P0
-  - **Owner:** Dev 1
-  - **Status:** Backlog
-  - **Description:** Scaffolds primary app shell, responsive container, and header navigation.
+  - **Status:** In Progress
+  - **Description:** Fixes from the 2026-10-11 audit: a gate that blocks, tests isolated from the real repo, portable links, one consistent rule set, enforcement hooks, single-developer framing. Plan: [`2026-10-11-workflow-remediation-plan.md`](specs/2026-10-11-workflow-remediation-plan.md).
 
-- [ ] **Task 1.2: Primary Feature API & Data Model**
+- [ ] **Task 1.1: Core Application Shell & Navigation**
   - **Priority:** P0
-  - **Owner:** Dev 2
   - **Status:** Backlog
-  - **Description:** Core data models and backend routes for the primary application flow.
+  - **Description:** Placeholder. Primary app shell, responsive container, and header navigation.
 
-- [ ] **Task 1.3: Hero Flow & Interactive Value Loop**
+- [ ] **Task 1.2: Core Data Models & API Endpoints**
   - **Priority:** P0
-  - **Owner:** Dev 1
   - **Status:** Backlog
-  - **Description:** The primary user action that produces the "WOW" moment for judges.
+  - **Description:** Placeholder. Core data models and backend routes for the primary application flow.
+
+- [ ] **Task 1.3: Primary User Journey**
+  - **Priority:** P0
+  - **Status:** Backlog
+  - **Description:** Placeholder. The main action a user takes, end to end.
 
 ---
 
-## P1: High Impact Polish
+## P1: Should-Have
 
-- [ ] **Task 2.1: Rich Demo Mock Data & Trends**
+- [ ] **Task 2.1: Realistic Seed Data**
   - **Priority:** P1
-  - **Owner:** Dev 2
   - **Status:** Backlog
-  - **Description:** Populate dashboards with realistic activity feeds, metrics, and avatars using `demo-seed-data`.
+  - **Description:** Placeholder. Populate realistic records and state using `demo-seed-data`.
 
-- [ ] **Task 2.2: Frontend Visual Polish & Contrast Audit**
+- [ ] **Task 2.2: UI Contrast, Responsive Refinement & Polish**
   - **Priority:** P1
-  - **Owner:** Dev 1
   - **Status:** Backlog
-  - **Description:** Run UI polish pass with `ui-ux-pro-max` and `impeccable` on buttons, empty states, and badges.
-
-- [ ] **Task 2.3: Interactive System Architecture Diagram**
-  - **Priority:** P1
-  - **Owner:** Dev 2
-  - **Status:** Backlog
-  - **Description:** Generate architecture diagrams for slide decks using `archify`.
+  - **Description:** Placeholder. Typography, motion, and WCAG contrast using `ui-ux-pro-max` and `impeccable`.
 
 ---
 
-## P2: Post-Hackathon Stretch
+## P2: Later
 
-- [ ] **Task 3.1: Multi-Tenant Team Organizations**
+- [ ] **Task 3.1: Secondary Workflows**
   - **Priority:** P2
-  - **Owner:** Dev 2
   - **Status:** Backlog
-  - **Description:** Extended workspace collaboration for enterprise teams.
-
-- [ ] **Task 3.2: Advanced Export to PDF / External Integrations**
-  - **Priority:** P2
-  - **Owner:** Dev 1
-  - **Status:** Backlog
-  - **Description:** Exporting generated assets to external third-party cloud services.
+  - **Description:** Placeholder. Advanced configuration and secondary settings.

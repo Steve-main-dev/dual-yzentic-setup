@@ -27,7 +27,7 @@ function defaultTasks() {
     { id: '1.1', title: 'Core Application Shell & Navigation', priority: 'P0', description: 'Scaffolds primary app shell, responsive container, and header navigation.' },
     { id: '1.2', title: 'Core Data Models & API Endpoints', priority: 'P0', description: 'Core data models and backend routes for the primary application flow.' },
     { id: '1.3', title: 'Hero Flow & Interactive Value Loop', priority: 'P0', description: 'The primary user action that delivers the core value of the product.' },
-    { id: '2.1', title: 'Demo Mock & Realistic Seed Data', priority: 'P1', description: 'Populate realistic transactions, profiles, and state using demo-seed-data.' },
+    { id: '2.1', title: 'Realistic Seed Data', priority: 'P1', description: 'Populate realistic transactions, profiles, and state using demo-seed-data.' },
     { id: '2.2', title: 'UI Contrast, Responsive Refinement & Polish', priority: 'P1', description: 'Polish typography, animations, and WCAG contrast using ui-ux-pro-max and impeccable.' },
     { id: '3.1', title: 'Secondary Edge-Case Workflows', priority: 'P2', description: 'Advanced configurations and secondary administrative settings.' }
   ];

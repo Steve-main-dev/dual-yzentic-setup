@@ -108,7 +108,7 @@ New constraints from the developer: the setup is **not for hackathons** and is f
 
 ### Task 3: Single developer, no hackathon (code)
 
-- [ ] **Status**
+- [x] **Status** (commit `6a5b84e`)
 
 **Files:**
 - Modify: `project-blueprint.json`, `package.json`, `scripts/roadmap.mjs`, `scripts/init-project.mjs`, `scripts/scaffolder.mjs`, `scripts/tailor.mjs`, `tests/repo_fixture.py`, `.agents/skills/tailor-setup/SKILL.md` (manifest example and field table only)

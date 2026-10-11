@@ -31,7 +31,7 @@ version: 1.0.0
 3. WRITE THE MANIFEST     into the "project" block of project-blueprint.json (Section 4)
                           Leave "status" and "archetypes" untouched
 4. DRY RUN                npm run tailor -- --dry-run
-5. GET APPROVAL           Show the developer: skills kept / archived, stack, team,
+5. GET APPROVAL           Show the developer: skills kept / archived, stack, developer,
                           roadmap tasks, verify commands. STOP until they approve
 6. APPLY                  npm run tailor
 7. REWRITE & SCAFFOLD     Rules and agent docs (Section 6), then src/ (Section 7)
