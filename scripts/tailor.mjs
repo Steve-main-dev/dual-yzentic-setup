@@ -8,6 +8,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { syncSkillsToList } from './skills-manager.mjs';
+import { generateRoadmap } from './roadmap.mjs';
+import { installHooks } from './install-hooks.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -112,4 +115,155 @@ export function validateManifest(blueprint, { root = REPO_ROOT } = {}) {
   }
 
   return problems;
+}
+
+const WRITTEN_FILES = [
+  'docs/PLAN.md',
+  'package.json',
+  '.agents/sync/handoff.json',
+  '.agents/sync/handoff.md',
+  'project-blueprint.json'
+];
+
+function readBlueprint(root) {
+  const blueprintPath = path.resolve(root, 'project-blueprint.json');
+  if (!fs.existsSync(blueprintPath)) {
+    throw new Error(`project-blueprint.json not found at ${blueprintPath}`);
+  }
+  try {
+    return JSON.parse(fs.readFileSync(blueprintPath, 'utf-8'));
+  } catch (err) {
+    throw new Error(`project-blueprint.json is not valid JSON: ${err.message}`);
+  }
+}
+
+const writeJson = (filePath, data) => fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+
+/**
+ * Validate the manifest, then apply it. Nothing is written unless validation passes.
+ */
+export function tailorProject({ root = REPO_ROOT, dryRun = false, force = false } = {}) {
+  const blueprint = readBlueprint(root);
+
+  if (blueprint.status === 'initialized' && !force) {
+    throw new Error('Project is already initialized. Re-run with --force to overwrite docs/PLAN.md and re-sync skills.');
+  }
+
+  const problems = validateManifest(blueprint, { root });
+  if (problems.length > 0) {
+    const err = new Error('Manifest in project-blueprint.json is invalid:');
+    err.problems = problems;
+    throw err;
+  }
+
+  const project = blueprint.project;
+  const installed = readSkillDirs(root);
+  const known = new Set([...installed.active, ...installed.archived]);
+  const keep = new Set([...project.skills, ...ALWAYS_KEPT_SKILLS.filter(name => known.has(name))]);
+  const changes = {
+    archive: installed.active.filter(name => !keep.has(name)),
+    restore: installed.archived.filter(name => keep.has(name)),
+    write: WRITTEN_FILES
+  };
+
+  if (dryRun) {
+    return { dryRun: true, changes, project };
+  }
+
+  // 1. Sync skills to the manifest list
+  syncSkillsToList([...keep], { root });
+
+  // 2. Render docs/PLAN.md
+  const dev1 = project.team.dev1.name;
+  const dev2 = project.team.dev2.name;
+  const roadmap = generateRoadmap({
+    name: project.name,
+    desc: project.description,
+    dev1,
+    dev2,
+    preset: project.archetype,
+    tasks: project.roadmap.map(task => ({ ...task, owner: project.team[task.owner].name })),
+    batonPath: path.resolve(root, 'scripts', 'baton.mjs')
+  });
+  fs.writeFileSync(path.resolve(root, 'docs', 'PLAN.md'), roadmap, 'utf-8');
+
+  // 3. Update package.json
+  const packagePath = path.resolve(root, 'package.json');
+  if (fs.existsSync(packagePath)) {
+    const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
+    pkg.name = project.name.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    pkg.description = project.description;
+    writeJson(packagePath, pkg);
+  }
+
+  // 4. Reset Sync Bus
+  const syncDir = path.resolve(root, '.agents', 'sync');
+  fs.mkdirSync(syncDir, { recursive: true });
+  const timestamp = new Date().toISOString();
+  writeJson(path.join(syncDir, 'handoff.json'), {
+    version: '1.0',
+    task_id: 'INIT-01',
+    active_agent: 'claude',
+    status: 'idle',
+    turn_count: 0,
+    max_turns: 5,
+    last_updated: timestamp,
+    summary: `Project tailored (${project.name} - ${project.archetype})`,
+    files_modified: []
+  });
+  fs.writeFileSync(path.join(syncDir, 'handoff.md'), `# Agent Handoff Ticket: INIT-01
+
+- **Status:** idle
+- **Active Agent:** claude
+- **Turn:** 0 / 5
+- **Timestamp:** ${timestamp}
+
+## Project Tailored
+- **Name:** ${project.name}
+- **Source Spec:** ${project.source_spec}
+- **Active Skills:** ${keep.size} (Archived: ${installed.archived.length + changes.archive.length - changes.restore.length})
+- **Team:** ${dev1} & ${dev2}
+`, 'utf-8');
+
+  // 5. Install git pre-commit hook
+  if (fs.existsSync(path.resolve(root, '.git'))) {
+    installHooks({ root });
+  }
+
+  // 6. Mark initialized last, so a failure above leaves the command re-runnable
+  blueprint.status = 'initialized';
+  writeJson(path.resolve(root, 'project-blueprint.json'), blueprint);
+
+  return { dryRun: false, changes, project };
+}
+
+/**
+ * CLI Entry
+ */
+export function main() {
+  const args = process.argv.slice(2);
+  const options = { dryRun: args.includes('--dry-run'), force: args.includes('--force') };
+  const rootIndex = args.indexOf('--root');
+  if (rootIndex !== -1 && args[rootIndex + 1]) {
+    options.root = path.resolve(args[rootIndex + 1]);
+  }
+
+  try {
+    const res = tailorProject(options);
+    const list = (names) => (names.length > 0 ? names.join(', ') : '(none)');
+    console.log(`[Tailor] archive: ${list(res.changes.archive)}`);
+    console.log(`[Tailor] restore: ${list(res.changes.restore)}`);
+    console.log(`[Tailor] write: ${list(res.changes.write)}`);
+    console.log(res.dryRun ? '[Tailor] Dry run: nothing written.' : '[Tailor] Project tailored.');
+    process.exit(0);
+  } catch (err) {
+    console.error(`[Tailor Error] ${err.message}`);
+    (err.problems || []).forEach(problem => console.error(`  - ${problem}`));
+    process.exit(1);
+  }
+}
+
+// Execute if run directly
+if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
+  main();
 }

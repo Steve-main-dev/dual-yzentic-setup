@@ -13,10 +13,11 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '..');
-const HOOKS_DIR = path.resolve(REPO_ROOT, '.githooks');
-const PRE_COMMIT = path.resolve(HOOKS_DIR, 'pre-commit');
 
-export function installHooks() {
+export function installHooks({ root = REPO_ROOT } = {}) {
+  const HOOKS_DIR = path.resolve(root, '.githooks');
+  const PRE_COMMIT = path.resolve(HOOKS_DIR, 'pre-commit');
+
   if (!fs.existsSync(HOOKS_DIR)) {
     fs.mkdirSync(HOOKS_DIR, { recursive: true });
   }
@@ -51,7 +52,7 @@ exit 0
   } catch {}
 
   try {
-    execSync('git config core.hooksPath .githooks', { cwd: REPO_ROOT });
+    execSync('git config core.hooksPath .githooks', { cwd: root });
   } catch (err) {
     console.warn(`[Hooks Warning] Could not configure git core.hooksPath: ${err.message}`);
   }
