@@ -44,7 +44,7 @@ New constraints from the developer: the setup is **not for hackathons** and is f
 - Paths go into JavaScript snippets through `json.dumps`, never raw f-string interpolation (Windows backslashes).
 - Write files with `\n` line endings. Temp directories use `tempfile.TemporaryDirectory(ignore_cleanup_errors=True)`.
 - New optional parameters are trailing and defaulted; existing call sites keep working unless the task says otherwise.
-- **Commits in Tasks 1 to 4:** first run `git checkout -- .agents/sync/handoff.json .githooks/pre-commit`, stage only the task's files, and commit with `SKIP_VERIFY=1 git commit ...`. The hook is unreliable until Task 4 lands; the planner runs the full suite between tasks. From Task 5 on, commit normally.
+- **Commits:** stage only the task's files and commit normally. The pre-commit hook runs the baton (about 30 seconds for a code change) and blocks a failing commit; if it blocks, fix the cause, do not bypass it. (Tasks 1 to 4 used `SKIP_VERIFY=1` while the hook was unreliable.)
 - Known baseline: `test_markdown_links_are_valid` fails until Task 1; two tests in `test_e2e_baton_flow` fail until Task 2.
 
 ---
@@ -137,7 +137,7 @@ New constraints from the developer: the setup is **not for hackathons** and is f
 
 ### Task 4: A gate that gates
 
-- [ ] **Status**
+- [x] **Status** (commit `5e91d28`)
 
 **Files:**
 - Create: `scripts/changes.mjs`, `.gitattributes`
@@ -261,4 +261,5 @@ Done inline by the planner, not the builder.
 
 - `.claude/settings.json`: a `SessionStart` hook that injects `.agents/sync/session.md`, the blueprint status, and the tier table; a `PreToolUse` hook on shell tools that blocks full-suite commands and points at the baton. Scripts: `scripts/session-context.mjs`, `scripts/guard-commands.mjs`, with tests.
 - Prose: `README.md`, `docs/PLAN.md`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `docs/ai/agent-handbook.md`, `docs/ai/workflows.md`, `docs/ai/architecture.md`, both 2026-10-11 design specs. Single developer, no hackathon framing, one answer each for test ownership, full-suite runs, session start, and plan location, and the delegation commands.
+- Final verification in a **fresh clone**, not only the working copy: untracked state files on disk can hide failures (found after Task 4: a link to `.agents/sync/handoff.md` breaks the link test in a clone).
 - Whole-branch review with `npm run review`, one fix pass, then merge to `main`.
