@@ -22,7 +22,7 @@ def snapshot(root):
 
 class TestTailorApply(unittest.TestCase):
     def repo(self, project=None, status="uninitialized"):
-        tmp = tempfile.TemporaryDirectory()
+        tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(tmp.cleanup)
         return make_repo(tmp.name, project=project, status=status)
 

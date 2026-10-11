@@ -8,7 +8,7 @@ from tests.tailor_fixture import make_repo, run_node, skill_dirs
 
 class TestSkillsSyncList(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
+        self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(self.tmp.cleanup)
         self.root = make_repo(self.tmp.name)
 

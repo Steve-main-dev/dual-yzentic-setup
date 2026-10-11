@@ -41,7 +41,7 @@ class TestBatonVerifyConfig(unittest.TestCase):
         return self.node_json(f"readVerifyConfig({json.dumps(str(blueprint_path))})")
 
     def test_read_verify_config(self):
-        tmp = tempfile.TemporaryDirectory()
+        tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(tmp.cleanup)
         base = Path(tmp.name)
 

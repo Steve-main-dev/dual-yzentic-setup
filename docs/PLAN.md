@@ -40,10 +40,10 @@ Active milestone: **MVP Core Scaffolding & Dual-Agent Setup**
   - **Status:** In Progress
   - **Description:** Implement `scripts/baton.mjs`, `.agents/sync/`, and persona rules for token defense.
 
-- [ ] **Task 0.2: Spec-Driven Setup Tailoring (`tailor-setup` skill)**
+- [x] **Task 0.2: Spec-Driven Setup Tailoring (`tailor-setup` skill)**
   - **Priority:** P0
   - **Owner:** Dev 1
-  - **Status:** Backlog
+  - **Status:** Done
   - **Description:** Skill plus `npm run tailor` that tailors skills, roadmap, rules, scaffold, and baton commands from a brainstormed spec. Design: [`docs/specs/2026-10-11-tailor-setup-design.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/2026-10-11-tailor-setup-design.md).
 
 - [ ] **Task 1.1: Core Application Shell & Routing**

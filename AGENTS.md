@@ -25,6 +25,7 @@ To prevent token waste and latency, all tasks are classified into three operatio
 0. **Gate 0: Fresh Clone & Project Blueprint Intake**
    - On the very first session turn, inspect [`project-blueprint.json`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/project-blueprint.json).
    - If `status === "uninitialized"`, DO NOT write code yet. Ask the user what they are building, their stack, and Dev 1 / Dev 2 names, or guide them to run `npm run init:project`.
+   - If a project design spec already exists in [`docs/specs/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/), use the [`tailor-setup`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/tailor-setup/SKILL.md) skill (`npm run tailor`) instead of an archetype preset.
 1. **Gate 1: Mandatory Skills Discovery & Invocation**
    - Read [`docs/ai/agent-handbook.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/ai/agent-handbook.md) to discover and invoke required domain skills before beginning any non-trivial user task.
    - For Tier 1 micro-tasks, invoke [`fast-track`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/fast-track/SKILL.md).
