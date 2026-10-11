@@ -161,6 +161,30 @@ class TestGatekeeper(unittest.TestCase):
                 self.assertNotIn(DIAGNOSIS_HEADING, res.stderr)
                 self.assertFalse((root / ".agents" / "sync" / "last-failure.log").exists())
 
+    def scoped_fixture(self, scoped_command):
+        """Source changed and no test changed, in a project that defines a scoped test command."""
+        root = self.make_fixture()
+        blueprint_path = root / "project-blueprint.json"
+        blueprint = json.loads(blueprint_path.read_text(encoding="utf-8"))
+        blueprint["project"]["verify"]["test_scoped"] = scoped_command
+        blueprint_path.write_text(json.dumps(blueprint, indent=2) + "\n", encoding="utf-8")
+        return root
+
+    def test_an_explicit_scope_means_no_write_launch(self):
+        # Naming the test file that covers a change says its tests already exist
+        root = self.scoped_fixture(PASS + " {scope}")
+        res = self.baton(root, "--tier", "2", "--scope", "tests/app.test.js")
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(self.launches(), [])
+        self.assertEqual(self.state(root)["gatekeeper"]["result"], "not_needed")
+
+    def test_a_scoped_failure_is_still_diagnosed(self):
+        root = self.scoped_fixture(FAIL + " {scope}")
+        res = self.baton(root, "--tier", "2", "--scope", "tests/app.test.js")
+        self.assertEqual(res.returncode, 1, res.stdout)
+        self.assertEqual(len(self.launches()), 1)
+        self.assertIn(DIAGNOSIS_HEADING, res.stderr)
+
     def test_a_changed_test_file_means_no_write_launch(self):
         root = self.make_fixture(changes={"src/app.js": "module.exports = 1;\n", "tests/app.test.js": "// test\n"})
         res = self.baton(root)

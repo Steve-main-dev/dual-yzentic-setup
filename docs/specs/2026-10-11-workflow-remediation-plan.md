@@ -36,6 +36,8 @@ New constraints from the developer: the setup is **not for hackathons** and is f
 - **A `.mjs` path in `BATON_AGY_CMD` is run with Node.** This is how tests substitute a stub without a shell.
 - **The launcher's kill grace is configurable.** The process timeout is the launch timeout plus `BATON_AGY_GRACE` seconds (default 15). Tests set it to 1 so a timeout case does not take 16 seconds.
 - **Default launch timeout is 600 seconds.** The first real scout on `gemini-3.8-flash-high` took 240 seconds and 121,403 tokens, too close to the original 300.
+- **An explicit `--scope` means no test-writing launch.** Naming the test file that covers a change says its tests exist. Failures are still diagnosed. Without this, every scoped check by a builder would launch Antigravity.
+- **The baton creates `.agents/sync/` on demand and never counts its own state as a change,** whether or not the project git-ignores it. Found by the first real Gatekeeper run, in a project that was not a template clone.
 - **Prompts ask for plain paths.** Every prompt ends with: `Reply in plain text. Refer to files by repo-relative path with forward slashes. Do not use Markdown links or absolute paths.` The first real brief spent most of its length on absolute `file://` links.
 
 ## Global Constraints
@@ -229,7 +231,7 @@ New constraints from the developer: the setup is **not for hackathons** and is f
 
 ### Task 7: Gatekeeper in the baton
 
-- [ ] **Status**
+- [x] **Status** (commit `a2eeaa9`)
 
 **Files:**
 - Create: `scripts/gatekeeper.mjs`, `tests/test_gatekeeper.py`

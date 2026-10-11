@@ -280,7 +280,8 @@ export async function main() {
       process.exit(0);
     }
 
-    if (shouldWriteTests({ tier, files: modified, disabled })) {
+    // An explicit --scope names the test that covers the change, so no tests are owed
+    if (shouldWriteTests({ tier, files: modified, disabled: disabled || Boolean(scopeOverride) })) {
       console.log('[Baton] Source changed with no test changes: asking the Gatekeeper to write tests...');
       const outcome = writeTests({ root, state, files: modified, saveState });
       state.gatekeeper = { result: outcome.result, tests_written: outcome.testsWritten };
