@@ -27,3 +27,8 @@ build/
 # Skills Staging
 .agents/skills/_staging/*
 !.agents/skills/_staging/.gitkeep
+
+# Baton sync state (per-machine; session.md stays tracked)
+.agents/sync/*
+!.agents/sync/session.md
+!.agents/sync/.gitkeep

@@ -23,7 +23,8 @@ class TestBatonRunner(unittest.TestCase):
         console.log(JSON.stringify({
             tier1: detectExecutionTier(['README.md', 'src/styles/app.css']),
             tier2: detectExecutionTier(['src/components/Button.tsx', 'tests/Button.test.ts']),
-            tier3: detectExecutionTier(['prisma/schema.prisma', 'src/auth.ts', 'src/server.ts', 'src/db.ts'])
+            tier3: detectExecutionTier(['prisma/schema.prisma', 'src/auth.ts', 'src/server.ts', 'src/db.ts']),
+            empty: detectExecutionTier([])
         }));
         """
         res = self.run_node_eval(code)
@@ -32,6 +33,7 @@ class TestBatonRunner(unittest.TestCase):
         self.assertEqual(data["tier1"], 1)
         self.assertEqual(data["tier2"], 2)
         self.assertEqual(data["tier3"], 3)
+        self.assertEqual(data["empty"], 3, "no files must never skip the tests")
 
     def test_circuit_breaker(self):
         code = """

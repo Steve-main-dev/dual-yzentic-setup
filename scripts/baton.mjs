@@ -10,6 +10,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
+import { isCosmeticFile, resolveChangeSet } from './changes.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -104,19 +105,14 @@ export function distillDiagnostics(rawOutput) {
  * Tier 1: Express Lane (Micro/Cosmetic: CSS, markdown, static assets, docs)
  * Tier 2: Scoped Lane (Single component/module and/or its test file)
  * Tier 3: Architectural Deep Lane (DB schema, migrations, auth, multi-file features)
+ * No files at all is never Tier 1: with nothing to classify, run the full suite.
  */
 export function detectExecutionTier(modifiedFiles = []) {
   if (!modifiedFiles || modifiedFiles.length === 0) {
-    return 1;
+    return 3;
   }
 
-  const cosmeticExtensions = ['.md', '.css', '.scss', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.ico'];
-  const isAllCosmetic = modifiedFiles.every(file => {
-    const lower = file.toLowerCase();
-    return cosmeticExtensions.some(ext => lower.endsWith(ext)) || lower.startsWith('docs/');
-  });
-
-  if (isAllCosmetic) {
+  if (modifiedFiles.every(isCosmeticFile)) {
     return 1;
   }
 
@@ -175,20 +171,7 @@ export function resolveTestExecution(tier, scope, verify = null) {
   return { command: 'python3 -m unittest discover tests', isExpress: false };
 }
 
-/**
- * Get modified files from git status.
- */
-function getGitModifiedFiles(root = REPO_ROOT) {
-  try {
-    const stdout = execSync('git status --porcelain', { cwd: root, encoding: 'utf-8' });
-    return stdout
-      .split('\n')
-      .filter(line => line.trim().length > 0)
-      .map(line => line.slice(3).trim());
-  } catch {
-    return [];
-  }
-}
+const CLEAN_TREE_NOTE = '[Baton] Working tree clean: classifying the last commit.';
 
 /**
  * Pull `--root <path>` out of the CLI args. Returns the resolved root and the remaining args.
@@ -214,9 +197,10 @@ export async function main() {
 
   if (command === 'status') {
     const state = readSyncState(syncJson);
-    const modified = getGitModifiedFiles(root);
+    const { files: modified, source } = resolveChangeSet(root);
     const tier = detectExecutionTier(modified);
     console.log('\n=== Baton Sync Status ===');
+    if (source === 'last-commit') console.log(CLEAN_TREE_NOTE);
     console.log(`Status:       ${state.status}`);
     console.log(`Active Agent: ${state.active_agent}`);
     console.log(`Turn Count:   ${state.turn_count} / ${state.max_turns}`);
@@ -246,7 +230,7 @@ export async function main() {
       process.exit(1);
     }
 
-    // Determine tier & scope
+    // Determine tier & scope: flags win, then npm's own config for `npm run verify:agent --tier 2` (no `--`)
     let tierOverride = null;
     let scopeOverride = null;
 
@@ -258,8 +242,15 @@ export async function main() {
         scopeOverride = args[i + 1];
       }
     }
+    if (!tierOverride && process.env.npm_config_tier) {
+      tierOverride = parseInt(process.env.npm_config_tier, 10);
+    }
+    if (!scopeOverride && process.env.npm_config_scope) {
+      scopeOverride = process.env.npm_config_scope;
+    }
 
-    const modified = getGitModifiedFiles(root);
+    const { files: modified, source } = resolveChangeSet(root);
+    if (source === 'last-commit') console.log(CLEAN_TREE_NOTE);
     const tier = tierOverride || detectExecutionTier(modified);
     const { command: testCmd, isExpress } = resolveTestExecution(tier, scopeOverride, readVerifyConfig(resolve(root, 'project-blueprint.json')));
 

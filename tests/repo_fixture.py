@@ -79,6 +79,9 @@ def make_template_repo(tmp):
 
     (root / "docs").mkdir()
     (root / "docs" / "PLAN.md").write_text("ORIGINAL PLAN\n", encoding="utf-8")
+    (root / ".gitignore").write_text(
+        ".agents/sync/*\n!.agents/sync/session.md\n!.agents/sync/.gitkeep\n", encoding="utf-8"
+    )
     return root
 
 

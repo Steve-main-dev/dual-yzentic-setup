@@ -22,28 +22,34 @@ export function installHooks({ root = REPO_ROOT } = {}) {
     fs.mkdirSync(HOOKS_DIR, { recursive: true });
   }
 
+  // The whole body sits in one function that is called on the last line. sh then parses the entire
+  // script before running anything, so rewriting this file while it runs cannot misalign it.
   const hookContent = `#!/bin/sh
 # Git pre-commit hook enforcing Baton verification
 
-if [ "$SKIP_VERIFY" = "1" ]; then
+baton_pre_commit() {
+  if [ "$SKIP_VERIFY" = "1" ]; then
+    exit 0
+  fi
+
+  echo "[Git Hook] Running Baton pre-commit verification..."
+  export BATON_GATEKEEPER=0
+  node scripts/baton.mjs verify
+
+  EXIT_CODE=$?
+  if [ $EXIT_CODE -ne 0 ]; then
+    echo ""
+    echo "[Git Hook Error] Commit blocked: Baton verification failed."
+    echo "Fix the reported issue or run 'npm run verify:agent' to inspect diagnostics."
+    echo "To bypass (not recommended): git commit --no-verify"
+    echo ""
+    exit $EXIT_CODE
+  fi
+
   exit 0
-fi
+}
 
-echo "[Git Hook] Running Baton pre-commit verification..."
-node scripts/baton.mjs verify
-
-EXIT_CODE=$?
-if [ $EXIT_CODE -ne 0 ]; then
-  echo ""
-  echo "[Git Hook Error] Commit blocked: Baton verification failed."
-  echo "Fix the reported issue or run 'npm run verify:agent' to inspect diagnostics."
-  echo "To bypass (not recommended): git commit --no-verify"
-  echo ""
-  exit $EXIT_CODE
-fi
-
-git add .agents/sync/handoff.json 2>/dev/null
-exit 0
+baton_pre_commit; exit $?
 `;
 
   fs.writeFileSync(PRE_COMMIT, hookContent, { mode: 0o755 });

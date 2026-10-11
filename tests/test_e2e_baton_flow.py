@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -36,9 +37,27 @@ class TestE2EBatonFlow(unittest.TestCase):
         self.addCleanup(fixture_tmp.cleanup)
         return repo_fixture.git_init(repo_fixture.make_template_repo(fixture_tmp.name))
 
-    def baton(self, fixture, *args):
+    def make_verify_fixture(self, test_command):
+        """An initialized project whose last commit changed only src/app.js and whose tree is clean."""
+        fixture_tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        self.addCleanup(fixture_tmp.cleanup)
+        root = repo_fixture.make_template_repo(fixture_tmp.name)
+        blueprint_path = root / "project-blueprint.json"
+        blueprint = json.loads(blueprint_path.read_text(encoding="utf-8"))
+        blueprint["status"] = "initialized"
+        blueprint["project"] = {"verify": {"test": test_command}}
+        blueprint_path.write_text(json.dumps(blueprint, indent=2) + "\n", encoding="utf-8")
+        repo_fixture.git_init(root)
+        (root / "src").mkdir()
+        (root / "src" / "app.js").write_text("module.exports = 1;\n", encoding="utf-8")
+        for args in (["add", "-A"], ["commit", "-q", "-m", "add app"]):
+            subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True)
+        return root
+
+    def baton(self, fixture, *args, env=None):
         cmd = ["node", str(BATON), *args, "--root", str(fixture)]
-        return subprocess.run(cmd, cwd=fixture, capture_output=True, text=True)
+        base_env = {k: v for k, v in os.environ.items() if k not in ("npm_config_tier", "npm_config_scope")}
+        return subprocess.run(cmd, cwd=fixture, capture_output=True, text=True, env={**base_env, **(env or {})})
 
     def test_tier_1_express_pass(self):
         code = f"""
@@ -103,6 +122,34 @@ class TestE2EBatonFlow(unittest.TestCase):
         self.assertNotEqual(fixture_json.read_bytes(), fixture_before)
         self.assertEqual(json.loads(fixture_json.read_text(encoding="utf-8"))["status"], "verified")
         self.assertEqual(real_json.read_bytes(), real_before)
+
+    def test_clean_tree_verifies_the_last_commit(self):
+        fixture = self.make_verify_fixture('node -e "process.exit(0)"')
+        res = self.baton(fixture, "verify")
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertIn("Working tree clean: classifying the last commit.", res.stdout)
+        self.assertIn('Executing test command: node -e "process.exit(0)"', res.stdout)
+        self.assertNotIn("Express Lane", res.stdout)
+
+    def test_clean_tree_with_failing_test_fails_and_counts_a_turn(self):
+        fixture = self.make_verify_fixture('node -e "process.exit(1)"')
+        res = self.baton(fixture, "verify")
+        self.assertEqual(res.returncode, 1, res.stdout)
+        state = json.loads((fixture / ".agents" / "sync" / "handoff.json").read_text(encoding="utf-8"))
+        self.assertEqual(state["turn_count"], 1)
+        self.assertEqual(state["status"], "verification_failed")
+
+    def test_npm_config_tier_selects_the_tier(self):
+        fixture = self.make_verify_fixture('node -e "process.exit(1)"')
+        res = self.baton(fixture, "verify", env={"npm_config_tier": "1"})
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertIn("Tier 1 Express Lane", res.stdout)
+
+    def test_flag_beats_npm_config_tier(self):
+        fixture = self.make_verify_fixture('node -e "process.exit(1)"')
+        res = self.baton(fixture, "verify", "--tier", "2", env={"npm_config_tier": "1"})
+        self.assertEqual(res.returncode, 1)
+        self.assertNotIn("Express Lane", res.stdout)
 
     def test_root_flag_without_value_fails(self):
         res = subprocess.run(["node", str(BATON), "status", "--root"], cwd=self.tmp.name, capture_output=True, text=True)
