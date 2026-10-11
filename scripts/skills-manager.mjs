@@ -13,27 +13,36 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '..');
 
-const SKILLS_DIR = path.resolve(REPO_ROOT, '.agents', 'skills');
-const ARCHIVE_DIR = path.resolve(REPO_ROOT, '.agents', 'skills-archive');
 const BLUEPRINT_PATH = path.resolve(REPO_ROOT, 'project-blueprint.json');
+
+const SKILL_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+
+function skillPaths(root) {
+  return {
+    skillsDir: path.resolve(root, '.agents', 'skills'),
+    archiveDir: path.resolve(root, '.agents', 'skills-archive')
+  };
+}
 
 /**
  * Ensure archive directory exists
  */
-export function ensureDirs() {
-  if (!fs.existsSync(SKILLS_DIR)) {
-    fs.mkdirSync(SKILLS_DIR, { recursive: true });
+export function ensureDirs({ root = REPO_ROOT } = {}) {
+  const { skillsDir, archiveDir } = skillPaths(root);
+  if (!fs.existsSync(skillsDir)) {
+    fs.mkdirSync(skillsDir, { recursive: true });
   }
-  if (!fs.existsSync(ARCHIVE_DIR)) {
-    fs.mkdirSync(ARCHIVE_DIR, { recursive: true });
+  if (!fs.existsSync(archiveDir)) {
+    fs.mkdirSync(archiveDir, { recursive: true });
   }
 }
 
 /**
  * List all active and archived skills
  */
-export function listSkills() {
-  ensureDirs();
+export function listSkills({ root = REPO_ROOT } = {}) {
+  ensureDirs({ root });
+  const { skillsDir, archiveDir } = skillPaths(root);
 
   const getSubdirs = (dir) => {
     if (!fs.existsSync(dir)) return [];
@@ -44,18 +53,19 @@ export function listSkills() {
   };
 
   return {
-    active: getSubdirs(SKILLS_DIR),
-    archived: getSubdirs(ARCHIVE_DIR)
+    active: getSubdirs(skillsDir),
+    archived: getSubdirs(archiveDir)
   };
 }
 
 /**
  * Enable (restore) a skill from archive
  */
-export function enableSkill(skillName) {
-  ensureDirs();
-  const source = path.join(ARCHIVE_DIR, skillName);
-  const target = path.join(SKILLS_DIR, skillName);
+export function enableSkill(skillName, { root = REPO_ROOT } = {}) {
+  ensureDirs({ root });
+  const { skillsDir, archiveDir } = skillPaths(root);
+  const source = path.join(archiveDir, skillName);
+  const target = path.join(skillsDir, skillName);
 
   if (!fs.existsSync(source)) {
     if (fs.existsSync(target)) {
@@ -75,10 +85,11 @@ export function enableSkill(skillName) {
 /**
  * Disable (soft-delete) a skill into archive
  */
-export function disableSkill(skillName) {
-  ensureDirs();
-  const source = path.join(SKILLS_DIR, skillName);
-  const target = path.join(ARCHIVE_DIR, skillName);
+export function disableSkill(skillName, { root = REPO_ROOT } = {}) {
+  ensureDirs({ root });
+  const { skillsDir, archiveDir } = skillPaths(root);
+  const source = path.join(skillsDir, skillName);
+  const target = path.join(archiveDir, skillName);
 
   if (!fs.existsSync(source)) {
     if (fs.existsSync(target)) {
@@ -93,6 +104,47 @@ export function disableSkill(skillName) {
 
   fs.renameSync(source, target);
   return { success: true, message: `Skill '${skillName}' disabled (moved to archive).` };
+}
+
+/**
+ * Sync skills against an explicit list: archive everything else, restore what is listed.
+ * Throws before moving anything if a name is not a known skill.
+ */
+export function syncSkillsToList(names, { root = REPO_ROOT } = {}) {
+  const keepSkills = new Set(names);
+  const currentSkills = listSkills({ root });
+  const known = new Set([...currentSkills.active, ...currentSkills.archived]);
+
+  const unknown = [...keepSkills].filter(name => !SKILL_NAME_PATTERN.test(name) || !known.has(name));
+  if (unknown.length > 0) {
+    throw new Error(`Unknown skills: ${unknown.map(name => name || '(empty)').join(', ')}`);
+  }
+
+  const disabled = [];
+  const enabled = [];
+
+  // Archive any active skill not in the list
+  for (const skill of currentSkills.active) {
+    if (!keepSkills.has(skill)) {
+      disableSkill(skill, { root });
+      disabled.push(skill);
+    }
+  }
+
+  // Restore any archived skill that is in the list
+  for (const skill of currentSkills.archived) {
+    if (keepSkills.has(skill)) {
+      enableSkill(skill, { root });
+      enabled.push(skill);
+    }
+  }
+
+  return {
+    active_count: keepSkills.size,
+    archived_count: listSkills({ root }).archived.length,
+    disabled,
+    enabled
+  };
 }
 
 /**
@@ -113,33 +165,16 @@ export function syncSkillsToArchetype(archetypeName) {
     throw new Error(`Archetype '${archetypeName}' not found. Available archetypes: ${available}`);
   }
 
-  const keepSkills = new Set(archetype.keep_skills || []);
+  // keep_skills may name skills that are not installed; those are ignored
+  const keepSkills = archetype.keep_skills || [];
   const currentSkills = listSkills();
-  const disabled = [];
-  const enabled = [];
-
-  // Archive any active skill not in keep_skills
-  for (const skill of currentSkills.active) {
-    if (!keepSkills.has(skill)) {
-      disableSkill(skill);
-      disabled.push(skill);
-    }
-  }
-
-  // Restore any archived skill that is in keep_skills
-  for (const skill of currentSkills.archived) {
-    if (keepSkills.has(skill)) {
-      enableSkill(skill);
-      enabled.push(skill);
-    }
-  }
+  const known = new Set([...currentSkills.active, ...currentSkills.archived]);
+  const res = syncSkillsToList(keepSkills.filter(name => known.has(name)));
 
   return {
     archetype: archetypeName,
-    active_count: keepSkills.size,
-    archived_count: listSkills().archived.length,
-    disabled,
-    enabled
+    ...res,
+    active_count: new Set(keepSkills).size
   };
 }
 
