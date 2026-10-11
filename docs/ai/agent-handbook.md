@@ -6,14 +6,15 @@ This handbook serves as the operational onboarding manual and skills selection g
 
 ## 1. Initial Session Orientation
 
-Whenever starting a new session or receiving a task in this repository:
-0. **Inspect Project Blueprint:** Check [`project-blueprint.json`](../../project-blueprint.json). If `status === "uninitialized"`, ask the developer to define project name, stack, and team handles (or run `npm run init:project`) before editing code.
-1. **Inspect Git Status:** Run `git status` to verify current branch and uncommitted modifications.
-2. **Review Recent Changes:** Check `git log -n 5 --oneline` to understand recent commits.
-3. **Check the Universal Living Roadmap:** Consult [`docs/PLAN.md`](../PLAN.md) to understand current sprint priorities (`P0`, `P1`, `P2`) and assignees.
-4. **Inspect Sync Bus:** Check [`.agents/sync/handoff.json`](../../.agents/sync/handoff.json) using `npm run sync:status`.
-5. **Locate Skills:** Review available procedural skills in [`.agents/skills/`](../../.agents/skills/).
-6. **Check Domain Rules:** If implementing web components or APIs, check [`docs/rules/README.md`](../rules/README.md).
+Whenever starting a new session in this repository:
+
+0. **Start from the handoff:** Read [`.agents/sync/session.md`](../../.agents/sync/session.md). In Claude Code a hook injects it at session start. Open only the files it lists.
+1. **Inspect Project Blueprint:** Check [`project-blueprint.json`](../../project-blueprint.json). If `status === "uninitialized"`, ask the developer what they are building and their stack before editing project code.
+2. **Inspect Sync Bus:** Run `npm run sync:status` for the baton state and the working-tree change set.
+3. **Check the Universal Living Roadmap:** Find the entry for the task at hand in [`docs/PLAN.md`](../PLAN.md).
+4. **Load on demand:** Open a skill in [`.agents/skills/`](../../.agents/skills/) or a rule file in [`docs/rules/`](../rules/README.md) only when the task needs it.
+
+Do not survey the repository, recent history, or the skills catalogue up front. For a Tier 2 or 3 task, `npm run scout -- "<task>"` returns the files that matter.
 
 ---
 
@@ -21,11 +22,18 @@ Whenever starting a new session or receiving a task in this repository:
 
 ### Execution Guidelines
 - Run non-interactively (`PAGER=cat`, non-blocking flags).
-- All file paths and code symbols MUST be formatted as clickable markdown links using the `file://` scheme.
-- Verification is performed via the Baton Coordinator:
+- In chat, format file paths and code symbols as clickable `file://` links for the current machine. In committed files, use relative links.
+- Verification is performed via the Baton Coordinator. Never run a full test suite directly:
   ```bash
   npm run verify:agent
   ```
+- Three commands hand work to the Gatekeeper (Antigravity), each returning a short result:
+
+  | Command | Gatekeeper job | Returns |
+  | :--- | :--- | :--- |
+  | `npm run scout -- "<task>"` | Find the files and ranges a task touches | A brief of at most 40 lines |
+  | `npm run verify:agent` | Write tests for untested changes; diagnose failures | Pass, or a root-cause note |
+  | `npm run review` | Review the branch diff against its spec and plan | Findings, at most 60 lines |
 
 ---
 
@@ -42,17 +50,17 @@ Whenever starting a new session or receiving a task in this repository:
 
 | Scenario / Task | Process Skill | Purpose |
 | :--- | :--- | :--- |
-| **Starting any turn / prompt** | `superpowers:using-superpowers` | Check and invoke applicable skills BEFORE any response or action |
-| **New feature, idea, or creative work** | `superpowers:brainstorming` | Mandatory discovery of intent, requirements, and design before implementation |
-| **Multi-step implementation planning** | `superpowers:writing-plans` | Mandatory implementation plan generation for multi-step tasks |
-| **Executing implementation plans** | `superpowers:executing-plans` | Deterministic inline task execution with strict per-task verification |
-| **Writing or modifying any code** | `superpowers:test-driven-development` | Mandatory Red-Green-Refactor test cycle (Tier 2/3 tasks) |
+| **Tier 3 work only** | `superpowers:using-superpowers` | Process skills apply to Tier 3. Tier 1 uses `fast-track`; Tier 2 uses a short design in chat |
+| **New subsystem or architectural change** | `superpowers:brainstorming` | Discovery of intent, requirements, and design before implementation |
+| **Tier 3 implementation planning** | `superpowers:writing-plans` | Implementation plan in `docs/specs/`, one task per `builder` agent |
+| **Executing implementation plans** | `builder` agent (`.claude/agents/builder.md`) | One plan task per launch, on Sonnet, with a fresh context |
+| **Writing a test yourself** | `superpowers:test-driven-development` | Red-Green-Refactor, when the Gatekeeper was skipped or a plan task supplies the test |
 | **Bug fixing or troubleshooting** | `superpowers:systematic-debugging` | Root-cause investigation before proposing fixes (no guessing) |
 | **Pre-completion claim** | `superpowers:verification-before-completion` | Pre-completion evidence gate (verify tests before claiming complete) |
 
 ---
 
-### Hackathon & Domain Skills ([`.agents/skills/`](../../.agents/skills/))
+### Domain Skills ([`.agents/skills/`](../../.agents/skills/))
 
 | Scenario / Task | Recommended Skill | Purpose |
 | :--- | :--- | :--- |
@@ -60,8 +68,7 @@ Whenever starting a new session or receiving a task in this repository:
 | **Minimalist coding & anti-over-engineering** | [`ponytail`](../../.agents/skills/ponytail/SKILL.md) | "Lazy senior developer" mode: smallest workable diff, no bloated libraries |
 | **Design intelligence (React, Tailwind, Shadcn)** | [`ui-ux-pro-max`](../../.agents/skills/ui-ux-pro-max/SKILL.md) | Searchable design tokens, color palettes, typography, and UX patterns |
 | **Award-winning UI polish & accessibility** | [`impeccable`](../../.agents/skills/impeccable/SKILL.md) | Precision commands: `/impeccable polish`, `bolder`, `quieter`, `audit` |
-| **System architecture & sequence diagrams** | [`archify`](../../.agents/skills/archify/SKILL.md) | Generates interactive, visual architecture diagrams for judge slide decks |
-| **3-minute hackathon pitch & demo flow** | [`pitch-architect`](../../.agents/skills/pitch-architect/SKILL.md) | Structured pitch formulas, live demo script, and judge Q&A preparation |
+| **System architecture & sequence diagrams** | [`archify`](../../.agents/skills/archify/SKILL.md) | Generates interactive architecture and sequence diagrams |
 | **Realistic mock & seed data for demos** | [`demo-seed-data`](../../.agents/skills/demo-seed-data/SKILL.md) | Populates dashboards with avatars, realistic names, dynamic metrics |
 | **Tailoring the repo to a brainstormed spec at kickoff** | [`tailor-setup`](../../.agents/skills/tailor-setup/SKILL.md) | Derives skills, roadmap, rules, scaffold, and verify commands from the project spec |
 | **Micro-tasks, cosmetic CSS & quick fixes** | [`fast-track`](../../.agents/skills/fast-track/SKILL.md) | Express-lane protocol for token-efficient edits without test ceremony |

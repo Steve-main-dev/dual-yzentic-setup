@@ -21,16 +21,16 @@ All architectural changes progress through four formal stages:
 Requirement / Idea
        │
        ▼
-1. Specification (`docs/specs/YYYY-MM-DD-<name>.md`)
+1. Specification (`docs/specs/YYYY-MM-DD-<name>-design.md`)
        │
        ▼
 2. Human Review Gate (Explicit Approval)
        │
        ▼
-3. Implementation Plan (`docs/superpowers/plans/`)
+3. Implementation Plan (`docs/specs/YYYY-MM-DD-<name>-plan.md`)
        │
        ▼
-4. Test-Driven Delivery & Verification Gate
+4. Builder Delivery, Gatekeeper Tests & Verification Gate
 ```
 
 ---
@@ -42,7 +42,10 @@ Requirement / Idea
 - `.agents/skills/_staging/`: Isolated staging gate for unverified scrape artifacts.
 - `docs/ai/`: Agent operational guides, workflows, and architecture.
 - `docs/specs/`: Approved technical specs and feature design documents.
-- `tests/`: Automated unit and integration test suites.
+- `tests/`: Automated unit and integration test suites. Script tests run against temp fixture repos, never this one.
+- `scripts/`: The baton, the Antigravity launcher, and the scout, review, tailor, and init commands.
+- `.agents/sync/`: `session.md` (committed handoff) plus local, uncommitted baton and Gatekeeper state.
+- `.claude/`: The `builder` agent and the session and command-guard hooks.
 
 ---
 

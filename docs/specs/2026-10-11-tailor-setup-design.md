@@ -196,3 +196,14 @@ Python `unittest` in `tests/`, driving the Node scripts through `subprocess` as 
 
 ### Known Consequence
 Once `verify.test` points at the project's commands, the template's own tests in `tests/` no longer run on commit. This is intended: they test the template, not the application. They remain in the repo and can be run directly with `python -m unittest discover tests`. The skills-structure test already accepts archived skills, and the fixed anchors in Section 6 and the retained roadmap headings in Section 5.3 exist so that the docs and plan integrity tests still pass in a tailored project.
+
+---
+
+## Amendments (2026-10-11)
+
+Changed by Tasks 1 to 3 of [`2026-10-11-workflow-remediation-plan.md`](2026-10-11-workflow-remediation-plan.md). Where this section and the text above differ, this section is what the code does.
+
+- **Single developer.** The manifest has no `team` block and roadmap tasks have no `owner`. An optional `project.developer` string names the developer; without it the roadmap says "the developer".
+- **Roadmap sections.** `Mission & Objective`, `Rules for Adding Features`, `Current Focus`, `P0: Must-Have`, `P1: Should-Have`, `P2: Later`. Tasks carry `Priority`, `Status`, and `Description`.
+- **Links.** Generated and committed files use relative links. The roadmap's baton link is `../scripts/baton.mjs`.
+- **Archetypes.** `minimal-hackathon` is now `minimal`, and `pitch-architect` is no longer kept by any archetype.

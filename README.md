@@ -1,126 +1,149 @@
-# Dual-Agent Hackathon Setup (Claude Pro + Antigravity)
+# Dual-Agent Setup (Claude Code + Antigravity)
 
-**Autonomous Pair-Programming Environment Optimized for 24-Hour Hackathons & Claude Pro Token Preservation**
+**A single-developer AI workflow that keeps Claude for planning and code, and hands scouting, testing, and review to Antigravity.**
 
-This repository provides a coordinated dual-agent development architecture where **Claude Code** acts as **The Builder** (Planning & Implementation) and **Google Antigravity** acts as **The Gatekeeper** (Test Authoring, Headless Verification & Error Distillation).
+This repository is a project template. **Claude Code** is **the Builder**: it plans and writes source code. **Google Antigravity** is **the Gatekeeper**: it finds the files a task touches, writes and diagnoses tests, and reviews branches. Scripts launch Antigravity headlessly, so you work in one Claude session and your Claude quota is spent on planning and code only.
 
 ---
 
-## 🌱 Starting a New Project / Fresh Clone Setup
+## Who Does What
 
-Immediately after cloning this repository for a new project or hackathon, run the project tailoring wizard:
+| Job | Done by | How it starts |
+| :--- | :--- | :--- |
+| Planning, design, source code | Claude Code | You ask. Tier 3 plan tasks run on a Sonnet `builder` agent. |
+| Finding the files a task touches | Antigravity | `npm run scout -- "<task>"` |
+| Writing tests for untested changes | Antigravity | Automatic inside `npm run verify:agent` |
+| Running the tests | The baton script (no model, no tokens) | `npm run verify:agent` |
+| Diagnosing a failure | Antigravity | Automatic when the tests fail |
+| Reviewing a branch | Antigravity | `npm run review` |
+
+Antigravity is launched with `agy --print`. It can read anything and edit test files; it cannot run commands, and a change to any non-test file fails verification. If `agy` is missing, logged out, out of quota, or too slow, each job falls back to plain behaviour: the existing tests run, Claude gets a trimmed log, and the review reports that it did not happen.
+
+---
+
+## Starting a Project
+
+**From a spec (recommended).** Brainstorm the project with Claude into a design spec in [`docs/specs/`](docs/specs/), then invoke the [`tailor-setup`](.agents/skills/tailor-setup/SKILL.md) skill. Claude writes a manifest into [`project-blueprint.json`](project-blueprint.json), shows you a dry run, and after your yes runs:
+
+```bash
+npm run tailor
+```
+
+That archives the skills the project does not need, writes the real roadmap to [`docs/PLAN.md`](docs/PLAN.md), and points the baton at the project's own test commands. Claude then rewrites the stack rules in [`docs/rules/`](docs/rules/README.md) and scaffolds `src/` with the stack's own generator.
+
+**From an archetype.** When a preset fits, run the wizard:
 
 ```bash
 npm run init:project
 ```
 
-The wizard prompts for:
-1. **Project Name & 1-Line Pitch** (updates [`package.json`](package.json) and [`docs/PLAN.md`](docs/PLAN.md)).
-2. **Project Archetype:**
-   - `[1] fullstack-web`: Next.js / Vite + Backend + Database (keeps 11 core web skills).
-   - `[2] ai-agent-app`: FastAPI / Node + Prompt engineering & agentic eval (keeps AI pipeline skills).
-   - `[3] frontend-dashboard`: Vite + React + Tailwind + Charts & Presentations.
-   - `[4] minimal-hackathon`: Ultra-lean core suite (7 essential skills).
-3. **Developer Handles:** Assigns `Dev 1` and `Dev 2` responsibilities in [`docs/PLAN.md`](docs/PLAN.md).
+It asks for the project name, a one-line mission, an archetype (`fullstack-web`, `ai-agent-app`, `frontend-dashboard`, or `minimal`), and your name.
 
-> **Context Optimization:** Unselected skills are **soft-deleted** into [`.agents/skills-archive/`](.agents/skills-archive/) so agents only scan active skills, saving hundreds of context tokens. You can restore any skill instantly:
-> ```bash
-> npm run skill:enable <skill-name>    # e.g., npm run skill:enable slides
-> npm run skill:disable <skill-name>   # move back to archive
-> npm run skill:list                  # view active vs archived
-> ```
+Either way, skills that are not kept are moved to `.agents/skills-archive/`, not deleted:
 
----
-
-## 🚀 The Dual-Terminal Workflow
-
-```text
-┌──────────────────────────────────────┐    ┌──────────────────────────────────────┐
-│  TERMINAL 1: CLAUDE CODE (Builder)   │    │  TERMINAL 2: ANTIGRAVITY (QA Gate)   │
-│  - Plans features & UI architecture  │    │  - Runs test suites & Playwright E2E │
-│  - Implements source code in src/    │    │  - Absorbs verbose terminal/DOM logs │
-│  - Runs: npm run verify:agent        │    │  - Distills failures to <= 25 lines  │
-│  - Uses: /caveman & /ponytail        │    │  - Uses: webapp-testing, archify     │
-└──────────────────┬───────────────────┘    └──────────────────┬───────────────────┘
-                   │                                           │
-                   └──────────────► .agents/sync/ ◄────────────┘
-                              (handoff.json & handoff.md)
+```bash
+npm run skill:list
+npm run skill:enable <skill-name>
+npm run skill:disable <skill-name>
 ```
 
-1. **Open Split Terminals:**
-   - Left Pane: run `claude`
-   - Right Pane: run `agy`
-2. **Build Code:** Claude implements feature code in `src/`.
-3. **Verify via Baton:** Claude executes:
-   ```bash
-   npm run verify:agent
-   ```
-4. **Iterate Cleanly:** If tests fail, Claude receives a concise 5-10 line failure diagnostic. If tests pass, the baton stamps `verified` in [`.agents/sync/handoff.json`](.agents/sync/handoff.json).
+---
+
+## The Loop
+
+```text
+session start   a hook injects .agents/sync/session.md and the blueprint status
+classify        Tier 1, 2, or 3
+scout           npm run scout -- "<task>"            (Tier 2 and 3)
+build           Claude; Tier 3 runs one plan task per Sonnet builder agent
+verify          npm run verify:agent
+                  Gatekeeper writes missing tests -> baton runs them
+                  -> on failure, Gatekeeper writes a root-cause note
+review          npm run review                       (Tier 3)
+commit          the pre-commit hook runs the baton and blocks a failing commit
+hand off        Claude rewrites .agents/sync/session.md; you start a new session
+```
 
 ---
 
-## ⚡ 3-Tier Execution Lanes
+## Three Tiers
 
-`scripts/baton.mjs` automatically inspects touched files to prevent wasting time and tokens on full test suite runs:
+| Tier | Scope | Process | Verification |
+| :--- | :--- | :--- | :--- |
+| **1: Express** | CSS, copy, Markdown, static assets | `fast-track`: edit and commit | No tests; passes in under a second |
+| **2: Bounded** | One component, one route, one bug | A few lines of design in chat, then build | The affected tests |
+| **3: Architectural** | Schemas, auth, multi-file features | Spec, plan, builder agents, review | The full suite |
 
-- **Tier 1 (Express / Fast-Track):** Micro-edits (CSS/Tailwind, copy, markdown, static assets). Full test suites are **bypassed**; passes in < 1 second.
-- **Tier 2 (Scoped Lane):** Single component or route change. Runs only the matching scoped test file.
-- **Tier 3 (Architectural Lane):** DB schemas, migrations, auth, or core multi-file features. Runs full regression suite.
+[`scripts/baton.mjs`](scripts/baton.mjs) picks the tier from the changed files. With a clean working tree it classifies the last commit. To override:
 
-**Manual Overrides:**
 ```bash
 npm run verify:agent -- --tier 1
 npm run verify:agent -- --tier 2 --scope tests/auth.test.ts
 npm run verify:agent -- --tier 3
+npm run verify:agent -- --no-gatekeeper
 ```
 
----
-
-## 🗺️ Team Sync: The Universal Living Plan
-
-In a 2-developer team, [`docs/PLAN.md`](docs/PLAN.md) is the single source of truth:
-- **`P0` (Must-Have for Demo):** Core loop needed for judges.
-- **`P1` (High Impact Polish):** Enhancements that elevate the demo.
-- **`P2` (Post-Hackathon Stretch):** Ideas to park until after judging.
-- **Ownership:** Every item is tagged `Owner: Dev 1` or `Owner: Dev 2` to prevent git collisions.
+After five failed runs in a row the baton locks until you run `npm run sync:reset`.
 
 ---
 
-## 🧰 Hackathon Skill Arsenal
+## What Is Enforced
 
-| Skill | Trigger / Command | Hackathon Impact |
-| :--- | :--- | :--- |
-| **[`caveman`](.agents/skills/caveman/SKILL.md)** | `/caveman` | Strips conversational fluff; **saves ~70% output tokens on Claude Pro** |
-| **[`ponytail`](.agents/skills/ponytail/SKILL.md)** | `/ponytail` | "Lazy senior dev" mode: smallest code change, **zero bloated libraries** |
-| **[`ui-ux-pro-max`](.agents/skills/ui-ux-pro-max/SKILL.md)** | `/ui-ux-pro-max` | Design system intelligence across React, Tailwind, and Shadcn |
-| **[`impeccable`](.agents/skills/impeccable/SKILL.md)** | `/impeccable polish`, `bolder` | High-polish UI finishing pass by Paul Bakaus |
-| **[`archify`](.agents/skills/archify/SKILL.md)** | `/archify` | Generates interactive architecture and sequence diagrams for pitch slides |
-| **[`pitch-architect`](.agents/skills/pitch-architect/SKILL.md)** | `/pitch-architect` | 3-minute hackathon pitch deck, live demo script, and judge Q&A prep |
-| **[`demo-seed-data`](.agents/skills/demo-seed-data/SKILL.md)** | `/demo-seed-data` | Populates UI with avatars, realistic trends, and dynamic chart data |
+- **Failing commits are blocked** by the pre-commit hook (`npm run hook:install`).
+- **Full test suites cannot be run directly by Claude.** A hook in [`.claude/settings.json`](.claude/settings.json) blocks them and points at the baton.
+- **Every session starts from the handoff.** The same file injects [`.agents/sync/session.md`](.agents/sync/session.md) at session start.
+- **Antigravity stays in scope.** Files are compared before and after every launch.
+- **Tests never touch your work.** Every script test runs against a temporary fixture repository.
+
+The tier process and the builder hand-off are written rules in [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md); nothing mechanical checks them.
 
 ---
 
-## 🛠️ CLI Commands
+## The Roadmap
+
+[`docs/PLAN.md`](docs/PLAN.md) is the single source of truth for what gets built:
+
+- **`P0` (Must-Have):** required for the core user journey to work.
+- **`P1` (Should-Have):** improves the core journey.
+- **`P2` (Later):** parked until P0 and P1 are done.
+
+---
+
+## Commands
 
 ```bash
-# Initialize a new project from clone
-npm run init:project
+# Start a project
+npm run tailor -- --dry-run      # preview spec-driven tailoring
+npm run tailor                   # apply it
+npm run init:project             # archetype wizard
 
-# Skills management & soft-delete archival
-npm run skill:list
-npm run skill:enable <skill-name>
-npm run skill:disable <skill-name>
-npm run skill:sync [archetype]
+# Work
+npm run scout -- "<task>"        # Antigravity: which files matter
+npm run verify:agent             # tests, written and diagnosed by Antigravity
+npm run review                   # Antigravity: review the branch
 
-# Verify current changes with auto-detected tier
-npm run verify:agent
-
-# Check active synchronization status
-npm run sync:status
-
-# Reset handoff state to idle
-npm run sync:reset
-
-# Run full project test suite
-python3 -m unittest discover tests
+# State
+npm run sync:status              # baton state and Antigravity token use
+npm run sync:reset               # clear the failure lock
+npm run hook:install             # install the pre-commit hook
 ```
+
+### Environment Variables
+
+| Variable | Effect |
+| :--- | :--- |
+| `BATON_GATEKEEPER=0` | Never launch Antigravity from `verify` (the pre-commit hook sets this). |
+| `BATON_AGY_MODEL` | Model for every launch. Default `gemini-3.8-flash-high`. |
+| `BATON_AGY_TIMEOUT` | Seconds before a launch is abandoned. Default `600`. |
+| `BATON_AGY_CMD` | Executable to launch. Default `agy`. |
+
+A launch is not free. The first real scout on the default model took four minutes and about 120,000 Antigravity tokens. `npm run sync:status` shows the running total. Set `BATON_AGY_MODEL` to a lighter model, such as `gemini-3.8-flash-low`, to trade depth for speed.
+
+---
+
+## Saving Claude Tokens
+
+- Plan on the session model; let the Sonnet `builder` agent implement.
+- One task per session. The handoff file makes a fresh session cheap.
+- Use `/caveman` for terse replies and `/ponytail` for the smallest workable change.
+- Keep Tier 1 and Tier 2 work out of the spec-and-plan process.

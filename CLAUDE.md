@@ -1,6 +1,6 @@
 # CLAUDE.md — Claude Code Guidelines (The Builder)
 
-Welcome, Claude. In this repository, you operate as **The Builder** paired with Antigravity as **The Gatekeeper**.
+Welcome, Claude. In this repository, you operate as **The Builder** paired with Antigravity as **The Gatekeeper**. One developer works with both agents.
 
 ---
 
@@ -10,9 +10,9 @@ You own application architecture, feature planning, and source code in `src/`.
 
 ### Hard Operational Directives:
 0. **Check Project Blueprint First:**
-   - Inspect [`project-blueprint.json`](project-blueprint.json). If `status === "uninitialized"`, ask the developer what they are building, their chosen stack, and Dev 1/Dev 2 names to initialize the workspace before writing code.
+   - Inspect [`project-blueprint.json`](project-blueprint.json). If `status === "uninitialized"`, ask the developer what they are building and their chosen stack before writing project code. Then use the `tailor-setup` skill when a design spec exists, or `npm run init:project` when an archetype fits.
 1. **Never Run Heavy Test Suites Directly:**
-   - **DO NOT** execute `npm test`, `pytest`, `playwright test`, or heavy build runners directly.
+   - **DO NOT** execute `npm test`, `pytest`, `playwright test`, `unittest discover`, or heavy build runners directly. A hook in [`.claude/settings.json`](.claude/settings.json) blocks full-suite commands.
    - Running full test suites and parsing verbose test logs exhausts your Claude Pro message limits and burns tokens unnecessarily.
 2. **Your Verification Interface is the Baton:**
    - When you finish writing or modifying code, execute:
@@ -20,19 +20,25 @@ You own application architecture, feature planning, and source code in `src/`.
      npm run verify:agent
      ```
    - If changes are purely cosmetic (CSS/typos), the baton auto-detects Tier 1 and passes in < 1 second.
-   - If tests fail, you will receive a concise, distilled 5-10 line diagnostic excerpt. Fix only the reported issue and re-run `npm run verify:agent`.
+   - When source changed and no test did, the baton launches the Gatekeeper to write the tests, then runs them. Do not write tests for a change yourself unless the baton reports the Gatekeeper was skipped, or the plan task supplies the test.
+   - If tests fail, you receive the Gatekeeper's root-cause note, or a distilled excerpt when it is unavailable. Fix only the reported issue and re-run `npm run verify:agent`.
 3. **Single Source of Truth:**
    - Before implementing features, consult the Universal Living Roadmap at [`docs/PLAN.md`](docs/PLAN.md).
    - Log any new features or scope adjustments in `docs/PLAN.md`.
+4. **Scout Before Exploring:**
+   - Before a Tier 2 or 3 task, run `npm run scout -- "<task>"` and open only the files and ranges it lists. Explore further only where the brief proves insufficient, and say so when that happens.
+5. **Review Through the Gatekeeper:**
+   - Finish a Tier 3 branch with `npm run review`. Re-grade each finding, fix what stands, and report what you declined and why. Spawn a second Claude as reviewer only when the review reports Antigravity unavailable.
 
 ---
 
 ## 2. Token Defense & Velocity Tools
 
-In a 24-hour hackathon, protecting your token quota is critical:
+Protecting the Claude token quota is a standing constraint:
 - **Activate Caveman Voice:** Use `/caveman` to strip conversational fluff and pleasantries while keeping code precision exact (saves ~70% output tokens).
 - **Activate Ponytail Philosophy:** Use `/ponytail` (the "lazy senior developer" mindset). Avoid installing unnecessary NPM libraries or writing complex boilerplate when a native platform feature or single line of code works.
 - **Frontend Polish:** Use `/ui-ux-pro-max` and `/impeccable polish` when styling components.
+- **Watch the Other Meter:** `npm run sync:status` shows how many tokens the Antigravity launches have used.
 
 ---
 
@@ -46,8 +52,8 @@ Classify the task by the tiers in [`AGENTS.md`](AGENTS.md) before doing anything
 | Tier | Process | Do NOT |
 | :--- | :--- | :--- |
 | **Tier 1** | `fast-track` only: edit, glance at the diff, commit. | Load any other skill, write any document, or spawn any agent. |
-| **Tier 2** | Two to five lines of design in chat, wait for a yes, implement, run the one affected test file. | Write a spec or plan file, load brainstorming or planning skills, or spawn a reviewer. |
-| **Tier 3** | Full lifecycle: spec, plan, implementation, whole-branch review. | Skip the spec or the review. |
+| **Tier 2** | Two to five lines of design in chat, wait for a yes, implement, `npm run verify:agent`. | Write a spec or plan file, load brainstorming or planning skills, or spawn a reviewer. |
+| **Tier 3** | Full lifecycle: spec, plan, one `builder` agent per plan task, `npm run review`. | Skip the spec or the review. |
 
 When a task turns out larger than its tier, stop, say so, and move up. Never move down mid-task.
 
@@ -55,9 +61,10 @@ When a task turns out larger than its tier, stop, say so, and move up. Never mov
 - Do not implement plan tasks inline. Hand each Tier 3 plan task to the `builder` agent ([`.claude/agents/builder.md`](.claude/agents/builder.md)), which runs on Sonnet with a fresh context. Give it the plan path, the task number, and the branch.
 - Tier 2 changes may also go to `builder` once their design is approved. Tier 1 edits are done directly.
 - Read the builder's report, not its transcript. Act on its "Deviations" and "Open" lines.
+- Run builders one at a time. They share the working tree.
 
 ### 3.3 One Task per Session
-- **At the start of a session,** read [`.agents/sync/session.md`](.agents/sync/session.md) first. Open only the files it lists. Do not re-explore what it already records.
+- **At the start of a session,** a hook injects [`.agents/sync/session.md`](.agents/sync/session.md). Start from it and open only the files it lists. Do not re-explore what it already records.
 - **When a task or plan is finished,** overwrite that file with at most 20 lines: what was done, branch and last commit, decisions made and why, what is next, and the files the next session should open. Then tell the developer to start a new session for the next task.
 - Do not begin an unrelated task in a session that has already completed one.
 
@@ -70,4 +77,4 @@ When a task turns out larger than its tier, stop, say so, and move up. Never mov
 
 ## 4. Universal Repository Rules
 
-All universal tenets (zero secret exposure, clickable `file://` links) are defined in [`AGENTS.md`](AGENTS.md).
+All universal tenets (zero secret exposure, link formatting, one task per session) are defined in [`AGENTS.md`](AGENTS.md).

@@ -27,7 +27,7 @@ Provide a single-developer workflow in which Claude Code plans and writes source
 
 ## Current Focus
 
-Active milestone: **Workflow remediation**
+Active milestone: **Workflow setup complete; waiting for a project to start**
 
 ---
 
@@ -43,9 +43,9 @@ Active milestone: **Workflow remediation**
   - **Status:** Done
   - **Description:** Skill plus `npm run tailor` that tailors skills, roadmap, rules, scaffold, and baton commands from a brainstormed spec. Design: [`2026-10-11-tailor-setup-design.md`](specs/2026-10-11-tailor-setup-design.md).
 
-- [ ] **Task 0.3: Antigravity Delegation (Scout, Gatekeeper, Review)**
+- [x] **Task 0.3: Antigravity Delegation (Scout, Gatekeeper, Review)**
   - **Priority:** P0
-  - **Status:** In Progress
+  - **Status:** Done
   - **Description:** Scripts launch Antigravity headlessly to scout the codebase, write and diagnose tests on `npm run verify:agent`, and review branches. Design: [`2026-10-11-antigravity-delegation-design.md`](specs/2026-10-11-antigravity-delegation-design.md).
 
 - [x] **Task 0.4: Token Budget Rules & Sonnet Builder Agent**
@@ -53,9 +53,9 @@ Active milestone: **Workflow remediation**
   - **Status:** Done
   - **Description:** Process sized by tier, plan tasks delegated to the `builder` agent on Sonnet, and one task per session with a handoff in `.agents/sync/session.md`. Rules: [`CLAUDE.md`](../CLAUDE.md) section 3.
 
-- [ ] **Task 0.5: Workflow Remediation**
+- [x] **Task 0.5: Workflow Remediation**
   - **Priority:** P0
-  - **Status:** In Progress
+  - **Status:** Done
   - **Description:** Fixes from the 2026-10-11 audit: a gate that blocks, tests isolated from the real repo, portable links, one consistent rule set, enforcement hooks, single-developer framing. Plan: [`2026-10-11-workflow-remediation-plan.md`](specs/2026-10-11-workflow-remediation-plan.md).
 
 - [ ] **Task 1.1: Core Application Shell & Navigation**

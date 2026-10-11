@@ -1,7 +1,7 @@
 # Design Spec: Antigravity Delegation (Scout, Gatekeeper, Review)
 
 - **Date:** 2026-10-11
-- **Status:** Draft / Pending Review
+- **Status:** Approved and implemented (see Amendments)
 - **Repository:** [`dual-yzentic-setup`](../../)
 - **Builds on:** [`2026-10-11-tailor-setup-design.md`](2026-10-11-tailor-setup-design.md) (branch `feat/tailor-setup`)
 
@@ -184,3 +184,17 @@ Python `unittest` in `tests/`, driving the Node scripts through `subprocess`, ag
 ## 9. Build Order
 
 One plan, in this order, each step usable before the next exists: launcher and scope guard; scout; Gatekeeper test writing; Gatekeeper diagnosis; review; documentation.
+
+---
+
+## Amendments (2026-10-11)
+
+Implemented by Tasks 4 to 7 of [`2026-10-11-workflow-remediation-plan.md`](2026-10-11-workflow-remediation-plan.md). Where this section and the text above differ, this section is what was built.
+
+- **Sync state is untracked.** `.agents/sync/` is git-ignored except `session.md`. `handoff.json`, `handoff.md`, `scout.md`, `review.md`, `review.diff`, and `last-failure.log` are local files.
+- **Change set.** File classification lives in `scripts/changes.mjs`. With a clean working tree the baton classifies the files of the last commit; with no files at all it runs Tier 3.
+- **Launcher signature.** `launchAgy({ job, prompt, allowEdits, timeoutSeconds, root })` returns `{ ok, response, usage, deniedActions, reason, detail, entry }`. It writes nothing; callers record `entry` with `appendDelegation`.
+- **Overrides.** `BATON_AGY_TIMEOUT` sets the timeout. A `BATON_AGY_CMD` ending in `.mjs` is run with Node, which is how the tests substitute a stub.
+- **Review flags.** `npm run review` also accepts `--spec <path>` and `--plan <path>` to override auto-detection.
+- **Handoff ticket.** After every `verify` the baton rewrites `.agents/sync/handoff.md` with the changed files and the Gatekeeper's report.
+- **npm argument trap.** `verify` also honours `npm_config_tier` and `npm_config_scope`, so the flags work without the `--` separator.
