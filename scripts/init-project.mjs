@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { syncSkillsToArchetype, listSkills } from './skills-manager.mjs';
 import { installHooks } from './install-hooks.mjs';
 import { scaffoldProject } from './scaffolder.mjs';
+import { generateRoadmap } from './roadmap.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,92 +25,17 @@ const HANDOFF_JSON_PATH = path.resolve(REPO_ROOT, '.agents', 'sync', 'handoff.js
 const HANDOFF_MD_PATH = path.resolve(REPO_ROOT, '.agents', 'sync', 'handoff.md');
 
 /**
- * Generate fresh living roadmap
+ * Placeholder roadmap tasks for a freshly initialized archetype project
  */
-function generateRoadmap({ name, desc, dev1, dev2, preset }) {
-  const dateStr = new Date().toISOString().split('T')[0];
-  return `# Universal Living Roadmap & Feature Plan: ${name}
-
-> **For ${dev1}, ${dev2}, and AI Agents:** This document is the single source of truth for the project. No feature is implemented without an entry here. Keep it updated after every completed task.
-
-- **Project:** ${name}
-- **Objective:** ${desc}
-- **Archetype:** ${preset}
-- **Last Synchronized:** ${dateStr}
-- **Sync Protocol:** [\`scripts/baton.mjs\`](file://${path.resolve(REPO_ROOT, 'scripts', 'baton.mjs')}) via \`npm run verify:agent\`
-
----
-
-## Mission & Hackathon Objective
-
-${desc}
-
----
-
-## Rules for Adding Features
-
-1. **No Rogue Work:** When either developer (or their AI agent) wants to add an idea, log it below with Priority, Owner, and initial status \`[ ] Backlog\`.
-2. **Prioritization Tiers:**
-   - **\`P0\` (Must-Have for Demo):** The core loop required for judges to understand and experience the product.
-   - **\`P1\` (High Impact Polish):** Visual enhancers, seed data, and animations that elevate demo day.
-   - **\`P2\` (Post-Hackathon Stretch):** Features that can wait until after judging.
-3. **Owner Assignment:** Always declare \`Owner: ${dev1}\` or \`Owner: ${dev2}\` to prevent git collisions.
-4. **Git Sync Cadence:** Pull before starting a task; commit and push immediately upon completing a task (\`git commit -m "feat: [feature name]"\`).
-
----
-
-## Current Sprint Focus
-
-Active milestone: **MVP Core Scaffolding & Initial Feature Loop**
-
----
-
-## P0: Must-Have for Demo
-
-- [ ] **Task 1.1: Core Application Shell & Navigation**
-  - **Priority:** P0
-  - **Owner:** ${dev1}
-  - **Status:** Backlog
-  - **Description:** Scaffolds primary app shell, responsive container, and header navigation.
-
-- [ ] **Task 1.2: Core Data Models & API Endpoints**
-  - **Priority:** P0
-  - **Owner:** ${dev2}
-  - **Status:** Backlog
-  - **Description:** Core data models and backend routes for the primary application flow.
-
-- [ ] **Task 1.3: Hero Flow & Interactive Value Loop**
-  - **Priority:** P0
-  - **Owner:** ${dev1}
-  - **Status:** Backlog
-  - **Description:** The primary user action that produces the "WOW" moment for judges.
-
----
-
-## P1: High Impact Polish
-
-- [ ] **Task 2.1: Demo Mock & Realistic Seed Data**
-  - **Priority:** P1
-  - **Owner:** ${dev2}
-  - **Status:** Backlog
-  - **Description:** Populate realistic transactions, profiles, and state using demo-seed-data.
-
-- [ ] **Task 2.2: UI Contrast, Responsive Refinement & Polish**
-  - **Priority:** P1
-  - **Owner:** ${dev1}
-  - **Status:** Backlog
-  - **Description:** Polish typography, animations, and WCAG contrast using ui-ux-pro-max and impeccable.
-
----
-
-## P2: Post-Hackathon / Stretch Goals
-
-- [ ] **Task 3.1: Secondary Edge-Case Workflows**
-  - **Priority:** P2
-  - **Owner:** ${dev2}
-  - **Status:** Backlog
-  - **Description:** Advanced configurations and secondary administrative settings.
-`;
+function defaultTasks(dev1, dev2) {
+  return [
+    { id: '1.1', title: 'Core Application Shell & Navigation', priority: 'P0', owner: dev1, description: 'Scaffolds primary app shell, responsive container, and header navigation.' },
+    { id: '1.2', title: 'Core Data Models & API Endpoints', priority: 'P0', owner: dev2, description: 'Core data models and backend routes for the primary application flow.' },
+    { id: '1.3', title: 'Hero Flow & Interactive Value Loop', priority: 'P0', owner: dev1, description: 'The primary user action that produces the "WOW" moment for judges.' },
+    { id: '2.1', title: 'Demo Mock & Realistic Seed Data', priority: 'P1', owner: dev2, description: 'Populate realistic transactions, profiles, and state using demo-seed-data.' },
+    { id: '2.2', title: 'UI Contrast, Responsive Refinement & Polish', priority: 'P1', owner: dev1, description: 'Polish typography, animations, and WCAG contrast using ui-ux-pro-max and impeccable.' },
+    { id: '3.1', title: 'Secondary Edge-Case Workflows', priority: 'P2', owner: dev2, description: 'Advanced configurations and secondary administrative settings.' }
+  ];
 }
 
 /**
@@ -155,7 +81,9 @@ export function initProject({ preset, name, desc, dev1, dev2, scaffold = true })
     desc: blueprint.project.description,
     dev1: dev1 || 'Dev 1',
     dev2: dev2 || 'Dev 2',
-    preset
+    preset,
+    tasks: defaultTasks(dev1 || 'Dev 1', dev2 || 'Dev 2'),
+    batonPath: path.resolve(REPO_ROOT, 'scripts', 'baton.mjs')
   });
   fs.writeFileSync(PLAN_PATH, roadmapContent, 'utf-8');
 
