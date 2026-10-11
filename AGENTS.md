@@ -15,7 +15,7 @@ To prevent token waste and latency, all tasks are classified into three operatio
 | Tier | Scope | Required Process & Verification |
 | :--- | :--- | :--- |
 | **Tier 1: Express Lane** *(Micro / Cosmetic)* | Pure CSS/Tailwind tweaks, copy/text edits, icon swaps, single-file non-structural adjustments. | Use [`fast-track`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/fast-track/SKILL.md). Auto-detected by `npm run verify:agent` or explicitly via `--tier 1`. **Exempt from Red-Green TDD, full regression runs, and production build.** |
-| **Tier 2: Standard Bounded Lane** *(Component / Fix)* | Localized component logic, single API route, or isolated bug fix. | Scoped TDD on the affected test file. Verified via `npm run verify:agent --tier 2 --scope <path>`. |
+| **Tier 2: Standard Bounded Lane** *(Component / Fix)* | Localized component logic, single API route, or isolated bug fix. | A short design agreed in chat; no spec or plan file. Scoped TDD on the affected test file. Verified via `npm run verify:agent --tier 2 --scope <path>`. |
 | **Tier 3: Architectural Deep Lane** *(Full Features)* | Multi-file features, database schema/migrations, authentication, breaking architectural changes. | Full Superpowers lifecycle: Spec (`superpowers:brainstorming`) → Plan (`superpowers:writing-plans`) → Full TDD → Full regression suite via `npm run verify:agent --tier 3` → Production build. |
 
 ---
@@ -29,8 +29,9 @@ To prevent token waste and latency, all tasks are classified into three operatio
 1. **Gate 1: Mandatory Skills Discovery & Invocation**
    - Read [`docs/ai/agent-handbook.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/ai/agent-handbook.md) to discover and invoke required domain skills before beginning any non-trivial user task.
    - For Tier 1 micro-tasks, invoke [`fast-track`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/fast-track/SKILL.md).
-2. **Gate 2: Spec & Plan First (Tier 2 & Tier 3)**
-   - For any multi-step task, complete requirements discovery (`superpowers:brainstorming`) and write an implementation plan (`superpowers:writing-plans`) in [`docs/specs/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/) before editing code.
+2. **Gate 2: Design Before Code, Sized to the Tier**
+   - **Tier 2:** state the design in a few lines in chat and wait for the developer's approval. Do not write a spec or plan file.
+   - **Tier 3:** complete requirements discovery (`superpowers:brainstorming`) and write an implementation plan (`superpowers:writing-plans`) in [`docs/specs/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/) before editing code.
    - Synchronize all planned work in [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md).
 3. **Gate 3: The Iron Law of TDD (Tier 2 & Tier 3)**
    - NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST for logic, mutations, or endpoints (`superpowers:test-driven-development`).
@@ -52,7 +53,9 @@ To prevent token waste and latency, all tasks are classified into three operatio
    - Maintain a markdown checklist (`- [ ]` / `- [x]`) tracking every phase of execution and keep [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md) updated.
 4. **Non-destructive & non-interactive execution:**
    - Always run commands non-interactively.
-5. **Zero secret exposure:**
+5. **One task per session:**
+   - On starting a session, read [`.agents/sync/session.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/sync/session.md) before exploring. On finishing a task, overwrite it with a summary of at most 20 lines (done, branch and commit, decisions, next step, files to open) so the next session starts small.
+6. **Zero secret exposure:**
    - Never print raw `.env` contents, API keys, credentials, or tokens. Use [`varlock`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/varlock/SKILL.md) and review against [`owasp-security`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/owasp-security/SKILL.md).
 
 ---

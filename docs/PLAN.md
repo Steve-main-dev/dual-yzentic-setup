@@ -52,6 +52,12 @@ Active milestone: **MVP Core Scaffolding & Dual-Agent Setup**
   - **Status:** Backlog
   - **Description:** Scripts launch Antigravity headlessly to scout the codebase, write and diagnose tests on `npm run verify:agent`, and review branches, moving that work off Claude quota. Design: [`docs/specs/2026-10-11-antigravity-delegation-design.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/2026-10-11-antigravity-delegation-design.md).
 
+- [x] **Task 0.4: Token Budget Rules & Sonnet Builder Agent**
+  - **Priority:** P0
+  - **Owner:** Dev 1
+  - **Status:** Done
+  - **Description:** Process sized by tier, plan tasks delegated to the `builder` agent on Sonnet, and one task per session with a written handoff in `.agents/sync/session.md`. Rules: [`CLAUDE.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/CLAUDE.md) section 3.
+
 - [ ] **Task 1.1: Core Application Shell & Routing**
   - **Priority:** P0
   - **Owner:** Dev 1
