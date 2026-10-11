@@ -34,6 +34,7 @@ New constraints from the developer: the setup is **not for hackathons** and is f
 - **Clean tree:** with nothing uncommitted, the baton classifies the files of the last commit; with no files at all it runs Tier 3.
 - **Review gains `--spec` and `--plan` flags** beyond the delegation spec, to override auto-detection.
 - **A `.mjs` path in `BATON_AGY_CMD` is run with Node.** This is how tests substitute a stub without a shell.
+- **The launcher's kill grace is configurable.** The process timeout is the launch timeout plus `BATON_AGY_GRACE` seconds (default 15). Tests set it to 1 so a timeout case does not take 16 seconds.
 
 ## Global Constraints
 
@@ -172,7 +173,7 @@ New constraints from the developer: the setup is **not for hackathons** and is f
 
 ### Task 5: Antigravity launcher and scope guard
 
-- [ ] **Status**
+- [x] **Status** (commit `28d4aab`)
 
 **Files:**
 - Create: `scripts/agy.mjs`, `tests/stubs/agy_stub.mjs`, `tests/test_agy_launcher.py`
