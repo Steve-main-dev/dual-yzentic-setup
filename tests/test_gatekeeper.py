@@ -139,7 +139,7 @@ class TestGatekeeper(unittest.TestCase):
         res = self.baton(root)
         self.assertEqual(res.returncode, 0, res.stderr)
         self.assertEqual(self.launches(), [])
-        self.assertEqual(self.state(root)["gatekeeper"], {"result": "not_needed", "tests_written": []})
+        self.assertEqual(self.state(root)["gatekeeper"], {"result": "not_needed", "tests_written": [], "out_of_scope": []})
 
     def test_no_gatekeeper_flag_launches_nothing(self):
         root = self.make_fixture()
@@ -192,6 +192,15 @@ class TestGatekeeper(unittest.TestCase):
         self.assertEqual(self.launches(), [])
         self.assertEqual(self.state(root)["gatekeeper"]["result"], "not_needed")
 
+    def test_configuration_only_changes_launch_nothing(self):
+        root = self.make_fixture(changes={"package.json": '{"name": "demo"}\n', ".gitignore": "node_modules/\n"})
+        res = self.baton(root)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertIn("Tier 2", res.stdout)
+        self.assertEqual(self.launches(), [])
+        self.assertIn("Executing test command", res.stdout)
+        self.assertEqual(self.state(root)["gatekeeper"], {"result": "not_needed", "tests_written": [], "out_of_scope": []})
+
     def test_source_without_tests_launches_with_edits_and_a_full_prompt(self):
         root = self.make_fixture()
         res = self.baton(root)
@@ -212,7 +221,7 @@ class TestGatekeeper(unittest.TestCase):
         ):
             self.assertIn(expected, prompt)
         self.assertTrue(prompt.endswith(PLAIN_PATHS_RULE), prompt)
-        self.assertEqual(self.state(root)["gatekeeper"], {"result": "ran", "tests_written": []})
+        self.assertEqual(self.state(root)["gatekeeper"], {"result": "ran", "tests_written": [], "out_of_scope": []})
 
     def test_tier_3_launches_too(self):
         root = self.make_fixture(changes={f"src/{name}.js": "module.exports = 1;\n" for name in "abcd"})
@@ -237,7 +246,7 @@ class TestGatekeeper(unittest.TestCase):
         root = self.make_fixture(NEEDS_GENERATED)
         res = self.baton(root, mode="write_test")
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
-        self.assertEqual(self.state(root)["gatekeeper"], {"result": "ran", "tests_written": ["tests/generated.test.js"]})
+        self.assertEqual(self.state(root)["gatekeeper"], {"result": "ran", "tests_written": ["tests/generated.test.js"], "out_of_scope": []})
         self.assertLess(res.stdout.index("Gatekeeper wrote"), res.stdout.index("Executing test command"))
         entry = self.state(root)["delegations"][0]
         self.assertEqual((entry["job"], entry["ok"], entry["total_tokens"]), ("write_tests", True, 1234))
@@ -262,6 +271,16 @@ class TestGatekeeper(unittest.TestCase):
         self.assertTrue((root / "src" / "app.js").read_text(encoding="utf-8").endswith("// touched by the stub\n"))
         self.assertEqual(self.state(root)["status"], "gatekeeper_out_of_scope")
 
+    def test_a_write_step_violation_is_recorded_and_reaches_the_ticket(self):
+        root = self.make_fixture()
+        res = self.baton(root, mode="write_source")
+        self.assertEqual(res.returncode, 1)
+        self.assertEqual(self.state(root)["gatekeeper"]["out_of_scope"], ["src/rogue.js"])
+        report = self.handoff(root).split(REPORT_HEADING)[1]
+        self.assertIn("Out of scope (not reverted):", report)
+        self.assertIn("- src/rogue.js", report)
+        self.assertNotIn("Not launched.", report)
+
     def test_active_agent_is_claude_after_every_outcome(self):
         for mode, env in (("success", None), ("fail_exit", None), ("sleep", {"BATON_AGY_TIMEOUT": "1"})):
             with self.subTest(mode):
@@ -276,7 +295,7 @@ class TestGatekeeper(unittest.TestCase):
         res = self.baton(root, mode="sleep", env={"BATON_AGY_TIMEOUT": "1"})
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
         self.assertIn("Gatekeeper skipped (timeout): tests for this change are still owed.", res.stdout)
-        self.assertEqual(self.state(root)["gatekeeper"], {"result": "skipped", "tests_written": []})
+        self.assertEqual(self.state(root)["gatekeeper"], {"result": "skipped", "tests_written": [], "out_of_scope": []})
 
     def test_the_scope_guard_still_runs_after_a_timed_out_launch(self):
         root = self.make_fixture()
@@ -299,7 +318,7 @@ class TestGatekeeper(unittest.TestCase):
                 self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
                 self.assertIn(f"[Baton] Gatekeeper skipped ({reason}): tests for this change are still owed.", res.stdout)
                 self.assertIn("Executing test command", res.stdout)
-                self.assertEqual(self.state(root)["gatekeeper"], {"result": "skipped", "tests_written": []})
+                self.assertEqual(self.state(root)["gatekeeper"], {"result": "skipped", "tests_written": [], "out_of_scope": []})
                 self.assertIn("still owed", self.handoff(root))
 
     # Diagnosing failures
@@ -344,6 +363,22 @@ class TestGatekeeper(unittest.TestCase):
         self.assertIn("boom: expected 1 got 2", res.stderr)
         self.assertNotIn(DIAGNOSIS_HEADING, res.stderr)
         self.assertEqual(self.state(root)["active_agent"], "claude")
+
+    def test_a_diagnosis_step_violation_is_recorded_and_the_run_stays_verification_failed(self):
+        root = self.make_fixture(FAIL, changes={"src/app.js": "module.exports = 1;\n", "tests/app.test.js": "// test\n"})
+        res = self.baton(root, mode="write_source")  # a test changed, so only the diagnosis launches
+        self.assertEqual(res.returncode, 1, res.stdout)
+        self.assertEqual(len(self.launches()), 1)
+        self.assertIn("[Baton] The Gatekeeper changed files during a read-only diagnosis:", res.stderr)
+        self.assertIn("src/rogue.js", res.stderr)
+        self.assertTrue((root / "src" / "rogue.js").exists())  # nothing is reverted
+        state = self.state(root)
+        self.assertEqual((state["status"], state["turn_count"]), ("verification_failed", 1))
+        self.assertEqual(state["gatekeeper"]["out_of_scope"], ["src/rogue.js"])
+        report = self.handoff(root).split(REPORT_HEADING)[1]
+        self.assertIn("Out of scope (not reverted):", report)
+        self.assertIn("- src/rogue.js", report)
+        self.assertNotIn("Not launched.", report)
 
     def test_state_says_antigravity_during_both_launches_and_the_note_reaches_the_ticket(self):
         root = self.make_fixture(FAIL)  # no tests changed and the tests fail: a write launch, then a diagnosis launch

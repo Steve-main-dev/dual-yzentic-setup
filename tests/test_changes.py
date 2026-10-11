@@ -19,7 +19,7 @@ class TestChanges(unittest.TestCase):
     def write(self, rel, text="x\n"):
         path = self.root / rel
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8", newline="\n")
 
     def commit_all(self, message="change"):
         self.git("add", "-A")
@@ -106,7 +106,8 @@ class TestChanges(unittest.TestCase):
     def test_source_file_classification(self):
         paths = {
             "src/app.js": True,
-            "package.json": True,
+            "config/settings.py": True,  # the directory name does not start with a dot
+            "lib/package.json.js": True,
             "tests/app.test.js": False,
             "README.md": False,
             "docs/notes.txt": False,
@@ -116,6 +117,29 @@ class TestChanges(unittest.TestCase):
         }
         flags = self.call(f"{json.dumps(list(paths))}.map(changes.isSourceFile)")
         self.assertEqual(flags, list(paths.values()))
+
+    def test_configuration_is_not_source(self):
+        paths = [
+            ".claude/settings.json",
+            ".githooks/pre-commit",
+            ".github/workflows/ci.yml",
+            ".gitignore",
+            ".env.example",
+            "src/.eslintrc.js",
+            "package.json",
+            "web/package.json",
+            "project-blueprint.json",
+            "package-lock.json",
+            "pnpm-lock.yaml",
+            "yarn.lock",
+            "bun.lockb",
+            "uv.lock",
+            "poetry.lock",
+            "Cargo.lock",
+            "go.sum",
+            "app/yarn.lock",
+        ]
+        self.assertEqual(self.call(f"{json.dumps(paths)}.map(changes.isSourceFile)"), [False] * len(paths))
 
     def test_snapshot_hashes_changed_files_and_maps_a_deletion_to_null(self):
         self.write("src/app.js")
@@ -148,6 +172,46 @@ class TestChanges(unittest.TestCase):
     def test_unchanged_paths_are_in_scope(self):
         state = {"src/app.js": "h1", "tests/a.test.js": "h2", "src/gone.js": None}
         self.assertEqual(self.scope(state, state, True), {"testsWritten": [], "outOfScope": []})
+
+    def test_a_path_missing_from_after_is_out_of_scope_in_both_modes(self):
+        before = {"src/new.js": "h1", "tests/old.test.js": "h2"}
+        for allow_edits in (False, True):
+            with self.subTest(allow_edits=allow_edits):
+                result = self.scope(before, {}, allow_edits)
+                self.assertEqual(result, {"testsWritten": [], "outOfScope": ["src/new.js", "tests/old.test.js"]})
+
+    def disappearance(self, vanish):
+        """checkScope over a real repo: `vanish` runs in the fixture between the two snapshots."""
+        code = f"""
+        import * as changes from './scripts/changes.mjs';
+        import {{ rmSync, writeFileSync }} from 'node:fs';
+        const root = {json.dumps(str(self.root))};
+        const before = changes.snapshotChanges(root);
+        {vanish}
+        console.log(JSON.stringify(changes.checkScope(before, changes.snapshotChanges(root), {{ allowEdits: true }})));
+        """
+        res = repo_fixture.run_node(code)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        return json.loads(res.stdout.strip())
+
+    def test_an_untracked_file_deleted_during_a_launch_is_out_of_scope(self):
+        self.fixture()
+        self.write("src/new.js")
+        result = self.disappearance("rmSync(root + '/src/new.js');")
+        self.assertEqual(result, {"testsWritten": [], "outOfScope": ["src/new.js"]})
+
+    def test_a_tracked_file_restored_to_its_committed_content_is_out_of_scope(self):
+        self.write("src/app.js", "committed\n")
+        repo_fixture.git_init(self.root)
+        self.write("src/app.js", "builder edit\n")
+        result = self.disappearance("writeFileSync(root + '/src/app.js', 'committed\\n');")
+        self.assertEqual(result, {"testsWritten": [], "outOfScope": ["src/app.js"]})
+
+    def test_a_tracked_file_deleted_during_a_launch_is_still_out_of_scope(self):
+        self.write("src/app.js", "committed\n")
+        repo_fixture.git_init(self.root)
+        result = self.disappearance("rmSync(root + '/src/app.js');")
+        self.assertEqual(result, {"testsWritten": [], "outOfScope": ["src/app.js"]})
 
     def test_file_already_changed_and_modified_again_is_caught_by_its_hash(self):
         self.write("src/app.js")

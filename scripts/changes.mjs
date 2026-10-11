@@ -32,11 +32,25 @@ export function isTestFile(path) {
   return parts.slice(0, -1).some(dir => TEST_DIRS.includes(dir)) || TEST_NAME.test(parts[parts.length - 1]);
 }
 
+const CONFIG_NAMES = [
+  'package.json', 'project-blueprint.json',
+  'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lockb', 'uv.lock', 'poetry.lock', 'Cargo.lock', 'go.sum'
+];
+
 /**
- * A source file is anything that is not a test, not cosmetic, and not agent state.
+ * Configuration is any dotfile or dot-directory (.agents, .claude, .github, .gitignore, ...), the package and
+ * blueprint manifests, and the lockfiles.
+ */
+function isConfigFile(path) {
+  const parts = path.split('/');
+  return parts.some(part => part.startsWith('.')) || CONFIG_NAMES.includes(parts[parts.length - 1]);
+}
+
+/**
+ * A source file is anything that is not a test, not cosmetic, and not configuration or agent state.
  */
 export function isSourceFile(path) {
-  return !isTestFile(path) && !isCosmeticFile(path) && !path.startsWith('.agents/');
+  return !isTestFile(path) && !isCosmeticFile(path) && !isConfigFile(path);
 }
 
 function git(root, args) {
@@ -106,6 +120,7 @@ export function snapshotChanges(root = REPO_ROOT) {
 
 /**
  * Compare two snapshots. A path changed if it is new in `after` or its hash differs.
+ * A path missing from `after` was deleted, or restored to its committed content: always out of scope.
  * Read-only runs may change nothing; with allowEdits only test files may change.
  */
 export function checkScope(before, after, { allowEdits = false } = {}) {
@@ -114,6 +129,9 @@ export function checkScope(before, after, { allowEdits = false } = {}) {
   for (const [path, hash] of after) {
     if (before.has(path) && before.get(path) === hash) continue;
     (allowEdits && isTestFile(path) ? testsWritten : outOfScope).push(path);
+  }
+  for (const path of before.keys()) {
+    if (!after.has(path)) outOfScope.push(path);
   }
   return { testsWritten, outOfScope };
 }

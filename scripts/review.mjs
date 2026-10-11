@@ -21,6 +21,8 @@ const DIFF_FILE = '.agents/sync/review.diff';
 
 /**
  * Read the four `--flag <value>` options; anything else is an error.
+ * `npm run review --base x` (no `--`) is swallowed by npm and arrives as npm_config_base, so the environment
+ * fills in --base, --spec and --plan when their flags are absent.
  */
 function parseArgs(args) {
   const options = { root: REPO_ROOT, base: null, spec: null, plan: null };
@@ -30,6 +32,9 @@ function parseArgs(args) {
     if (!value || value.startsWith('--')) return { error: `[Review] ${args[i]} requires a value` };
     options[args[i].slice(2)] = value;
     i++;
+  }
+  for (const name of ['base', 'spec', 'plan']) {
+    options[name] ??= process.env[`npm_config_${name}`] || null;
   }
   options.root = resolve(options.root);
   return options;
@@ -92,6 +97,7 @@ function buildPrompt(base, spec, plan) {
     ...(plan ? [`Plan: ${plan}`] : []),
     'Report findings under three headings, in this order: Critical, Important, Minor.',
     'For each finding give the file and line, what is wrong, and why it matters.',
+    'Give line numbers from the file itself, not positions in the diff file.',
     'End with a one-line verdict. Answer in at most 60 lines.',
     'Read only. Edit nothing. Run nothing.',
     PLAIN_PATHS_RULE
@@ -133,6 +139,7 @@ export async function main() {
     return;
   }
 
+  console.log(`[Review] Reviewing ${base}..HEAD`);
   const diffPath = resolve(root, DIFF_FILE);
   mkdirSync(dirname(diffPath), { recursive: true });
   writeFileSync(diffPath, diff, 'utf-8');

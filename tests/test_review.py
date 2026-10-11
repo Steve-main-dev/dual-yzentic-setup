@@ -59,12 +59,12 @@ class TestReview(unittest.TestCase):
                 (specs / name).write_text("# Plan\n", encoding="utf-8")
         return repo_fixture.git_init(root)
 
-    def review(self, *flags, mode="success", root=None, cmd=None):
+    def review(self, *flags, mode="success", root=None, cmd=None, env=None):
         """Run review.mjs as a subprocess from outside the fixture, with the stub wired in."""
-        env = {k: v for k, v in os.environ.items() if not k.startswith(("BATON_AGY_", "STUB_"))}
-        env.update({"BATON_AGY_CMD": cmd or str(STUB), "STUB_MODE": mode, "STUB_ARGS_FILE": str(self.args_file)})
+        clean = {k: v for k, v in os.environ.items() if not k.startswith(("BATON_AGY_", "STUB_", "npm_config_"))}
+        clean.update({"BATON_AGY_CMD": cmd or str(STUB), "STUB_MODE": mode, "STUB_ARGS_FILE": str(self.args_file), **(env or {})})
         argv = ["node", str(REVIEW), *flags, "--root", str(root or self.root)]
-        return subprocess.run(argv, cwd=self.tmp.name, capture_output=True, text=True, env=env)
+        return subprocess.run(argv, cwd=self.tmp.name, capture_output=True, text=True, env=clean)
 
     def recorded_args(self):
         return [json.loads(line) for line in self.args_file.read_text(encoding="utf-8").splitlines()]
@@ -96,11 +96,51 @@ class TestReview(unittest.TestCase):
         self.assertIn("Read only. Edit nothing. Run nothing.", prompt)
         self.assertTrue(prompt.endswith(PLAIN_PATHS_RULE), prompt)
 
+    def test_the_prompt_asks_for_line_numbers_from_the_file_before_the_plain_paths_rule(self):
+        self.review()
+        prompt = self.prompt()
+        sentence = "Give line numbers from the file itself, not positions in the diff file."
+        self.assertIn(sentence, prompt)
+        self.assertLess(prompt.index(sentence), prompt.index(PLAIN_PATHS_RULE))
+        self.assertTrue(prompt.endswith(PLAIN_PATHS_RULE), prompt)
+
     def test_base_flag_picks_the_diff_range(self):
         res = self.review("--base", "HEAD~1")
         self.assertEqual(res.returncode, 0, res.stderr)
         self.assertIn("src/beta.js", self.diff())
         self.assertNotIn("src/alpha.js", self.diff())
+
+    def test_a_launch_is_announced_with_its_range(self):
+        res = self.review("--base", "HEAD~1")
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(res.stdout.splitlines(), ["[Review] Reviewing HEAD~1..HEAD", "ok"])
+
+    def test_npm_config_base_selects_the_base_when_the_flag_is_absent(self):
+        # npm swallows `--base x` after `npm run review` and exports it as npm_config_base
+        res = self.review(env={"npm_config_base": "HEAD~1"})
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertIn("src/beta.js", self.diff())
+        self.assertNotIn("src/alpha.js", self.diff())
+        self.assertIn("[Review] Reviewing HEAD~1..HEAD", res.stdout.splitlines())
+
+    def test_the_base_flag_wins_over_npm_config_base(self):
+        res = self.review("--base", "HEAD~1", env={"npm_config_base": "HEAD~2"})
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertIn("src/beta.js", self.diff())
+        self.assertNotIn("src/alpha.js", self.diff())
+        self.assertIn("[Review] Reviewing HEAD~1..HEAD", res.stdout.splitlines())
+
+    def test_npm_config_spec_and_plan_apply_unless_the_flags_are_given(self):
+        self.review(env={"npm_config_spec": "docs/specs/env-design.md", "npm_config_plan": "docs/specs/env-plan.md"})
+        self.assertIn("docs/specs/env-design.md", self.prompt())
+        self.assertIn("docs/specs/env-plan.md", self.prompt())
+        self.args_file.unlink()
+        self.review("--spec", "docs/specs/flag-design.md", "--plan", "docs/specs/flag-plan.md",
+                    env={"npm_config_spec": "docs/specs/env-design.md", "npm_config_plan": "docs/specs/env-plan.md"})
+        self.assertIn("docs/specs/flag-design.md", self.prompt())
+        self.assertIn("docs/specs/flag-plan.md", self.prompt())
+        self.assertNotIn("env-design", self.prompt())
+        self.assertNotIn("env-plan", self.prompt())
 
     def test_without_a_main_branch_the_base_is_head_minus_one(self):
         git(self.root, "branch", "-D", "main")
@@ -154,7 +194,7 @@ class TestReview(unittest.TestCase):
     def test_the_review_is_written_and_printed_unchanged(self):
         res = self.review()
         self.assertEqual(res.returncode, 0, res.stderr)
-        self.assertEqual(res.stdout.strip(), "ok")
+        self.assertEqual(res.stdout.splitlines()[-1], "ok")
         self.assertEqual((self.root / ".agents" / "sync" / "review.md").read_text(encoding="utf-8").strip(), "ok")
 
     def test_files_written_under_agents_sync_are_not_a_scope_violation(self):

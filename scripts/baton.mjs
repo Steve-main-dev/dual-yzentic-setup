@@ -271,7 +271,7 @@ export async function main() {
     };
 
     console.log(`\n[Baton] Verifying changes (Tier ${tier}${tierOverride ? ' - manual override' : ' - auto-detected'})...`);
-    state.gatekeeper = { result: 'not_needed', tests_written: [] };
+    state.gatekeeper = { result: 'not_needed', tests_written: [], out_of_scope: [] };
 
     if (isExpress) {
       console.log('[Baton] Tier 1 Express Lane: Cosmetic/asset changes detected. Full tests bypassed.');
@@ -284,7 +284,7 @@ export async function main() {
     if (shouldWriteTests({ tier, files: modified, disabled: disabled || Boolean(scopeOverride) })) {
       console.log('[Baton] Source changed with no test changes: asking the Gatekeeper to write tests...');
       const outcome = writeTests({ root, state, files: modified, saveState });
-      state.gatekeeper = { result: outcome.result, tests_written: outcome.testsWritten };
+      state.gatekeeper = { result: outcome.result, tests_written: outcome.testsWritten, out_of_scope: outcome.outOfScope };
       if (outcome.outOfScope.length > 0) {
         settle('gatekeeper_out_of_scope');
         console.error('\n[Baton] FAIL: The Gatekeeper changed files other than tests:');
@@ -320,7 +320,10 @@ export async function main() {
       process.exit(0);
     } else {
       state.turn_count = (state.turn_count || 0) + 1;
-      const diagnosis = disabled ? null : diagnoseFailure({ root, state, output: testOutput, saveState });
+      const { note: diagnosis, outOfScope } = disabled
+        ? { note: null, outOfScope: [] }
+        : diagnoseFailure({ root, state, output: testOutput, saveState });
+      state.gatekeeper.out_of_scope = outOfScope;
       settle('verification_failed', diagnosis);
 
       console.error('\n[Baton] FAIL: Verification failed.');
@@ -333,6 +336,11 @@ export async function main() {
         console.error('\n--- Distilled Failure Diagnostic (For Claude Code) ---');
         console.error(distillDiagnostics(testOutput));
         console.error('------------------------------------------------------\n');
+      }
+      if (outOfScope.length > 0) {
+        console.error('[Baton] The Gatekeeper changed files during a read-only diagnosis:');
+        for (const path of outOfScope) console.error(`  ${path}`);
+        console.error('Nothing was reverted. Inspect these files before continuing.\n');
       }
       process.exit(1);
     }

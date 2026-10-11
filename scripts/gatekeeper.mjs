@@ -104,7 +104,7 @@ export function writeTests({ root, state, files, saveState = () => {} }) {
 
 /**
  * Ask Antigravity, read only, for a root-cause note on a failed test run.
- * Returns the note, or null when the launch was not ok. Files changed during the launch are reported, never reverted.
+ * Returns the note (null when the launch was not ok) and the files changed during the launch, which are never reverted.
  */
 export function diagnoseFailure({ root, state, output, saveState = () => {} }) {
   const logPath = resolve(root, FAILURE_LOG);
@@ -115,15 +115,11 @@ export function diagnoseFailure({ root, state, output, saveState = () => {} }) {
   const launch = launchAsAntigravity(state, saveState, { job: 'diagnose', prompt: buildDiagnosePrompt(root), root });
   const { outOfScope } = checkScope(before, snapshotChanges(root));
 
-  if (outOfScope.length > 0) {
-    console.error('[Baton] Antigravity changed files during a read-only diagnosis:');
-    for (const path of outOfScope) console.error(`  ${path}`);
-  }
   if (!launch.ok) {
     console.error(`[Baton] Gatekeeper diagnosis unavailable (${launch.reason}).`);
-    return null;
+    return { note: null, outOfScope };
   }
-  return launch.response.trim();
+  return { note: launch.response.trim(), outOfScope };
 }
 
 /**
@@ -131,9 +127,13 @@ export function diagnoseFailure({ root, state, output, saveState = () => {} }) {
  */
 export function renderHandoff({ state, tier, files, diagnosis = null }) {
   const written = state.gatekeeper?.tests_written ?? [];
+  const outOfScope = state.gatekeeper?.out_of_scope ?? [];
   const report = [];
   if (written.length > 0) report.push('Tests written:', ...written.map(path => `- ${path}`));
   if (diagnosis) report.push(...(report.length > 0 ? [''] : []), 'Diagnosis:', diagnosis);
+  if (outOfScope.length > 0) {
+    report.push(...(report.length > 0 ? [''] : []), 'Out of scope (not reverted):', ...outOfScope.map(path => `- ${path}`));
+  }
   if (report.length === 0) report.push('Not launched.');
   if (state.gatekeeper?.result === 'skipped') {
     report.push('', 'Gatekeeper skipped: tests for this change are still owed.');
