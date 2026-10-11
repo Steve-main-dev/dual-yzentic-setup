@@ -17,6 +17,7 @@ const REPO_ROOT = resolve(__dirname, '..');
 
 export const SYNC_JSON_PATH = resolve(REPO_ROOT, '.agents/sync/handoff.json');
 export const SYNC_MD_PATH = resolve(REPO_ROOT, '.agents/sync/handoff.md');
+export const BLUEPRINT_PATH = resolve(REPO_ROOT, 'project-blueprint.json');
 
 const DEFAULT_STATE = {
   version: '1.0',
@@ -121,11 +122,35 @@ export function detectExecutionTier(modifiedFiles = []) {
 }
 
 /**
+ * Read the project's verify commands from the blueprint.
+ * Returns null until the project is initialized, or if the blueprint is missing or unreadable.
+ */
+export function readVerifyConfig(blueprintPath = BLUEPRINT_PATH) {
+  try {
+    const blueprint = JSON.parse(readFileSync(blueprintPath, 'utf-8'));
+    const verify = blueprint.project?.verify;
+    if (blueprint.status !== 'initialized') return null;
+    if (typeof verify?.test !== 'string' || verify.test.trim().length === 0) return null;
+    return verify;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Determine the test command to run for a given tier.
  */
-export function resolveTestExecution(tier, scope) {
+export function resolveTestExecution(tier, scope, verify = null) {
   if (tier === 1) {
     return { command: 'git diff --stat', isExpress: true };
+  }
+
+  if (scope && verify?.test_scoped) {
+    return { command: verify.test_scoped.split('{scope}').join(scope), isExpress: false };
+  }
+
+  if (!scope && verify?.test) {
+    return { command: verify.test, isExpress: false };
   }
 
   if (scope) {
@@ -211,7 +236,7 @@ export async function main() {
 
     const modified = getGitModifiedFiles();
     const tier = tierOverride || detectExecutionTier(modified);
-    const { command: testCmd, isExpress } = resolveTestExecution(tier, scopeOverride);
+    const { command: testCmd, isExpress } = resolveTestExecution(tier, scopeOverride, readVerifyConfig());
 
     console.log(`\n[Baton] Verifying changes (Tier ${tier}${tierOverride ? ' - manual override' : ' - auto-detected'})...`);
 
