@@ -46,11 +46,11 @@ Active milestone: **MVP Core Scaffolding & Dual-Agent Setup**
   - **Status:** Done
   - **Description:** Skill plus `npm run tailor` that tailors skills, roadmap, rules, scaffold, and baton commands from a brainstormed spec. Design: [`docs/specs/2026-10-11-tailor-setup-design.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/2026-10-11-tailor-setup-design.md).
 
-- [ ] **Task 0.3: Automated Gatekeeper on Verify**
+- [ ] **Task 0.3: Antigravity Delegation (Scout, Gatekeeper, Review)**
   - **Priority:** P0
   - **Owner:** Dev 1
   - **Status:** Backlog
-  - **Description:** `npm run verify:agent` launches Antigravity headlessly to write tests for untested code changes, then runs them. Design: [`docs/specs/2026-10-11-gatekeeper-on-verify-design.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/2026-10-11-gatekeeper-on-verify-design.md).
+  - **Description:** Scripts launch Antigravity headlessly to scout the codebase, write and diagnose tests on `npm run verify:agent`, and review branches, moving that work off Claude quota. Design: [`docs/specs/2026-10-11-antigravity-delegation-design.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/2026-10-11-antigravity-delegation-design.md).
 
 - [ ] **Task 1.1: Core Application Shell & Routing**
   - **Priority:** P0
