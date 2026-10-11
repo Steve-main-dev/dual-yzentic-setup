@@ -1,5 +1,6 @@
 import copy
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -8,9 +9,9 @@ from pathlib import Path
 from tests.tailor_fixture import SCRIPTS, VALID_PROJECT, make_repo, skill_dirs
 
 
-def tailor(root, *flags):
+def tailor(root, *flags, env=None):
     cmd = ["node", str(SCRIPTS / "tailor.mjs"), "--root", str(root), *flags]
-    return subprocess.run(cmd, capture_output=True, text=True)
+    return subprocess.run(cmd, capture_output=True, text=True, env=env)
 
 
 def snapshot(root):
@@ -126,6 +127,85 @@ class TestTailorApply(unittest.TestCase):
         res = tailor(root)
         self.assertEqual(res.returncode, 0, res.stderr)
         self.assertFalse((root / ".githooks").exists())
+
+    def test_npm_swallowed_dry_run_flag_is_still_a_dry_run(self):
+        # `npm run tailor --dry-run` (no `--`) reaches the script only as npm_config_dry_run
+        root = self.repo()
+        before = snapshot(root)
+
+        res = tailor(root, env=dict(os.environ, npm_config_dry_run="true"))
+
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(snapshot(root), before)
+        self.assertIn("Dry run", res.stdout)
+
+    def test_unknown_flag_is_rejected(self):
+        root = self.repo()
+        before = snapshot(root)
+
+        res = tailor(root, "--dryrun")
+
+        self.assertEqual(res.returncode, 1)
+        self.assertIn("--dryrun", res.stderr)
+        self.assertEqual(snapshot(root), before)
+
+    def test_root_without_value_is_rejected(self):
+        res = subprocess.run(["node", str(SCRIPTS / "tailor.mjs"), "--root"], capture_output=True, text=True)
+        self.assertEqual(res.returncode, 1)
+        self.assertIn("--root", res.stderr)
+
+    def test_partial_failure_stays_uninitialized_and_rerun_converges(self):
+        root = self.repo()
+        plan = root / "docs" / "PLAN.md"
+        plan.unlink()
+        plan.mkdir()  # makes the roadmap write fail after skills have moved
+
+        res = tailor(root)
+        self.assertEqual(res.returncode, 1)
+        self.assertEqual(self.read_json(root, "project-blueprint.json")["status"], "uninitialized")
+
+        plan.rmdir()
+        res = tailor(root)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(self.read_json(root, "project-blueprint.json")["status"], "initialized")
+        self.assertEqual(skill_dirs(root, "skills-archive"), {"beta"})
+        self.assertIn("Task 1.1: Canvas shell", plan.read_text(encoding="utf-8"))
+
+    def test_git_repo_gets_the_hook(self):
+        root = self.repo()
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True, capture_output=True)
+
+        res = tailor(root)
+
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertTrue((root / ".githooks" / "pre-commit").exists())
+        hooks_path = subprocess.run(["git", "config", "core.hooksPath"], cwd=root, capture_output=True, text=True)
+        self.assertEqual(hooks_path.stdout.strip(), ".githooks")
+
+    def test_missing_project_block(self):
+        root = self.repo()
+        (root / "project-blueprint.json").write_text(json.dumps({"status": "uninitialized"}), encoding="utf-8")
+        before = snapshot(root)
+
+        res = tailor(root)
+
+        self.assertEqual(res.returncode, 1)
+        self.assertIn("project:", res.stderr)
+        self.assertEqual(snapshot(root), before)
+
+    def test_non_directory_skill_names_are_rejected(self):
+        for bad in ["../alpha", "_staging", ""]:
+            with self.subTest(name=bad):
+                project = copy.deepcopy(VALID_PROJECT)
+                project["skills"] = ["alpha", bad]
+                root = self.repo(project=project)
+                before = snapshot(root)
+
+                res = tailor(root)
+
+                self.assertEqual(res.returncode, 1)
+                self.assertIn("project.skills", res.stderr)
+                self.assertEqual(snapshot(root), before)
 
 
 if __name__ == "__main__":

@@ -242,13 +242,21 @@ export function tailorProject({ root = REPO_ROOT, dryRun = false, force = false 
  */
 export function main() {
   const args = process.argv.slice(2);
-  const options = { dryRun: args.includes('--dry-run'), force: args.includes('--force') };
-  const rootIndex = args.indexOf('--root');
-  if (rootIndex !== -1 && args[rootIndex + 1]) {
-    options.root = path.resolve(args[rootIndex + 1]);
-  }
+  // `npm run tailor --dry-run` (without `--`) is swallowed by npm and only reaches us as this env var
+  const options = { dryRun: process.env.npm_config_dry_run === 'true', force: false };
 
   try {
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === '--dry-run') options.dryRun = true;
+      else if (args[i] === '--force') options.force = true;
+      else if (args[i] === '--root') {
+        if (!args[i + 1] || args[i + 1].startsWith('--')) throw new Error('--root requires a path');
+        options.root = path.resolve(args[++i]);
+      } else {
+        throw new Error(`Unknown argument: ${args[i]}. Use --dry-run, --force, or --root <path>.`);
+      }
+    }
+
     const res = tailorProject(options);
     const list = (names) => (names.length > 0 ? names.join(', ') : '(none)');
     console.log(`[Tailor] archive: ${list(res.changes.archive)}`);

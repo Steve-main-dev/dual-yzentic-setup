@@ -45,6 +45,12 @@ class TestTailorValidation(unittest.TestCase):
             (lambda p: p["roadmap"][1].update(owner="Bob"), "project.roadmap[1].owner"),
             (lambda p: p["roadmap"][1].update(id="1.1"), "project.roadmap[1].id"),
             (lambda p: p["roadmap"][0].update(title=""), "project.roadmap[0].title"),
+            (lambda p: p["team"]["dev1"].update(name=" "), "project.team.dev1.name"),
+            (lambda p: p["roadmap"][0].update(description=""), "project.roadmap[0].description"),
+            (lambda p: p["roadmap"].__setitem__(1, "not a task"), "project.roadmap[1]"),
+            (lambda p: p.update(source_spec=str(self.root / "docs" / "specs" / "demo-design.md")), "project.source_spec"),
+            (lambda p: p.update(skills=["alpha", "../alpha"]), "project.skills"),
+            (lambda p: p.update(skills=["_staging"]), "project.skills"),
         ]
         for mutate, expected in cases:
             with self.subTest(field=expected):
