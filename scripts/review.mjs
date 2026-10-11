@@ -10,7 +10,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, relative, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { launchAgy, appendDelegation } from './agy.mjs';
+import { launchAgy, appendDelegation, PLAIN_PATHS_RULE } from './agy.mjs';
 import { snapshotChanges, checkScope } from './changes.mjs';
 import { readSyncState, writeSyncState, syncPaths } from './baton.mjs';
 
@@ -93,7 +93,8 @@ function buildPrompt(base, spec, plan) {
     'Report findings under three headings, in this order: Critical, Important, Minor.',
     'For each finding give the file and line, what is wrong, and why it matters.',
     'End with a one-line verdict. Answer in at most 60 lines.',
-    'Read only. Edit nothing. Run nothing.'
+    'Read only. Edit nothing. Run nothing.',
+    PLAIN_PATHS_RULE
   ].join('\n');
 }
 

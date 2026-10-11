@@ -11,6 +11,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import { isCosmeticFile, resolveChangeSet } from './changes.mjs';
+import { gatekeeperDisabled, shouldWriteTests, writeTests, diagnoseFailure, writeHandoff } from './gatekeeper.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -256,17 +257,44 @@ export async function main() {
     if (source === 'last-commit') console.log(CLEAN_TREE_NOTE);
     const tier = tierOverride || detectExecutionTier(modified);
     const { command: testCmd, isExpress } = resolveTestExecution(tier, scopeOverride, readVerifyConfig(resolve(root, 'project-blueprint.json')));
+    const disabled = gatekeeperDisabled(args);
+    const saveState = () => writeSyncState(state, syncJson);
+
+    // Record the verdict in handoff.json and rewrite handoff.md
+    const settle = (status, diagnosis = null) => {
+      state.status = status;
+      state.last_updated = new Date().toISOString();
+      state.files_modified = modified;
+      saveState();
+      writeHandoff(syncPaths(root).md, { state, tier, files: modified, diagnosis });
+    };
 
     console.log(`\n[Baton] Verifying changes (Tier ${tier}${tierOverride ? ' - manual override' : ' - auto-detected'})...`);
+    state.gatekeeper = { result: 'not_needed', tests_written: [] };
 
     if (isExpress) {
       console.log('[Baton] Tier 1 Express Lane: Cosmetic/asset changes detected. Full tests bypassed.');
-      state.status = 'verified';
-      state.last_updated = new Date().toISOString();
-      state.files_modified = modified;
-      writeSyncState(state, syncJson);
+      settle('verified');
       console.log('[Baton] PASS: Verified.\n');
       process.exit(0);
+    }
+
+    if (shouldWriteTests({ tier, files: modified, disabled })) {
+      console.log('[Baton] Source changed with no test changes: asking the Gatekeeper to write tests...');
+      const outcome = writeTests({ root, state, files: modified, saveState });
+      state.gatekeeper = { result: outcome.result, tests_written: outcome.testsWritten };
+      if (outcome.outOfScope.length > 0) {
+        settle('gatekeeper_out_of_scope');
+        console.error('\n[Baton] FAIL: The Gatekeeper changed files other than tests:');
+        for (const path of outcome.outOfScope) console.error(`  ${path}`);
+        console.error('Nothing was reverted. Inspect these files before continuing.\n');
+        process.exit(1);
+      }
+      if (outcome.result === 'skipped') {
+        console.log(`[Baton] Gatekeeper skipped (${outcome.reason}): tests for this change are still owed.`);
+      } else if (outcome.testsWritten.length > 0) {
+        console.log(`[Baton] Gatekeeper wrote: ${outcome.testsWritten.join(', ')}`);
+      }
     }
 
     console.log(`[Baton] Executing test command: ${testCmd}`);
@@ -282,28 +310,28 @@ export async function main() {
     }
 
     if (testSuccess) {
-      state.status = 'verified';
       state.turn_count = 0; // reset turn count on success
-      state.last_updated = new Date().toISOString();
-      state.files_modified = modified;
-      writeSyncState(state, syncJson);
+      settle('verified');
 
       console.log('\n[Baton] PASS: All tests passed! Verification completed.');
       console.log('Status set to "verified".\n');
       process.exit(0);
     } else {
-      state.status = 'verification_failed';
       state.turn_count = (state.turn_count || 0) + 1;
-      state.last_updated = new Date().toISOString();
-      state.files_modified = modified;
-      writeSyncState(state, syncJson);
+      const diagnosis = disabled ? null : diagnoseFailure({ root, state, output: testOutput, saveState });
+      settle('verification_failed', diagnosis);
 
-      const distilled = distillDiagnostics(testOutput);
       console.error('\n[Baton] FAIL: Verification failed.');
       console.error(`Recorded Turn ${state.turn_count} / ${state.max_turns} in .agents/sync/handoff.json.`);
-      console.error('\n--- Distilled Failure Diagnostic (For Claude Code) ---');
-      console.error(distilled);
-      console.error('------------------------------------------------------\n');
+      if (diagnosis) {
+        console.error('\n--- Gatekeeper Diagnosis ---');
+        console.error(diagnosis);
+        console.error('----------------------------\n');
+      } else {
+        console.error('\n--- Distilled Failure Diagnostic (For Claude Code) ---');
+        console.error(distillDiagnostics(testOutput));
+        console.error('------------------------------------------------------\n');
+      }
       process.exit(1);
     }
   }

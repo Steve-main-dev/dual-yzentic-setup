@@ -72,7 +72,7 @@ class TestAgyLauncher(unittest.TestCase):
         self.launch(timeout=None)
         self.launch(timeout=None, env={"BATON_AGY_TIMEOUT": "45"})
         first, second = self.recorded_args()
-        self.assertEqual(first[first.index("--print-timeout") + 1], "300s")
+        self.assertEqual(first[first.index("--print-timeout") + 1], "600s")
         self.assertEqual(second[second.index("--print-timeout") + 1], "45s")
 
     def test_success_parses_the_json_after_a_warning_line(self):

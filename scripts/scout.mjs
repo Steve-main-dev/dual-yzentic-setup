@@ -9,7 +9,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { launchAgy, appendDelegation } from './agy.mjs';
+import { launchAgy, appendDelegation, PLAIN_PATHS_RULE } from './agy.mjs';
 import { snapshotChanges, checkScope } from './changes.mjs';
 import { readSyncState, writeSyncState, syncPaths } from './baton.mjs';
 
@@ -55,7 +55,8 @@ function buildPrompt(task, spec) {
     '- the files to read first',
     '- for each file, the function or line range and one line on why',
     '- the existing patterns to follow',
-    'Read only. Edit nothing. Run nothing.'
+    'Read only. Edit nothing. Run nothing.',
+    PLAIN_PATHS_RULE
   ].join('\n');
 }
 

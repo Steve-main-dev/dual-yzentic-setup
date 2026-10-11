@@ -12,6 +12,10 @@ REVIEW = repo_fixture.SCRIPTS / "review.mjs"
 SPEC = "docs/specs/demo-design.md"
 FIRST_PLAN = "docs/specs/2026-01-01-first-plan.md"
 LAST_PLAN = "docs/specs/2026-02-02-second-plan.md"
+PLAIN_PATHS_RULE = (
+    "Reply in plain text. Refer to files by repo-relative path with forward slashes. "
+    "Do not use Markdown links or absolute paths."
+)
 
 
 def git(root, *args):
@@ -90,6 +94,7 @@ class TestReview(unittest.TestCase):
             self.assertIn(heading, prompt)
         self.assertIn("at most 60 lines", prompt)
         self.assertIn("Read only. Edit nothing. Run nothing.", prompt)
+        self.assertTrue(prompt.endswith(PLAIN_PATHS_RULE), prompt)
 
     def test_base_flag_picks_the_diff_range(self):
         res = self.review("--base", "HEAD~1")

@@ -11,9 +11,15 @@ import { fileURLToPath } from 'node:url';
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const DEFAULT_MODEL = 'gemini-3.8-flash-high';
-const DEFAULT_TIMEOUT_SECONDS = 300;
+const DEFAULT_TIMEOUT_SECONDS = 600;
 const DEFAULT_KILL_GRACE_SECONDS = 15; // agy gets this long past its own --print-timeout before we kill it
 const DELEGATION_LIMIT = 20;
+
+/**
+ * The closing line of every prompt, so replies carry plain repo-relative paths instead of Markdown links.
+ */
+export const PLAIN_PATHS_RULE =
+  'Reply in plain text. Refer to files by repo-relative path with forward slashes. Do not use Markdown links or absolute paths.';
 
 /**
  * How long to let the agy process run before killing it: its own timeout plus BATON_AGY_GRACE seconds (default 15).

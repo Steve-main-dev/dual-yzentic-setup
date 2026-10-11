@@ -10,6 +10,10 @@ from tests import repo_fixture
 STUB = Path(__file__).resolve().parent / "stubs" / "agy_stub.mjs"
 SCOUT = repo_fixture.SCRIPTS / "scout.mjs"
 SPEC = "docs/specs/demo-design.md"
+PLAIN_PATHS_RULE = (
+    "Reply in plain text. Refer to files by repo-relative path with forward slashes. "
+    "Do not use Markdown links or absolute paths."
+)
 
 
 class TestScout(unittest.TestCase):
@@ -58,6 +62,7 @@ class TestScout(unittest.TestCase):
         self.assertIn(SPEC, prompt)
         self.assertIn("at most 40 lines", prompt)
         self.assertIn("Read only. Edit nothing. Run nothing.", prompt)
+        self.assertTrue(prompt.endswith(PLAIN_PATHS_RULE), prompt)
 
     def test_a_blueprint_without_a_source_spec_names_only_the_plan(self):
         root = self.make_fixture(Path(self.tmp.name) / "plain")

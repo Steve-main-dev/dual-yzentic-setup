@@ -57,6 +57,7 @@ class TestE2EBatonFlow(unittest.TestCase):
     def baton(self, fixture, *args, env=None):
         cmd = ["node", str(BATON), *args, "--root", str(fixture)]
         base_env = {k: v for k, v in os.environ.items() if k not in ("npm_config_tier", "npm_config_scope")}
+        base_env["BATON_GATEKEEPER"] = "0"  # these runs are about the gate, so they must never launch the real agy
         return subprocess.run(cmd, cwd=fixture, capture_output=True, text=True, env={**base_env, **(env or {})})
 
     def test_tier_1_express_pass(self):
