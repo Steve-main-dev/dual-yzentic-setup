@@ -432,6 +432,24 @@ class TestGatekeeper(unittest.TestCase):
 
     # Structure
 
+    def test_the_ticket_says_launched_when_a_launch_wrote_no_tests(self):
+        root = self.make_fixture()  # source changed, no test changed; the stub replies but writes nothing
+        res = self.baton(root, mode="success")
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(self.state(root)["gatekeeper"]["result"], "ran")
+        report = self.handoff(root).split(REPORT_HEADING)[1]
+        self.assertIn("Launched; wrote no tests.", report)
+        self.assertNotIn("Not launched.", report)
+
+    def test_the_ticket_says_unavailable_when_the_launch_was_skipped(self):
+        root = self.make_fixture()
+        res = self.baton(root, mode="garbage")
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(self.state(root)["gatekeeper"]["result"], "skipped")
+        report = self.handoff(root).split(REPORT_HEADING)[1]
+        self.assertIn("Launch attempted; Antigravity was unavailable.", report)
+        self.assertNotIn("Not launched.", report)
+
     def test_the_gatekeeper_does_not_import_the_baton(self):
         text = GATEKEEPER.read_text(encoding="utf-8")
         self.assertIsNone(re.search(r"from\s+['\"][^'\"]*baton", text))

@@ -197,4 +197,8 @@ Implemented by Tasks 4 to 7 of [`2026-10-11-workflow-remediation-plan.md`](2026-
 - **Overrides.** `BATON_AGY_TIMEOUT` sets the timeout. A `BATON_AGY_CMD` ending in `.mjs` is run with Node, which is how the tests substitute a stub.
 - **Review flags.** `npm run review` also accepts `--spec <path>` and `--plan <path>` to override auto-detection.
 - **Handoff ticket.** After every `verify` the baton rewrites `.agents/sync/handoff.md` with the changed files and the Gatekeeper's report.
-- **npm argument trap.** `verify` also honours `npm_config_tier` and `npm_config_scope`, so the flags work without the `--` separator.
+- **npm argument trap.** `verify` also honours `npm_config_tier` and `npm_config_scope`, and `review` honours `npm_config_base`, `npm_config_spec`, and `npm_config_plan`, so the flags work without the `--` separator.
+- **Explicit scope.** `verify --scope <test file>` never launches the Gatekeeper to write tests; naming the covering test says it exists. Failures are still diagnosed.
+- **Configuration is not source.** Dotfiles and dot-directories, `package.json`, `project-blueprint.json`, and lockfiles never trigger a test-writing launch.
+- **Scope guard.** A file that was changed before a launch and is gone from the change set after it (deleted, or restored to its committed content) is out of scope. Violations are recorded in `gatekeeper.out_of_scope` and listed in `handoff.md`, for the diagnosis step as well as the write step.
+- **Measured cost** on `gemini-3.8-flash-high`: scout 240 s and 121,403 tokens; test writing 128 s and 149,514; diagnosis 22 s and 60,807; a 3,500-line branch review 374 s and about 246,000.

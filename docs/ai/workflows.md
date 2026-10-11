@@ -20,7 +20,7 @@ To balance engineering rigor with token efficiency and speed, tasks follow one o
 │ TIER 2: BOUNDED LANE (Component Features & Bugfixes)                   │
 │ Trigger: Single component logic, localized API route, targeted bug     │
 │ Flow: Short in-chat design -> Build -> npm run verify:agent -> Commit  │
-│ Rule: The Gatekeeper writes the missing tests; only those are run      │
+│ Rule: Gatekeeper writes missing tests; the test command then runs      │
 └────────────────────────────────────────────────────────────────────────┘
 
 ┌────────────────────────────────────────────────────────────────────────┐

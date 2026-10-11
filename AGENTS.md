@@ -15,7 +15,7 @@ To prevent token waste and latency, all tasks are classified into three operatio
 | Tier | Scope | Required Process & Verification |
 | :--- | :--- | :--- |
 | **Tier 1: Express Lane** *(Micro / Cosmetic)* | Pure CSS/Tailwind tweaks, copy/text edits, icon swaps, single-file non-structural adjustments. | Use [`fast-track`](.agents/skills/fast-track/SKILL.md). Auto-detected by `npm run verify:agent` or explicitly via `-- --tier 1`. **Exempt from tests, full regression runs, and production build.** |
-| **Tier 2: Standard Bounded Lane** *(Component / Fix)* | Localized component logic, single API route, or isolated bug fix. | A short design agreed in chat; no spec or plan file. Verified via `npm run verify:agent -- --tier 2 --scope <path>`. |
+| **Tier 2: Standard Bounded Lane** *(Component / Fix)* | Localized component logic, single API route, or isolated bug fix. | A short design agreed in chat; no spec or plan file. Verified via `npm run verify:agent` (the Gatekeeper writes missing tests), or `-- --tier 2 --scope <test file>` when the covering test already exists. |
 | **Tier 3: Architectural Deep Lane** *(Full Features)* | Multi-file features, database schema/migrations, authentication, breaking architectural changes. | Spec (`superpowers:brainstorming`) → Plan (`superpowers:writing-plans`) → one plan task per `builder` agent → full suite via `npm run verify:agent -- --tier 3` → the project's build command, when the blueprint defines one → `npm run review`. |
 
 ---

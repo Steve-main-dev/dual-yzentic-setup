@@ -71,7 +71,7 @@ hand off        Claude rewrites .agents/sync/session.md; you start a new session
 | Tier | Scope | Process | Verification |
 | :--- | :--- | :--- | :--- |
 | **1: Express** | CSS, copy, Markdown, static assets | `fast-track`: edit and commit | No tests; passes in under a second |
-| **2: Bounded** | One component, one route, one bug | A few lines of design in chat, then build | The affected tests |
+| **2: Bounded** | One component, one route, one bug | A few lines of design in chat, then build | The project's tests, or one file with `--scope` |
 | **3: Architectural** | Schemas, auth, multi-file features | Spec, plan, builder agents, review | The full suite |
 
 [`scripts/baton.mjs`](scripts/baton.mjs) picks the tier from the changed files. With a clean working tree it classifies the last commit. To override:
@@ -82,6 +82,8 @@ npm run verify:agent -- --tier 2 --scope tests/auth.test.ts
 npm run verify:agent -- --tier 3
 npm run verify:agent -- --no-gatekeeper
 ```
+
+`--scope` names the test that covers a change, so the Gatekeeper is not asked to write one. Changes to configuration only (dotfiles, `package.json`, lockfiles) never launch it either.
 
 After five failed runs in a row the baton locks until you run `npm run sync:reset`.
 

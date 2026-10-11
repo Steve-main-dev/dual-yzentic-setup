@@ -260,7 +260,7 @@ New constraints from the developer: the setup is **not for hackathons** and is f
 
 ### Task 9: Fixes from the Antigravity review
 
-- [ ] **Status**
+- [x] **Status** (commit `557dfae`, plus the handoff wording for launches that wrote nothing)
 
 Findings from `npm run review` on this branch (2026-10-12), re-graded by the planner.
 
@@ -287,7 +287,7 @@ Findings from `npm run review` on this branch (2026-10-12), re-graded by the pla
 
 ### Task 8: Enforcement hooks and documentation (planner)
 
-- [ ] **Status**
+- [x] **Status**
 
 Done inline by the planner, not the builder.
 

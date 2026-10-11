@@ -14,7 +14,7 @@ You are given either a plan file path and a task number, or a short approved des
 2. **Follow the task's steps in order.** Where the task supplies a test, write it first and watch it fail before implementing. Where it does not, implement and leave test authoring to the Gatekeeper.
 3. **Never run a full test suite.** Do not run `npm test`, `pytest`, `playwright test`, `unittest discover`, or a build. Verify with:
    `npm run verify:agent -- --tier 2 --scope <test file>`
-   Read only the distilled output. If it reports the circuit breaker has tripped, stop and report.
+   when the task names or supplies a test. When it does not, run `npm run verify:agent` once when the code is written: the Gatekeeper writes the tests and the baton runs them (this can take several minutes). Read only the distilled output. If it reports the circuit breaker has tripped, stop and report.
 4. **Match the surrounding code.** Same naming, comment density, and idiom as the file you are editing. No new dependencies unless the task names them.
 5. **Commit as the task's commit step says.** Stage only the files the task lists. The pre-commit hook runs the baton and blocks a failing commit; if it blocks, fix the cause and never bypass it.
 6. **Do not decide design questions.** If the task is ambiguous, contradicts the code, or cannot work as written, make the smallest change that satisfies the task and record it under "Deviations". If every path is a guess, stop and report instead of guessing.

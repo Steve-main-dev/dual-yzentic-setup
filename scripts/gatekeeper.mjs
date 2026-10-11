@@ -134,7 +134,12 @@ export function renderHandoff({ state, tier, files, diagnosis = null }) {
   if (outOfScope.length > 0) {
     report.push(...(report.length > 0 ? [''] : []), 'Out of scope (not reverted):', ...outOfScope.map(path => `- ${path}`));
   }
-  if (report.length === 0) report.push('Not launched.');
+  if (report.length === 0) {
+    const result = state.gatekeeper?.result;
+    if (result === 'ran') report.push('Launched; wrote no tests.');
+    else if (result === 'skipped') report.push('Launch attempted; Antigravity was unavailable.');
+    else report.push('Not launched.');
+  }
   if (state.gatekeeper?.result === 'skipped') {
     report.push('', 'Gatekeeper skipped: tests for this change are still owed.');
   }
