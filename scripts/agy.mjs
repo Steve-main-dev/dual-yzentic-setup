@@ -12,8 +12,17 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const DEFAULT_MODEL = 'gemini-3.8-flash-high';
 const DEFAULT_TIMEOUT_SECONDS = 300;
-const KILL_GRACE_SECONDS = 15; // agy gets this long past its own --print-timeout before we kill it
+const DEFAULT_KILL_GRACE_SECONDS = 15; // agy gets this long past its own --print-timeout before we kill it
 const DELEGATION_LIMIT = 20;
+
+/**
+ * How long to let the agy process run before killing it: its own timeout plus BATON_AGY_GRACE seconds (default 15).
+ */
+export function processTimeoutMs(seconds) {
+  const raw = (process.env.BATON_AGY_GRACE ?? '').trim();
+  const grace = raw !== '' && Number.isFinite(Number(raw)) && Number(raw) >= 0 ? Number(raw) : DEFAULT_KILL_GRACE_SECONDS;
+  return (seconds + grace) * 1000;
+}
 
 /**
  * The last stdout line that starts with `{` and parses as JSON, or null. agy may print a warning first.
@@ -50,7 +59,7 @@ export function launchAgy({ job, prompt, allowEdits = false, timeoutSeconds, roo
   const run = spawnSync(runsWithNode ? process.execPath : cmd, runsWithNode ? [cmd, ...agyArgs] : agyArgs, {
     cwd: root,
     encoding: 'utf-8',
-    timeout: (seconds + KILL_GRACE_SECONDS) * 1000,
+    timeout: processTimeoutMs(seconds),
     windowsHide: true
   });
   const wallSeconds = (Date.now() - started) / 1000;

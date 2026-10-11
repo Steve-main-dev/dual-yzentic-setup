@@ -30,10 +30,11 @@ class TestAgyLauncher(unittest.TestCase):
         settings = {"BATON_AGY_CMD": cmd or str(STUB), "STUB_MODE": mode, "STUB_ARGS_FILE": str(self.args_file), **(env or {})}
         sets = "\n".join(f"process.env[{json.dumps(k)}] = {json.dumps(v)};" for k, v in settings.items())
         code = f"""
-        import {{ launchAgy, appendDelegation }} from './scripts/agy.mjs';
+        import {{ launchAgy, appendDelegation, processTimeoutMs }} from './scripts/agy.mjs';
         import {{ snapshotChanges, checkScope }} from './scripts/changes.mjs';
         delete process.env.BATON_AGY_MODEL;
         delete process.env.BATON_AGY_TIMEOUT;
+        delete process.env.BATON_AGY_GRACE;
         {sets}
         const root = {json.dumps(str(self.root))};
         {body}
@@ -118,9 +119,22 @@ class TestAgyLauncher(unittest.TestCase):
         self.assertEqual(result["entry"]["reason"], "not_installed")
 
     def test_slow_command_times_out(self):
-        result = self.launch(mode="sleep", timeout=1, env={"STUB_SLEEP": "120"})
+        result = self.launch(mode="sleep", timeout=1, env={"STUB_SLEEP": "120", "BATON_AGY_GRACE": "1"})
         self.assertFalse(result["ok"])
         self.assertEqual(result["reason"], "timeout")
+
+    def test_process_timeout_adds_the_kill_grace(self):
+        body = """
+        const unset = processTimeoutMs(30);
+        process.env.BATON_AGY_GRACE = '1';
+        const short = processTimeoutMs(30);
+        process.env.BATON_AGY_GRACE = '0';
+        const none = processTimeoutMs(30);
+        process.env.BATON_AGY_GRACE = 'soon';
+        const invalid = processTimeoutMs(30);
+        console.log(JSON.stringify({ unset, short, none, invalid }));
+        """
+        self.assertEqual(self.snippet(body), {"unset": 45000, "short": 31000, "none": 30000, "invalid": 45000})
 
     def test_append_delegation_keeps_the_last_20(self):
         body = """
