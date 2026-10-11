@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node.js (ES Modules, standard `fs`, `path`, `readline`), Python 3 (`unittest`), Markdown schemas.
 
-**Spec:** [`docs/specs/2026-10-08-project-blueprint-dynamic-tailoring-design.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/2026-10-08-project-blueprint-dynamic-tailoring-design.md)
+**Spec:** [`docs/specs/2026-10-08-project-blueprint-dynamic-tailoring-design.md`](2026-10-08-project-blueprint-dynamic-tailoring-design.md)
 
 ## Global Constraints
 

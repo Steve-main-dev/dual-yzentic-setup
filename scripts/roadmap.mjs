@@ -30,7 +30,7 @@ function renderSection({ priority, heading }, tasks) {
  * Generate fresh living roadmap.
  * tasks: [{ id, title, priority: 'P0'|'P1'|'P2', owner (display name), description }]
  */
-export function generateRoadmap({ name, desc, dev1, dev2, preset, tasks = [], batonPath }) {
+export function generateRoadmap({ name, desc, dev1, dev2, preset, tasks = [] }) {
   const dateStr = new Date().toISOString().split('T')[0];
   const sections = PRIORITY_SECTIONS.map(section => renderSection(section, tasks)).join('\n---\n\n');
 
@@ -42,7 +42,7 @@ export function generateRoadmap({ name, desc, dev1, dev2, preset, tasks = [], ba
 - **Objective:** ${desc}
 - **Archetype:** ${preset}
 - **Last Synchronized:** ${dateStr}
-- **Sync Protocol:** [\`scripts/baton.mjs\`](file://${batonPath}) via \`npm run verify:agent\`
+- **Sync Protocol:** [\`scripts/baton.mjs\`](../scripts/baton.mjs) via \`npm run verify:agent\`
 
 ---
 

@@ -54,7 +54,7 @@ New constraints from the developer: the setup is **not for hackathons** and is f
 - [ ] **Status**
 
 **Files:**
-- Modify: every tracked `*.md` that contains a `](file://` link; `scripts/roadmap.mjs`; `AGENTS.md` (tenet 2 only); `.agents/skills/tailor-setup/SKILL.md` (section 9, last bullet)
+- Modify: every tracked `*.md` that contains a `file://` Markdown link; `scripts/roadmap.mjs`; `AGENTS.md` (tenet 2 only); `.agents/skills/tailor-setup/SKILL.md` (section 9, last bullet)
 - Test: `tests/test_docs_integrity.py`
 
 **Decisions:**
@@ -65,7 +65,7 @@ New constraints from the developer: the setup is **not for hackathons** and is f
 - `tailor-setup/SKILL.md` section 9, "Clickable links" bullet becomes: `- **Relative links.** In files you write, link with relative Markdown paths, never absolute machine paths.`
 
 **Tests (in `tests/test_docs_integrity.py`):**
-- `test_no_absolute_file_links`: for every file from `git ls-files "*.md"`, the text contains no `](file://`.
+- `test_no_absolute_file_links`: for every file from `git ls-files "*.md"`, the text contains no Markdown link whose target starts with `file://`.
 - `test_markdown_links_are_valid`: add `README.md`, `docs/PLAN.md`, and `.agents/skills/tailor-setup/SKILL.md` to `files_to_check`; drop the `file:///` branch; check the path part before any `#`.
 - A link in a checked file whose target does not exist: point it at the real path if one obviously exists, otherwise keep the text and drop the link. List each under Deviations.
 

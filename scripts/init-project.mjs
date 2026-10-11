@@ -82,8 +82,7 @@ export function initProject({ preset, name, desc, dev1, dev2, scaffold = true })
     dev1: dev1 || 'Dev 1',
     dev2: dev2 || 'Dev 2',
     preset,
-    tasks: defaultTasks(dev1 || 'Dev 1', dev2 || 'Dev 2'),
-    batonPath: path.resolve(REPO_ROOT, 'scripts', 'baton.mjs')
+    tasks: defaultTasks(dev1 || 'Dev 1', dev2 || 'Dev 2')
   });
   fs.writeFileSync(PLAN_PATH, roadmapContent, 'utf-8');
 

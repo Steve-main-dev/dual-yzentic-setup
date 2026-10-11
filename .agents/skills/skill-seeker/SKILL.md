@@ -8,7 +8,7 @@ version: 1.0.0
 
 The **Skill Seeker** skill provides autonomous agents with an automated pipeline to ingest external documentation websites, GitHub repositories, and technical PDFs into structured, high-density domain skills.
 
-It operates via an ephemeral [`uvx`](file:///home/yzenn/.local/bin/uvx) runner with a safe staging gate in [`.agents/skills/_staging/`](file:///mnt/LubaDub/Projects/Web/Yzentic-setup/Yzentic-setup/.agents/skills/_staging/), ensuring newly scraped knowledge is validated and compliant before entering the active catalog.
+It operates via an ephemeral `uvx` runner with a safe staging gate in [`.agents/skills/_staging/`](../_staging/), ensuring newly scraped knowledge is validated and compliant before entering the active catalog.
 
 ---
 
@@ -18,13 +18,13 @@ Activate Skill Seeker when:
 - **Unfamiliar or Bleeding-Edge Libraries:** The user or task requires using a library or framework where official documentation is newer than model weights (e.g. Next.js canary, new state managers, v5 releases).
 - **Private / Internal Company SDKs:** An internal library or utility exists in a GitHub repository, and agents need idiomatic TypeScript/Python interfaces and usage patterns.
 - **Complex Architecture / API PDFs:** A specification, RFC, or security compliance mandate is provided as a PDF document.
-- **Automated Fallback from [`find-skills`](file:///C:/Users/Admin/Yzen/Yzentic-setup/.agents/skills/find-skills/SKILL.md):** No pre-packaged community skill was found on `skills.sh`, but an official documentation URL is available.
+- **Automated Fallback from [`find-skills`](../find-skills/SKILL.md):** No pre-packaged community skill was found on `skills.sh`, but an official documentation URL is available.
 
 ---
 
 ## 2. Ingestion Commands & Workflow
 
-All operations are executed non-interactively using the orchestrator script [`scripts/seek.py`](file:///C:/Users/Admin/Yzen/Yzentic-setup/.agents/skills/skill-seeker/scripts/seek.py):
+All operations are executed non-interactively using the orchestrator script [`scripts/seek.py`](scripts/seek.py):
 
 ### A. Ingest from Documentation Website
 Scrapes web pages, extracts code snippets, and synthesizes `SKILL.md` + `references/`:
@@ -48,7 +48,7 @@ python .agents/skills/skill-seeker/scripts/seek.py --pdf docs/specs/architecture
 
 ## 3. Staging Gate & Catalog Promotion
 
-Newly generated skills are placed into [`.agents/skills/_staging/<name>/`](file:///C:/Users/Admin/Yzen/Yzentic-setup/.agents/skills/_staging/) to isolate unverified scrape artifacts.
+Newly generated skills are placed into [`.agents/skills/_staging/<name>/`](../_staging/) to isolate unverified scrape artifacts.
 
 ### 1. List Staged Skills
 Inspect all draft skills currently waiting in staging:
@@ -63,7 +63,7 @@ python .agents/skills/skill-seeker/scripts/seek.py --validate .agents/skills/_st
 ```
 
 ### 3. Promote to Active Catalog
-Move the validated skill from `_staging/` to [`.agents/skills/<name>/`](file:///C:/Users/Admin/Yzen/Yzentic-setup/.agents/skills/):
+Move the validated skill from `_staging/` to [`.agents/skills/<name>/`](../):
 ```bash
 python .agents/skills/skill-seeker/scripts/seek.py --promote <name>
 ```
@@ -73,10 +73,10 @@ python .agents/skills/skill-seeker/scripts/seek.py --promote <name>
 ## 4. Operational Guardrails
 
 1. **Zero Root Dependency Bloat:**
-   - Always run `skill-seekers` via [`scripts/seek.py`](file:///C:/Users/Admin/Yzen/Yzentic-setup/.agents/skills/skill-seeker/scripts/seek.py) and `uvx`. Never install scraping packages directly into root project dependencies.
+   - Always run `skill-seekers` via [`scripts/seek.py`](scripts/seek.py) and `uvx`. Never install scraping packages directly into root project dependencies.
 2. **Clickable Links:**
    - Ensure all references and file links use the clickable `file://` scheme with forward slashes (`/`).
 3. **Secret Zero-Exposure:**
    - If using `GITHUB_TOKEN` to access private repos, read it strictly from the environment; never echo, log, or store credentials in files.
 4. **Post-Promotion Integration:**
-   - After promoting a skill to `.agents/skills/<name>/`, update [`docs/ai/agent-handbook.md`](file:///C:/Users/Admin/Yzen/Yzentic-setup/docs/ai/agent-handbook.md) and verify tests pass with `python3 -m unittest discover tests`.
+   - After promoting a skill to `.agents/skills/<name>/`, update [`docs/ai/agent-handbook.md`](../../../docs/ai/agent-handbook.md) and verify tests pass with `python3 -m unittest discover tests`.

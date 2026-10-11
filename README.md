@@ -15,15 +15,15 @@ npm run init:project
 ```
 
 The wizard prompts for:
-1. **Project Name & 1-Line Pitch** (updates [`package.json`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/package.json) and [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md)).
+1. **Project Name & 1-Line Pitch** (updates [`package.json`](package.json) and [`docs/PLAN.md`](docs/PLAN.md)).
 2. **Project Archetype:**
    - `[1] fullstack-web`: Next.js / Vite + Backend + Database (keeps 11 core web skills).
    - `[2] ai-agent-app`: FastAPI / Node + Prompt engineering & agentic eval (keeps AI pipeline skills).
    - `[3] frontend-dashboard`: Vite + React + Tailwind + Charts & Presentations.
    - `[4] minimal-hackathon`: Ultra-lean core suite (7 essential skills).
-3. **Developer Handles:** Assigns `Dev 1` and `Dev 2` responsibilities in [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md).
+3. **Developer Handles:** Assigns `Dev 1` and `Dev 2` responsibilities in [`docs/PLAN.md`](docs/PLAN.md).
 
-> **Context Optimization:** Unselected skills are **soft-deleted** into [`.agents/skills-archive/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills-archive/) so agents only scan active skills, saving hundreds of context tokens. You can restore any skill instantly:
+> **Context Optimization:** Unselected skills are **soft-deleted** into [`.agents/skills-archive/`](.agents/skills-archive/) so agents only scan active skills, saving hundreds of context tokens. You can restore any skill instantly:
 > ```bash
 > npm run skill:enable <skill-name>    # e.g., npm run skill:enable slides
 > npm run skill:disable <skill-name>   # move back to archive
@@ -55,7 +55,7 @@ The wizard prompts for:
    ```bash
    npm run verify:agent
    ```
-4. **Iterate Cleanly:** If tests fail, Claude receives a concise 5-10 line failure diagnostic. If tests pass, the baton stamps `verified` in [`.agents/sync/handoff.json`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/sync/handoff.json).
+4. **Iterate Cleanly:** If tests fail, Claude receives a concise 5-10 line failure diagnostic. If tests pass, the baton stamps `verified` in [`.agents/sync/handoff.json`](.agents/sync/handoff.json).
 
 ---
 
@@ -78,7 +78,7 @@ npm run verify:agent -- --tier 3
 
 ## 🗺️ Team Sync: The Universal Living Plan
 
-In a 2-developer team, [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md) is the single source of truth:
+In a 2-developer team, [`docs/PLAN.md`](docs/PLAN.md) is the single source of truth:
 - **`P0` (Must-Have for Demo):** Core loop needed for judges.
 - **`P1` (High Impact Polish):** Enhancements that elevate the demo.
 - **`P2` (Post-Hackathon Stretch):** Ideas to park until after judging.
@@ -90,13 +90,13 @@ In a 2-developer team, [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yz
 
 | Skill | Trigger / Command | Hackathon Impact |
 | :--- | :--- | :--- |
-| **[`caveman`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/caveman/SKILL.md)** | `/caveman` | Strips conversational fluff; **saves ~70% output tokens on Claude Pro** |
-| **[`ponytail`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/ponytail/SKILL.md)** | `/ponytail` | "Lazy senior dev" mode: smallest code change, **zero bloated libraries** |
-| **[`ui-ux-pro-max`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/ui-ux-pro-max/SKILL.md)** | `/ui-ux-pro-max` | Design system intelligence across React, Tailwind, and Shadcn |
-| **[`impeccable`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/impeccable/SKILL.md)** | `/impeccable polish`, `bolder` | High-polish UI finishing pass by Paul Bakaus |
-| **[`archify`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/archify/SKILL.md)** | `/archify` | Generates interactive architecture and sequence diagrams for pitch slides |
-| **[`pitch-architect`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/pitch-architect/SKILL.md)** | `/pitch-architect` | 3-minute hackathon pitch deck, live demo script, and judge Q&A prep |
-| **[`demo-seed-data`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/demo-seed-data/SKILL.md)** | `/demo-seed-data` | Populates UI with avatars, realistic trends, and dynamic chart data |
+| **[`caveman`](.agents/skills/caveman/SKILL.md)** | `/caveman` | Strips conversational fluff; **saves ~70% output tokens on Claude Pro** |
+| **[`ponytail`](.agents/skills/ponytail/SKILL.md)** | `/ponytail` | "Lazy senior dev" mode: smallest code change, **zero bloated libraries** |
+| **[`ui-ux-pro-max`](.agents/skills/ui-ux-pro-max/SKILL.md)** | `/ui-ux-pro-max` | Design system intelligence across React, Tailwind, and Shadcn |
+| **[`impeccable`](.agents/skills/impeccable/SKILL.md)** | `/impeccable polish`, `bolder` | High-polish UI finishing pass by Paul Bakaus |
+| **[`archify`](.agents/skills/archify/SKILL.md)** | `/archify` | Generates interactive architecture and sequence diagrams for pitch slides |
+| **[`pitch-architect`](.agents/skills/pitch-architect/SKILL.md)** | `/pitch-architect` | 3-minute hackathon pitch deck, live demo script, and judge Q&A prep |
+| **[`demo-seed-data`](.agents/skills/demo-seed-data/SKILL.md)** | `/demo-seed-data` | Populates UI with avatars, realistic trends, and dynamic chart data |
 
 ---
 

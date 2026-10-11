@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node 22 ES modules, standard library only (no new dependencies). Tests are Python `unittest` driving the scripts through `subprocess`.
 
-**Spec:** [`docs/specs/2026-10-11-tailor-setup-design.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/2026-10-11-tailor-setup-design.md)
+**Spec:** [`docs/specs/2026-10-11-tailor-setup-design.md`](2026-10-11-tailor-setup-design.md)
 
 ## Global Constraints
 

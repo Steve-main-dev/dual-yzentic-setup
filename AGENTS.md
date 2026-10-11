@@ -14,7 +14,7 @@ To prevent token waste and latency, all tasks are classified into three operatio
 
 | Tier | Scope | Required Process & Verification |
 | :--- | :--- | :--- |
-| **Tier 1: Express Lane** *(Micro / Cosmetic)* | Pure CSS/Tailwind tweaks, copy/text edits, icon swaps, single-file non-structural adjustments. | Use [`fast-track`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/fast-track/SKILL.md). Auto-detected by `npm run verify:agent` or explicitly via `--tier 1`. **Exempt from Red-Green TDD, full regression runs, and production build.** |
+| **Tier 1: Express Lane** *(Micro / Cosmetic)* | Pure CSS/Tailwind tweaks, copy/text edits, icon swaps, single-file non-structural adjustments. | Use [`fast-track`](.agents/skills/fast-track/SKILL.md). Auto-detected by `npm run verify:agent` or explicitly via `--tier 1`. **Exempt from Red-Green TDD, full regression runs, and production build.** |
 | **Tier 2: Standard Bounded Lane** *(Component / Fix)* | Localized component logic, single API route, or isolated bug fix. | A short design agreed in chat; no spec or plan file. Scoped TDD on the affected test file. Verified via `npm run verify:agent --tier 2 --scope <path>`. |
 | **Tier 3: Architectural Deep Lane** *(Full Features)* | Multi-file features, database schema/migrations, authentication, breaking architectural changes. | Full Superpowers lifecycle: Spec (`superpowers:brainstorming`) → Plan (`superpowers:writing-plans`) → Full TDD → Full regression suite via `npm run verify:agent --tier 3` → Production build. |
 
@@ -23,23 +23,23 @@ To prevent token waste and latency, all tasks are classified into three operatio
 ## 2. Hard Operational Gates
 
 0. **Gate 0: Fresh Clone & Project Blueprint Intake**
-   - On the very first session turn, inspect [`project-blueprint.json`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/project-blueprint.json).
+   - On the very first session turn, inspect [`project-blueprint.json`](project-blueprint.json).
    - If `status === "uninitialized"`, DO NOT write code yet. Ask the user what they are building, their stack, and Dev 1 / Dev 2 names, or guide them to run `npm run init:project`.
-   - If a project design spec already exists in [`docs/specs/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/), use the [`tailor-setup`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/tailor-setup/SKILL.md) skill (`npm run tailor`) instead of an archetype preset.
+   - If a project design spec already exists in [`docs/specs/`](docs/specs/), use the [`tailor-setup`](.agents/skills/tailor-setup/SKILL.md) skill (`npm run tailor`) instead of an archetype preset.
 1. **Gate 1: Mandatory Skills Discovery & Invocation**
-   - Read [`docs/ai/agent-handbook.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/ai/agent-handbook.md) to discover and invoke required domain skills before beginning any non-trivial user task.
-   - For Tier 1 micro-tasks, invoke [`fast-track`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/fast-track/SKILL.md).
+   - Read [`docs/ai/agent-handbook.md`](docs/ai/agent-handbook.md) to discover and invoke required domain skills before beginning any non-trivial user task.
+   - For Tier 1 micro-tasks, invoke [`fast-track`](.agents/skills/fast-track/SKILL.md).
 2. **Gate 2: Design Before Code, Sized to the Tier**
    - **Tier 2:** state the design in a few lines in chat and wait for the developer's approval. Do not write a spec or plan file.
-   - **Tier 3:** complete requirements discovery (`superpowers:brainstorming`) and write an implementation plan (`superpowers:writing-plans`) in [`docs/specs/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/) before editing code.
-   - Synchronize all planned work in [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md).
+   - **Tier 3:** complete requirements discovery (`superpowers:brainstorming`) and write an implementation plan (`superpowers:writing-plans`) in [`docs/specs/`](docs/specs/) before editing code.
+   - Synchronize all planned work in [`docs/PLAN.md`](docs/PLAN.md).
 3. **Gate 3: The Iron Law of TDD (Tier 2 & Tier 3)**
    - NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST for logic, mutations, or endpoints (`superpowers:test-driven-development`).
 4. **Gate 4: Systematic Root-Cause Debugging**
    - Never guess or blindly patch bugs. Investigate root causes with evidence before touching implementation (`superpowers:systematic-debugging`).
 5. **Gate 5: Evidence Before Assertions**
    - Never claim code works without running verification output (`superpowers:verification-before-completion`).
-   - Run `npm run verify:agent` to generate evidence in [`.agents/sync/handoff.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/sync/handoff.md).
+   - Run `npm run verify:agent` to generate evidence in [`.agents/sync/handoff.md`](.agents/sync/handoff.md).
 
 ---
 
@@ -48,22 +48,23 @@ To prevent token waste and latency, all tasks are classified into three operatio
 1. **Evidence before assertions:**
    - Always verify exit codes and output before declaring completion.
 2. **Navigable file and symbol references:**
-   - You MUST format all file paths and code symbols as clickable Markdown links using the `file://` scheme (e.g. [`README.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/README.md) or [`AGENTS.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/AGENTS.md)).
+   - In chat replies, format file paths and code symbols as clickable Markdown links using the `file://` scheme with the absolute path on the current machine.
+   - In committed files, use relative Markdown links. Never commit an absolute machine path.
 3. **Continuous task tracking:**
-   - Maintain a markdown checklist (`- [ ]` / `- [x]`) tracking every phase of execution and keep [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md) updated.
+   - Maintain a markdown checklist (`- [ ]` / `- [x]`) tracking every phase of execution and keep [`docs/PLAN.md`](docs/PLAN.md) updated.
 4. **Non-destructive & non-interactive execution:**
    - Always run commands non-interactively.
 5. **One task per session:**
-   - On starting a session, read [`.agents/sync/session.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/sync/session.md) before exploring. On finishing a task, overwrite it with a summary of at most 20 lines (done, branch and commit, decisions, next step, files to open) so the next session starts small.
+   - On starting a session, read [`.agents/sync/session.md`](.agents/sync/session.md) before exploring. On finishing a task, overwrite it with a summary of at most 20 lines (done, branch and commit, decisions, next step, files to open) so the next session starts small.
 6. **Zero secret exposure:**
-   - Never print raw `.env` contents, API keys, credentials, or tokens. Use [`varlock`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/varlock/SKILL.md) and review against [`owasp-security`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/owasp-security/SKILL.md).
+   - Never print raw `.env` contents, API keys, credentials, or tokens. Use [`varlock`](.agents/skills/varlock/SKILL.md) and review against [`owasp-security`](.agents/skills/owasp-security/SKILL.md).
 
 ---
 
 ## 4. Skills & Documentation Routing
 
-- [`docs/PLAN.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/PLAN.md): **Universal Living Roadmap**. The single source of truth for features, priorities, and team sync.
-- [`.agents/sync/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/sync/): **Dual-Agent Sync Bus**. Houses `handoff.json` and `handoff.md` managed by `scripts/baton.mjs`.
-- [`docs/ai/agent-handbook.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/ai/agent-handbook.md): Skills catalog and routing index.
-- [`.agents/skills/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/): On-demand domain skills.
-- [`docs/rules/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/rules/README.md): Modular full-stack web development standards.
+- [`docs/PLAN.md`](docs/PLAN.md): **Universal Living Roadmap**. The single source of truth for features, priorities, and team sync.
+- [`.agents/sync/`](.agents/sync/): **Dual-Agent Sync Bus**. Houses `handoff.json` and `handoff.md` managed by `scripts/baton.mjs`.
+- [`docs/ai/agent-handbook.md`](docs/ai/agent-handbook.md): Skills catalog and routing index.
+- [`.agents/skills/`](.agents/skills/): On-demand domain skills.
+- [`docs/rules/`](docs/rules/README.md): Modular full-stack web development standards.

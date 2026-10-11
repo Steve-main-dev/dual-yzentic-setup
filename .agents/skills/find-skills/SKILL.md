@@ -128,7 +128,7 @@ When searching, consider these common categories:
 If no relevant skills exist on the open registry:
 
 1. Acknowledge that no existing community skill was found.
-2. If official documentation or a GitHub repository exists, offer to automatically synthesize a skill using [`skill-seeker`](file:///C:/Users/Admin/Yzen/Yzentic-setup/.agents/skills/skill-seeker/SKILL.md):
+2. If official documentation or a GitHub repository exists, offer to automatically synthesize a skill using [`skill-seeker`](../skill-seeker/SKILL.md):
    ```bash
    python .agents/skills/skill-seeker/scripts/seek.py --url <docs-url> --name <name>
    ```

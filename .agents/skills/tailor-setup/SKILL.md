@@ -12,7 +12,7 @@ version: 1.0.0
 
 ## 1. When to Use
 
-- A project design spec exists in [`docs/specs/`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/) and [`project-blueprint.json`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/project-blueprint.json) has `status: "uninitialized"`.
+- A project design spec exists in [`docs/specs/`](../../../docs/specs/) and [`project-blueprint.json`](../../../project-blueprint.json) has `status: "uninitialized"`.
 
 ## 2. When NOT to Use
 
@@ -141,4 +141,4 @@ Keep rule files token-lean: principles, checklists, and Dos/Don'ts tables, not l
 
 - **Approval before apply.** Never run `npm run tailor` without showing the dry run and getting a yes.
 - **One source of truth.** The manifest lives in `project-blueprint.json`; do not hand-edit `docs/PLAN.md` or move skill folders as part of tailoring.
-- **Clickable links.** Format file references as `file://` Markdown links, per [`AGENTS.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/AGENTS.md).
+- **Relative links.** In files you write, link with relative Markdown paths, never absolute machine paths.

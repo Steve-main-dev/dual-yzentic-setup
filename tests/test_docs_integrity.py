@@ -1,5 +1,5 @@
-import os
 import re
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -19,6 +19,15 @@ class TestDocsIntegrity(unittest.TestCase):
         specs_dir = self.root / "docs" / "specs"
         self.assertTrue(specs_dir.exists(), "docs/specs/ directory must exist")
 
+    def test_no_absolute_file_links(self):
+        tracked = subprocess.run(
+            ["git", "ls-files", "*.md"], cwd=self.root, capture_output=True, text=True, check=True
+        ).stdout.splitlines()
+        self.assertTrue(tracked, "git ls-files returned no Markdown files")
+        for name in tracked:
+            content = (self.root / name).read_text(encoding="utf-8")
+            self.assertNotIn("](file://", content, f"Absolute file:// link in {name}")
+
     def test_markdown_links_are_valid(self):
         files_to_check = [
             self.root / "AGENTS.md",
@@ -28,21 +37,17 @@ class TestDocsIntegrity(unittest.TestCase):
             self.docs_ai / "workflows.md",
             self.docs_ai / "architecture.md",
             self.root / "docs" / "rules" / "README.md",
+            self.root / "README.md",
+            self.root / "docs" / "PLAN.md",
+            self.root / ".agents" / "skills" / "tailor-setup" / "SKILL.md",
         ]
         for f in files_to_check:
             self.assertTrue(f.exists(), f"File {f.name} must exist")
             content = f.read_text(encoding="utf-8")
             links = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", content)
             for text, url in links:
-                if url.startswith("file:///"):
-                    if os.name == "nt":
-                        path_str = url.replace("file:///", "").replace("/", "\\")
-                    else:
-                        path_str = url.replace("file://", "")
-                    p = Path(path_str)
-                    self.assertTrue(p.exists(), f"Broken file link in {f.name}: {url}")
-                elif not url.startswith(("http://", "https://", "#", "mailto:")):
-                    target = (f.parent / url).resolve()
+                if not url.startswith(("http://", "https://", "#", "mailto:")):
+                    target = (f.parent / url.split("#")[0]).resolve()
                     self.assertTrue(target.exists(), f"Broken relative link in {f.name}: {url}")
 
 if __name__ == "__main__":

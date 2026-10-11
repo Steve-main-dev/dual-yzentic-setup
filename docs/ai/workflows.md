@@ -75,7 +75,7 @@ Enforced via `superpowers:test-driven-development`:
 Web applications in this repository adhere to a three-tier testing pyramid:
 - **Unit & Custom Hook Tests (Vitest):** Millisecond-fast execution of pure business logic, calculations, and custom React hooks.
 - **Component & Interaction Tests (React Testing Library):** User-centric verification of UI rendering, form events, and accessibility attributes without mocking internal state.
-- **End-to-End User Journeys (Playwright via [`webapp-testing`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/webapp-testing/SKILL.md)):** Headless browser automation verifying critical user paths (auth, multi-step checkout, forms, and all 4 UI states).
+- **End-to-End User Journeys (Playwright via [`webapp-testing`](../../.agents/skills/webapp-testing/SKILL.md)):** Headless browser automation verifying critical user paths (auth, multi-step checkout, forms, and all 4 UI states).
 
 ---
 
@@ -94,13 +94,13 @@ Enforced via `superpowers:systematic-debugging`:
   ```bash
   git checkout -b feature/<descriptive-name>
   ```
-- **Isolated Worktrees:** For parallel agent work or large refactors, use `superpowers:using-git-worktrees` or [`orca-cli`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/.agents/skills/orca-cli/SKILL.md).
+- **Isolated Worktrees:** For parallel agent work or large refactors, use `superpowers:using-git-worktrees` or [`orca-cli`](../../.agents/skills/orca-cli/SKILL.md).
 - **Conventional Commits:** Format commit messages with clear semantic types (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`).
 
 ### Pull Request & Pre-Merge Checklist
 Before completing a task, opening a PR, or merging into `main`:
 - [ ] **Automated Tests Green:** Full test suite executes cleanly with exit code 0 (`py -m unittest discover tests -v` / `npm test`).
-- [ ] **Acceptance Criteria Met:** Feature satisfies Given/When/Then scenarios defined in [`docs/rules/requirements.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/rules/requirements.md).
+- [ ] **Acceptance Criteria Met:** Feature satisfies Given/When/Then scenarios defined in [`docs/rules/requirements.md`](../rules/requirements.md).
 - [ ] **The 4 UI States Handled:** Loading (skeletons), Empty, Error, and Success states verified.
 - [ ] **Accessibility & Web Vitals:** Keyboard operable (WCAG 2.1 AA) with zero layout shift regressions (CLS < 0.1).
 - [ ] **Zero Secret Leaks:** Zero credentials, tokens, or `.env` traces in commits or logs.

@@ -182,8 +182,7 @@ export function tailorProject({ root = REPO_ROOT, dryRun = false, force = false 
     dev1,
     dev2,
     preset: project.archetype,
-    tasks: project.roadmap.map(task => ({ ...task, owner: project.team[task.owner].name })),
-    batonPath: path.resolve(root, 'scripts', 'baton.mjs')
+    tasks: project.roadmap.map(task => ({ ...task, owner: project.team[task.owner].name }))
   });
   fs.writeFileSync(path.resolve(root, 'docs', 'PLAN.md'), roadmap, 'utf-8');
 

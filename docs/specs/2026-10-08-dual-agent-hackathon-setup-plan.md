@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node.js (ESM), Bash, Markdown, Vitest/Pytest/Jest compatibility.
 
-**Spec:** [`docs/specs/2026-10-08-dual-agent-hackathon-setup-design.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/2026-10-08-dual-agent-hackathon-setup-design.md)
+**Spec:** [`docs/specs/2026-10-08-dual-agent-hackathon-setup-design.md`](2026-10-08-dual-agent-hackathon-setup-design.md)
 
 ## Global Constraints
 

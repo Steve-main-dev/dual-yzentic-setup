@@ -10,14 +10,14 @@ To preserve context window tokens, agents MUST NOT load all rules upfront. Consu
 
 | Developer / Agent Task | Rule File | Purpose & Focus |
 | :--- | :--- | :--- |
-| **Scoping a feature, writing PRD, or defining user stories** | [`requirements.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/rules/requirements.md) | Given/When/Then acceptance criteria, mandatory 4 UI states, and Definition of Done |
-| **Building UI components, forms, state, styling, or layouts** | [`frontend.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/rules/frontend.md) | Server-first RSC, state boundaries, Tailwind tokens, WCAG 2.1 AA A11y, Core Web Vitals |
-| **Creating API endpoints, database mutations, schemas, or auth** | [`backend.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/rules/backend.md) | Zod validation, RFC error envelopes, Prisma/Drizzle transactions, HttpOnly cookies, CSRF, CSP |
-| **Testing strategy, TDD cycles, branching, or PR reviews** | [`docs/ai/workflows.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/ai/workflows.md) | TDD Red-Green-Refactor, Vitest/RTL/Playwright pyramid, and PR submission checklist |
+| **Scoping a feature, writing PRD, or defining user stories** | [`requirements.md`](requirements.md) | Given/When/Then acceptance criteria, mandatory 4 UI states, and Definition of Done |
+| **Building UI components, forms, state, styling, or layouts** | [`frontend.md`](frontend.md) | Server-first RSC, state boundaries, Tailwind tokens, WCAG 2.1 AA A11y, Core Web Vitals |
+| **Creating API endpoints, database mutations, schemas, or auth** | [`backend.md`](backend.md) | Zod validation, RFC error envelopes, Prisma/Drizzle transactions, HttpOnly cookies, CSRF, CSP |
+| **Testing strategy, TDD cycles, branching, or PR reviews** | [`docs/ai/workflows.md`](../ai/workflows.md) | TDD Red-Green-Refactor, Vitest/RTL/Playwright pyramid, and PR submission checklist |
 
 ---
 
 ## Architectural Principles
-1. **Single Source of Truth:** Domain rules reside here; procedural rules reside in [`AGENTS.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/AGENTS.md) and [`docs/ai/workflows.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/ai/workflows.md).
+1. **Single Source of Truth:** Domain rules reside here; procedural rules reside in [`AGENTS.md`](../../AGENTS.md) and [`docs/ai/workflows.md`](../ai/workflows.md).
 2. **Glanceable & Token-Lean:** Rules are structured around concise principles, checklists, and Dos/Don'ts tables rather than heavy inline code blocks.
-3. **Automated Verification:** All rule documents are verified by [`tests/test_rules_integrity.py`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/tests/test_rules_integrity.py).
+3. **Automated Verification:** All rule documents are verified by [`tests/test_rules_integrity.py`](../../tests/test_rules_integrity.py).

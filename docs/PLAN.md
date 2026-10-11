@@ -4,7 +4,7 @@
 
 - **Sprint Deadline:** 24-Hour Hackathon Submission
 - **Last Synchronized:** 2026-10-08
-- **Sync Protocol:** [`scripts/baton.mjs`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/scripts/baton.mjs) via `npm run verify:agent`
+- **Sync Protocol:** [`scripts/baton.mjs`](../scripts/baton.mjs) via `npm run verify:agent`
 
 ---
 
@@ -44,19 +44,19 @@ Active milestone: **MVP Core Scaffolding & Dual-Agent Setup**
   - **Priority:** P0
   - **Owner:** Dev 1
   - **Status:** Done
-  - **Description:** Skill plus `npm run tailor` that tailors skills, roadmap, rules, scaffold, and baton commands from a brainstormed spec. Design: [`docs/specs/2026-10-11-tailor-setup-design.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/2026-10-11-tailor-setup-design.md).
+  - **Description:** Skill plus `npm run tailor` that tailors skills, roadmap, rules, scaffold, and baton commands from a brainstormed spec. Design: [`docs/specs/2026-10-11-tailor-setup-design.md`](specs/2026-10-11-tailor-setup-design.md).
 
 - [ ] **Task 0.3: Antigravity Delegation (Scout, Gatekeeper, Review)**
   - **Priority:** P0
   - **Owner:** Dev 1
   - **Status:** Backlog
-  - **Description:** Scripts launch Antigravity headlessly to scout the codebase, write and diagnose tests on `npm run verify:agent`, and review branches, moving that work off Claude quota. Design: [`docs/specs/2026-10-11-antigravity-delegation-design.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/docs/specs/2026-10-11-antigravity-delegation-design.md).
+  - **Description:** Scripts launch Antigravity headlessly to scout the codebase, write and diagnose tests on `npm run verify:agent`, and review branches, moving that work off Claude quota. Design: [`docs/specs/2026-10-11-antigravity-delegation-design.md`](specs/2026-10-11-antigravity-delegation-design.md).
 
 - [x] **Task 0.4: Token Budget Rules & Sonnet Builder Agent**
   - **Priority:** P0
   - **Owner:** Dev 1
   - **Status:** Done
-  - **Description:** Process sized by tier, plan tasks delegated to the `builder` agent on Sonnet, and one task per session with a written handoff in `.agents/sync/session.md`. Rules: [`CLAUDE.md`](file:///mnt/LubaDub/Projects/Web/dual-yzentic-setup/dual-yzentic-setup/CLAUDE.md) section 3.
+  - **Description:** Process sized by tier, plan tasks delegated to the `builder` agent on Sonnet, and one task per session with a written handoff in `.agents/sync/session.md`. Rules: [`CLAUDE.md`](../CLAUDE.md) section 3.
 
 - [ ] **Task 1.1: Core Application Shell & Routing**
   - **Priority:** P0
