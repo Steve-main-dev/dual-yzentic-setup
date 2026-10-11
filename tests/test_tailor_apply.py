@@ -43,9 +43,10 @@ class TestTailorApply(unittest.TestCase):
 
         plan = (root / "docs" / "PLAN.md").read_text(encoding="utf-8")
         self.assertIn("Task 1.1: Canvas shell", plan)
-        self.assertIn("**Owner:** Steve", plan)
-        self.assertIn("**Owner:** Bob", plan)
+        self.assertIn("> **For Steve and the AI agents:**", plan)
         self.assertNotIn("ORIGINAL PLAN", plan)
+        for banned in ["Owner", "Hackathon", "judges", "Demo"]:
+            self.assertNotIn(banned, plan)
 
         package = self.read_json(root, "package.json")
         self.assertEqual(package["name"], "ai-flow-canvas")
@@ -61,6 +62,19 @@ class TestTailorApply(unittest.TestCase):
         self.assertEqual(blueprint["status"], "initialized")
         self.assertEqual(blueprint["project"], VALID_PROJECT)
         self.assertIn("archetypes", blueprint)
+
+    def test_manifest_without_developer_renders_the_developer(self):
+        project = copy.deepcopy(VALID_PROJECT)
+        del project["developer"]
+        root = self.repo(project=project)
+
+        res = tailor(root)
+
+        self.assertEqual(res.returncode, 0, res.stderr)
+        plan = (root / "docs" / "PLAN.md").read_text(encoding="utf-8")
+        self.assertIn("> **For the developer and the AI agents:**", plan)
+        handoff = (root / ".agents" / "sync" / "handoff.md").read_text(encoding="utf-8")
+        self.assertNotIn("undefined", handoff)
 
     def test_dry_run_writes_nothing(self):
         root = self.repo()

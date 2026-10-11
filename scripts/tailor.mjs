@@ -19,7 +19,6 @@ const REPO_ROOT = path.resolve(__dirname, '..');
 export const ALWAYS_KEPT_SKILLS = ['tailor-setup', 'fast-track', 'caveman', 'ponytail'];
 
 const PRIORITIES = ['P0', 'P1', 'P2'];
-const OWNERS = ['dev1', 'dev2'];
 const SKILL_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 
 const isText = (value) => typeof value === 'string' && value.trim().length > 0;
@@ -71,8 +70,8 @@ export function validateManifest(blueprint, { root = REPO_ROOT } = {}) {
 
   if (!isObject(project.stack)) add('project.stack', 'must be an object');
 
-  for (const dev of OWNERS) {
-    if (!isText(project.team?.[dev]?.name)) add(`project.team.${dev}.name`, 'must be a non-empty string');
+  if (project.developer !== undefined && !isText(project.developer)) {
+    add('project.developer', 'must be a non-empty string');
   }
 
   if (!Array.isArray(project.skills)) {
@@ -109,7 +108,6 @@ export function validateManifest(blueprint, { root = REPO_ROOT } = {}) {
       else seenIds.add(task.id);
       if (!isText(task.title)) add(field('title'), 'must be a non-empty string');
       if (!PRIORITIES.includes(task.priority)) add(field('priority'), `must be one of ${PRIORITIES.join(', ')}`);
-      if (!OWNERS.includes(task.owner)) add(field('owner'), `must be one of ${OWNERS.join(', ')}`);
       if (!isText(task.description)) add(field('description'), 'must be a non-empty string');
     });
   }
@@ -174,15 +172,12 @@ export function tailorProject({ root = REPO_ROOT, dryRun = false, force = false 
   syncSkillsToList([...keep], { root });
 
   // 2. Render docs/PLAN.md
-  const dev1 = project.team.dev1.name;
-  const dev2 = project.team.dev2.name;
   const roadmap = generateRoadmap({
     name: project.name,
     desc: project.description,
-    dev1,
-    dev2,
+    developer: project.developer,
     preset: project.archetype,
-    tasks: project.roadmap.map(task => ({ ...task, owner: project.team[task.owner].name }))
+    tasks: project.roadmap
   });
   fs.writeFileSync(path.resolve(root, 'docs', 'PLAN.md'), roadmap, 'utf-8');
 
@@ -199,6 +194,7 @@ export function tailorProject({ root = REPO_ROOT, dryRun = false, force = false 
   const syncDir = path.resolve(root, '.agents', 'sync');
   fs.mkdirSync(syncDir, { recursive: true });
   const timestamp = new Date().toISOString();
+  const developerLine = project.developer ? `- **Developer:** ${project.developer}\n` : '';
   writeJson(path.join(syncDir, 'handoff.json'), {
     version: '1.0',
     task_id: 'INIT-01',
@@ -221,8 +217,7 @@ export function tailorProject({ root = REPO_ROOT, dryRun = false, force = false 
 - **Name:** ${project.name}
 - **Source Spec:** ${project.source_spec}
 - **Active Skills:** ${keep.size} (Archived: ${installed.archived.length + changes.archive.length - changes.restore.length})
-- **Team:** ${dev1} & ${dev2}
-`, 'utf-8');
+${developerLine}`, 'utf-8');
 
   // 5. Install git pre-commit hook
   if (fs.existsSync(path.resolve(root, '.git'))) {

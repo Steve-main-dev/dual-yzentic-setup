@@ -25,8 +25,7 @@ class TestE2EProjectBlueprint(unittest.TestCase):
             "--preset", "fullstack-web",
             "--name", "e2e-demo-system",
             "--desc", "Fullstack AI Web App",
-            "--dev1", "Alice",
-            "--dev2", "Bob",
+            "--dev", "Alice",
             "--non-interactive",
         )
         self.assertEqual(res.returncode, 0, f"init failed: {res.stderr}")
@@ -36,12 +35,15 @@ class TestE2EProjectBlueprint(unittest.TestCase):
         self.assertEqual(bp["status"], "initialized")
         self.assertEqual(bp["project"]["archetype"], "fullstack-web")
         self.assertEqual(bp["project"]["name"], "e2e-demo-system")
+        self.assertEqual(bp["project"]["developer"], "Alice")
 
         # 3. Check active skills count
         res_list = self.node("skills-manager.mjs", "list", "--json")
         self.assertEqual(res_list.returncode, 0, res_list.stderr)
         skills_data = json.loads(res_list.stdout)
-        self.assertEqual(len(skills_data["active"]), 11)
+        self.assertEqual(len(skills_data["active"]), 10)
+        self.assertNotIn("pitch-architect", skills_data["active"])
+        self.assertIn("pitch-architect", skills_data["archived"])
         self.assertIn("ui-ux-pro-max", skills_data["active"])
         self.assertIn("caveman", skills_data["active"])
         self.assertIn("ponytail", skills_data["active"])

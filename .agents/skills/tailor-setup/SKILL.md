@@ -53,10 +53,7 @@ Extend the existing `project` block. Do not remove `archetypes`.
   "archetype": "custom",
   "source_spec": "docs/specs/2026-10-11-ai-flow-canvas-design.md",
   "stack": { "frontend": "…", "backend": "…", "database": "…", "auth": "…" },
-  "team": {
-    "dev1": { "name": "Steve", "role": "Fullstack & AI" },
-    "dev2": { "name": "Partner", "role": "Frontend & Design" }
-  },
+  "developer": "Steve",
   "skills": ["webapp-testing", "owasp-security", "varlock"],
   "verify": {
     "test": "npm test",
@@ -64,7 +61,7 @@ Extend the existing `project` block. Do not remove `archetypes`.
     "build": "npm run build"
   },
   "roadmap": [
-    { "id": "1.1", "title": "…", "priority": "P0", "owner": "dev1", "description": "…" }
+    { "id": "1.1", "title": "…", "priority": "P0", "description": "…" }
   ]
 }
 ```
@@ -75,12 +72,12 @@ Extend the existing `project` block. Do not remove `archetypes`.
 | `archetype` | yes | Must be `"custom"`. |
 | `source_spec` | yes | Repo-relative path to the existing spec file. |
 | `stack` | yes | Object of free-form strings. Keys are not fixed; a CLI tool may have only `runtime`. |
-| `team.dev1`, `team.dev2` | yes | Each needs a non-empty `name`. Ask the developer for both names if the spec does not give them. |
+| `developer` | no | The developer's name, a non-empty string when present. The roadmap says "the developer" when absent. |
 | `skills` | yes | Names that exist in `.agents/skills/` or `.agents/skills-archive/`. |
 | `verify.test` | yes | Shell command for the project's full test suite. |
 | `verify.test_scoped` | no | Shell command containing `{scope}`. |
 | `verify.build` | no | Production build command. Recorded for agents; the baton does not run it. |
-| `roadmap` | yes | At least one task. `id` unique; `priority` is `P0`, `P1`, or `P2`; `owner` is `dev1` or `dev2`. |
+| `roadmap` | yes | At least one task. `id` unique; `priority` is `P0`, `P1`, or `P2`. |
 
 **Always kept, listed or not:** `tailor-setup`, `fast-track`, `caveman`, `ponytail`.
 

@@ -5,6 +5,7 @@
  * Project Blueprint & Dynamic Repo Tailoring Wizard.
  */
 
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline/promises';
@@ -21,21 +22,32 @@ const REPO_ROOT = path.resolve(__dirname, '..');
 /**
  * Placeholder roadmap tasks for a freshly initialized archetype project
  */
-function defaultTasks(dev1, dev2) {
+function defaultTasks() {
   return [
-    { id: '1.1', title: 'Core Application Shell & Navigation', priority: 'P0', owner: dev1, description: 'Scaffolds primary app shell, responsive container, and header navigation.' },
-    { id: '1.2', title: 'Core Data Models & API Endpoints', priority: 'P0', owner: dev2, description: 'Core data models and backend routes for the primary application flow.' },
-    { id: '1.3', title: 'Hero Flow & Interactive Value Loop', priority: 'P0', owner: dev1, description: 'The primary user action that produces the "WOW" moment for judges.' },
-    { id: '2.1', title: 'Demo Mock & Realistic Seed Data', priority: 'P1', owner: dev2, description: 'Populate realistic transactions, profiles, and state using demo-seed-data.' },
-    { id: '2.2', title: 'UI Contrast, Responsive Refinement & Polish', priority: 'P1', owner: dev1, description: 'Polish typography, animations, and WCAG contrast using ui-ux-pro-max and impeccable.' },
-    { id: '3.1', title: 'Secondary Edge-Case Workflows', priority: 'P2', owner: dev2, description: 'Advanced configurations and secondary administrative settings.' }
+    { id: '1.1', title: 'Core Application Shell & Navigation', priority: 'P0', description: 'Scaffolds primary app shell, responsive container, and header navigation.' },
+    { id: '1.2', title: 'Core Data Models & API Endpoints', priority: 'P0', description: 'Core data models and backend routes for the primary application flow.' },
+    { id: '1.3', title: 'Hero Flow & Interactive Value Loop', priority: 'P0', description: 'The primary user action that delivers the core value of the product.' },
+    { id: '2.1', title: 'Demo Mock & Realistic Seed Data', priority: 'P1', description: 'Populate realistic transactions, profiles, and state using demo-seed-data.' },
+    { id: '2.2', title: 'UI Contrast, Responsive Refinement & Polish', priority: 'P1', description: 'Polish typography, animations, and WCAG contrast using ui-ux-pro-max and impeccable.' },
+    { id: '3.1', title: 'Secondary Edge-Case Workflows', priority: 'P2', description: 'Advanced configurations and secondary administrative settings.' }
   ];
+}
+
+/**
+ * The developer's name for the wizard default: `git config user.name`, or 'Developer'
+ */
+function gitUserName(root) {
+  try {
+    return execFileSync('git', ['config', 'user.name'], { cwd: root, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || 'Developer';
+  } catch {
+    return 'Developer';
+  }
 }
 
 /**
  * Initialize project with options
  */
-export function initProject({ preset, name, desc, dev1, dev2, scaffold = true, root = REPO_ROOT }) {
+export function initProject({ preset, name, desc, developer = 'Developer', scaffold = true, root = REPO_ROOT }) {
   const BLUEPRINT_PATH = path.resolve(root, 'project-blueprint.json');
   const PLAN_PATH = path.resolve(root, 'docs', 'PLAN.md');
   const PACKAGE_PATH = path.resolve(root, 'package.json');
@@ -62,9 +74,8 @@ export function initProject({ preset, name, desc, dev1, dev2, scaffold = true, r
   blueprint.project.name = name || blueprint.project.name || 'my-project';
   blueprint.project.description = desc || blueprint.project.description || 'Project';
   blueprint.project.archetype = preset;
-  if (!blueprint.project.team) blueprint.project.team = {};
-  blueprint.project.team.dev1 = { name: dev1 || 'Dev 1', role: 'Fullstack' };
-  blueprint.project.team.dev2 = { name: dev2 || 'Dev 2', role: 'Frontend' };
+  blueprint.project.developer = developer || 'Developer';
+  delete blueprint.project.team;
   fs.writeFileSync(BLUEPRINT_PATH, JSON.stringify(blueprint, null, 2), 'utf-8');
 
   // 3. Update package.json
@@ -79,10 +90,9 @@ export function initProject({ preset, name, desc, dev1, dev2, scaffold = true, r
   const roadmapContent = generateRoadmap({
     name: blueprint.project.name,
     desc: blueprint.project.description,
-    dev1: dev1 || 'Dev 1',
-    dev2: dev2 || 'Dev 2',
+    developer: blueprint.project.developer,
     preset,
-    tasks: defaultTasks(dev1 || 'Dev 1', dev2 || 'Dev 2')
+    tasks: defaultTasks()
   });
   fs.writeFileSync(PLAN_PATH, roadmapContent, 'utf-8');
 
@@ -111,7 +121,7 @@ export function initProject({ preset, name, desc, dev1, dev2, scaffold = true, r
 - **Name:** ${blueprint.project.name}
 - **Archetype:** ${preset}
 - **Active Skills:** ${syncResult.active_count} (Archived: ${syncResult.archived_count})
-- **Team:** ${dev1 || 'Dev 1'} & ${dev2 || 'Dev 2'}
+- **Developer:** ${blueprint.project.developer}
 `;
   fs.writeFileSync(HANDOFF_MD_PATH, handoffMd, 'utf-8');
 
@@ -122,8 +132,7 @@ export function initProject({ preset, name, desc, dev1, dev2, scaffold = true, r
       preset,
       name: blueprint.project.name,
       desc: blueprint.project.description,
-      dev1: dev1 || 'Dev 1',
-      dev2: dev2 || 'Dev 2',
+      developer: blueprint.project.developer,
       root
     });
   }
@@ -149,8 +158,7 @@ export async function main() {
   let preset = null;
   let name = null;
   let desc = null;
-  let dev1 = null;
-  let dev2 = null;
+  let developer = null;
   let isNonInteractive = false;
   let shouldScaffold = true;
   let root = REPO_ROOT;
@@ -159,8 +167,7 @@ export async function main() {
     if (args[i] === '--preset' && args[i + 1]) preset = args[++i];
     if (args[i] === '--name' && args[i + 1]) name = args[++i];
     if (args[i] === '--desc' && args[i + 1]) desc = args[++i];
-    if (args[i] === '--dev1' && args[i + 1]) dev1 = args[++i];
-    if (args[i] === '--dev2' && args[i + 1]) dev2 = args[++i];
+    if (args[i] === '--dev' && args[i + 1]) developer = args[++i];
     if (args[i] === '--non-interactive') isNonInteractive = true;
     if (args[i] === '--skip-scaffold') shouldScaffold = false;
     if (args[i] === '--root') {
@@ -180,26 +187,26 @@ export async function main() {
       console.log('   🚀 Project Blueprint & Repo Tailoring Wizard');
       console.log('======================================================\n');
 
-      name = (await rl.question('1. Project Name (e.g. ai-flow-canvas): ')).trim() || 'my-hackathon-app';
-      desc = (await rl.question('2. 1-Sentence Project Mission / Pitch: ')).trim() || 'Rapid MVP Prototyping';
+      name = (await rl.question('1. Project Name (e.g. ai-flow-canvas): ')).trim() || 'my-app';
+      desc = (await rl.question('2. One-sentence project description: ')).trim() || 'New project';
       
       console.log('\n3. Select Project Archetype:');
       console.log('   [1] fullstack-web     (Next.js/Vite + Full Backend + DB)');
       console.log('   [2] ai-agent-app      (FastAPI/Node + Prompt & Agentic Eval)');
       console.log('   [3] frontend-dashboard (Vite + React + Tailwind + Charts)');
-      console.log('   [4] minimal-hackathon (Ultra-Lean Core Suite Only)');
+      console.log('   [4] minimal            (Lean Core Suite Only)');
       const choice = (await rl.question('   Choice [1-4, default 1]: ')).trim();
 
       const presetMap = {
         '1': 'fullstack-web',
         '2': 'ai-agent-app',
         '3': 'frontend-dashboard',
-        '4': 'minimal-hackathon'
+        '4': 'minimal'
       };
       preset = presetMap[choice] || 'fullstack-web';
 
-      dev1 = (await rl.question('\n4. Developer 1 Name / Handle (e.g. Steve): ')).trim() || 'Dev 1';
-      dev2 = (await rl.question('5. Developer 2 Name / Handle (e.g. Partner): ')).trim() || 'Dev 2';
+      const defaultDeveloper = gitUserName(root);
+      developer = (await rl.question(`\n4. Your name (default ${defaultDeveloper}): `)).trim() || defaultDeveloper;
       rl.close();
     } else if (!preset) {
       preset = 'fullstack-web';
@@ -207,10 +214,9 @@ export async function main() {
 
     const res = initProject({
       preset,
-      name: name || 'my-hackathon-app',
-      desc: desc || 'Hackathon Prototype',
-      dev1: dev1 || 'Dev 1',
-      dev2: dev2 || 'Dev 2',
+      name: name || 'my-app',
+      desc: desc || 'New project',
+      developer: developer || 'Developer',
       root
     });
 
@@ -218,9 +224,9 @@ export async function main() {
     console.log(`- Project:       ${res.project.name}`);
     console.log(`- Archetype:     ${res.project.archetype}`);
     console.log(`- Active Skills: ${res.syncResult.active_count} active (Archived ${res.syncResult.archived_count} into .agents/skills-archive/)`);
-    console.log(`- Roadmap:       Fresh docs/PLAN.md generated for ${res.project.team.dev1.name} & ${res.project.team.dev2.name}`);
+    console.log(`- Roadmap:       Fresh docs/PLAN.md generated for ${res.project.developer}`);
     console.log(`- Sync Bus:      Reset to idle in .agents/sync/handoff.json`);
-    console.log('\nYou can now start pair-programming with Claude Code and Antigravity!\n');
+    console.log('\nYou can now start building with Claude Code and Antigravity!\n');
     process.exit(0);
   } catch (err) {
     console.error(`\n[Init Project Error] ${err.message}\n`);

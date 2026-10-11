@@ -1,7 +1,7 @@
 {
   "name": "dual-yzentic-setup",
   "version": "1.0.0",
-  "description": "Dual-agent pair programming setup for Claude Pro and Antigravity",
+  "description": "Dual-agent development setup for one developer: Claude Code builds, Antigravity tests",
   "type": "module",
   "scripts": {
     "verify:agent": "node scripts/baton.mjs verify",
@@ -19,8 +19,7 @@
     "ai-agents",
     "claude-code",
     "antigravity",
-    "pair-programming",
-    "hackathon"
+    "dual-agent"
   ],
   "author": "",
   "license": "MIT"

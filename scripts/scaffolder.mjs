@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DEFAULT_ROOT = path.resolve(__dirname, '..');
 
-export function scaffoldProject({ preset = 'fullstack-web', name = 'hackathon-app', desc = 'MVP Prototype', dev1 = 'Dev 1', dev2 = 'Dev 2', root = DEFAULT_ROOT }) {
+export function scaffoldProject({ preset = 'fullstack-web', name = 'MyApp', desc = 'MVP Prototype', developer = 'Developer', root = DEFAULT_ROOT }) {
   const srcDir = path.resolve(root, 'src');
   if (!fs.existsSync(srcDir)) {
     fs.mkdirSync(srcDir, { recursive: true });
@@ -50,11 +50,10 @@ export function scaffoldProject({ preset = 'fullstack-web', name = 'hackathon-ap
 
 export interface HeaderProps {
   appName: string;
-  dev1: string;
-  dev2: string;
+  developer: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ appName, dev1, dev2 }) => {
+export const Header: React.FC<HeaderProps> = ({ appName, developer }) => {
   return (
     <header className="w-full border-b border-gray-200 bg-white/80 backdrop-blur px-6 py-4 flex items-center justify-between">
       <div className="flex items-center space-x-3">
@@ -62,8 +61,7 @@ export const Header: React.FC<HeaderProps> = ({ appName, dev1, dev2 }) => {
         <span className="bg-indigo-50 text-indigo-700 text-xs px-2.5 py-0.5 rounded-full font-medium">MVP</span>
       </div>
       <div className="flex items-center space-x-4 text-sm text-gray-600">
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> {dev1}</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500"></span> {dev2}</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> {developer}</span>
       </div>
     </header>
   );
@@ -78,7 +76,7 @@ import { Header } from './components/Header';
 export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
-      <Header appName="${name}" dev1="${dev1}" dev2="${dev2}" />
+      <Header appName="${name}" developer="${developer}" />
       <main className="flex-1 max-w-4xl mx-auto px-6 py-12 flex flex-col items-center justify-center text-center">
         <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl text-slate-950 mb-4">
           ${name}
@@ -87,11 +85,11 @@ export default function App() {
           ${desc}
         </p>
         <div className="p-6 bg-white rounded-xl shadow-sm border border-slate-200 text-left w-full max-w-lg">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Pair-Programming Status</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Agent Roles</h2>
           <ul className="space-y-2 text-sm text-slate-700">
             <li>🚀 <strong>Builder (Claude):</strong> Architecture & implementation in <code>src/</code></li>
             <li>🛡️ <strong>Gatekeeper (Antigravity):</strong> Test suites & baton verification</li>
-            <li>👥 <strong>Team:</strong> ${dev1} (Dev 1) & ${dev2} (Dev 2)</li>
+            <li>👤 <strong>Developer:</strong> ${developer}</li>
           </ul>
         </div>
       </main>
@@ -107,8 +105,7 @@ import os
 
 APP_NAME = "${name}"
 APP_DESC = "${desc}"
-DEV1 = "${dev1}"
-DEV2 = "${dev2}"
+DEVELOPER = "${developer}"
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 `;
     fs.writeFileSync(path.join(srcDir, 'config.py'), configContent, 'utf-8');
@@ -143,7 +140,7 @@ def handle_request(payload_json: str) -> str:
 `;
     fs.writeFileSync(path.join(srcDir, 'api.py'), apiContent, 'utf-8');
   } else {
-    // minimal-hackathon
+    // minimal
     // 1. src/index.html
     const htmlContent = `<!DOCTYPE html>
 <html lang="en">
@@ -155,16 +152,15 @@ def handle_request(payload_json: str) -> str:
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-6">
   <div class="max-w-lg w-full bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-2xl text-center">
-    <div class="inline-block bg-indigo-500/20 text-indigo-400 font-semibold px-3 py-1 rounded-full text-xs mb-4">Hackathon Demo</div>
+    <div class="inline-block bg-indigo-500/20 text-indigo-400 font-semibold px-3 py-1 rounded-full text-xs mb-4">Starter</div>
     <h1 class="text-3xl font-bold mb-2">${name}</h1>
     <p class="text-slate-400 mb-6">${desc}</p>
     <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/50 text-left text-sm text-slate-300 mb-6">
-      <div class="flex justify-between py-1"><span>Dev 1:</span> <strong class="text-white">${dev1}</strong></div>
-      <div class="flex justify-between py-1"><span>Dev 2:</span> <strong class="text-white">${dev2}</strong></div>
+      <div class="flex justify-between py-1"><span>Developer:</span> <strong class="text-white">${developer}</strong></div>
       <div class="flex justify-between py-1"><span>Clicks:</span> <strong id="counter" class="text-emerald-400">0</strong></div>
     </div>
     <button id="action-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl transition">
-      Trigger Demo Action
+      Trigger Action
     </button>
   </div>
   <script src="app.js"></script>
@@ -194,18 +190,16 @@ if (btn && counter) {
 export async function main() {
   const args = process.argv.slice(2);
   let preset = 'fullstack-web';
-  let name = 'MyHackApp';
+  let name = 'MyApp';
   let desc = 'Rapid Prototype';
-  let dev1 = 'Dev 1';
-  let dev2 = 'Dev 2';
+  let developer = 'Developer';
   let root = DEFAULT_ROOT;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--preset' && args[i + 1]) preset = args[++i];
     if (args[i] === '--name' && args[i + 1]) name = args[++i];
     if (args[i] === '--desc' && args[i + 1]) desc = args[++i];
-    if (args[i] === '--dev1' && args[i + 1]) dev1 = args[++i];
-    if (args[i] === '--dev2' && args[i + 1]) dev2 = args[++i];
+    if (args[i] === '--dev' && args[i + 1]) developer = args[++i];
     if (args[i] === '--root') {
       if (!args[i + 1] || args[i + 1].startsWith('--')) {
         console.error('[Scaffolder Error] --root requires a path');
@@ -215,7 +209,7 @@ export async function main() {
     }
   }
 
-  scaffoldProject({ preset, name, desc, dev1, dev2, root });
+  scaffoldProject({ preset, name, desc, developer, root });
   console.log(`[Scaffolder] Starter code generated in src/ for preset '\${preset}'.`);
 }
 

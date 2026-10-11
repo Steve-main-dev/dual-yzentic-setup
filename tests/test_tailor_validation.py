@@ -35,17 +35,17 @@ class TestTailorValidation(unittest.TestCase):
             (lambda p: p.update(source_spec="docs/specs/no.md"), "project.source_spec"),
             (lambda p: p.update(source_spec="../outside.md"), "project.source_spec"),
             (lambda p: p.update(stack=[]), "project.stack"),
-            (lambda p: p["team"]["dev2"].update(name=""), "project.team.dev2.name"),
+            (lambda p: p.update(developer=""), "project.developer"),
+            (lambda p: p.update(developer=7), "project.developer"),
             (lambda p: p.update(skills="alpha"), "project.skills"),
             (lambda p: p.update(skills=["alpha", "nope"]), "project.skills"),
             (lambda p: p["verify"].pop("test"), "project.verify.test"),
             (lambda p: p["verify"].update(test_scoped="npm test"), "project.verify.test_scoped"),
             (lambda p: p.update(roadmap=[]), "project.roadmap"),
             (lambda p: p["roadmap"][0].update(priority="P3"), "project.roadmap[0].priority"),
-            (lambda p: p["roadmap"][1].update(owner="Bob"), "project.roadmap[1].owner"),
             (lambda p: p["roadmap"][1].update(id="1.1"), "project.roadmap[1].id"),
             (lambda p: p["roadmap"][0].update(title=""), "project.roadmap[0].title"),
-            (lambda p: p["team"]["dev1"].update(name=" "), "project.team.dev1.name"),
+            (lambda p: p.update(developer=" "), "project.developer"),
             (lambda p: p["roadmap"][0].update(description=""), "project.roadmap[0].description"),
             (lambda p: p["roadmap"].__setitem__(1, "not a task"), "project.roadmap[1]"),
             (lambda p: p.update(source_spec=str(self.root / "docs" / "specs" / "demo-design.md")), "project.source_spec"),
@@ -76,7 +76,23 @@ class TestTailorValidation(unittest.TestCase):
         project = copy.deepcopy(VALID_PROJECT)
         del project["verify"]["test_scoped"]
         del project["verify"]["build"]
-        del project["team"]["dev1"]["role"]
+        del project["developer"]
+        self.assertEqual(self.problems(project), [])
+
+    def test_developer_is_optional_but_must_be_text_when_present(self):
+        project = copy.deepcopy(VALID_PROJECT)
+        del project["developer"]
+        self.assertEqual(self.problems(project), [])
+
+        project["developer"] = ""
+        found = self.problems(project)
+        self.assertEqual(len(found), 1, found)
+        self.assertTrue(found[0].startswith("project.developer"), found[0])
+
+    def test_old_team_and_owner_fields_are_ignored(self):
+        project = copy.deepcopy(VALID_PROJECT)
+        project["team"] = {"dev1": {"name": ""}}
+        project["roadmap"][0]["owner"] = "nobody"
         self.assertEqual(self.problems(project), [])
 
     def test_duplicate_and_always_kept_skills_are_valid(self):

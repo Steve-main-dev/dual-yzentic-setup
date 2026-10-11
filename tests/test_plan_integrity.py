@@ -15,19 +15,18 @@ class TestPlanIntegrity(unittest.TestCase):
         content = self.plan_path.read_text(encoding="utf-8")
         
         required_sections = [
-            "Mission & Hackathon Objective",
-            "Current Sprint Focus",
-            "P0: Must-Have for Demo",
-            "P1: High Impact Polish",
-            "P2: Post-Hackathon Stretch",
+            "Mission & Objective",
+            "Current Focus",
+            "P0: Must-Have",
+            "P1: Should-Have",
+            "P2: Later",
             "Rules for Adding Features"
         ]
         for section in required_sections:
             self.assertIn(section, content, f"Missing section '{section}' in docs/PLAN.md")
 
-    def test_plan_contains_ownership_and_priority_tags(self):
+    def test_plan_contains_priority_and_status_tags(self):
         content = self.plan_path.read_text(encoding="utf-8")
-        self.assertIn("Owner:", content)
         self.assertIn("Priority:", content)
         self.assertIn("Status:", content)
 

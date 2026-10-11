@@ -15,12 +15,12 @@ VALID_PROJECT = {
     "archetype": "custom",
     "source_spec": "docs/specs/demo-design.md",
     "stack": {"runtime": "Python 3.12 CLI"},
-    "team": {"dev1": {"name": "Steve", "role": "Fullstack"}, "dev2": {"name": "Bob"}},
+    "developer": "Steve",
     "skills": ["alpha", "gamma"],
     "verify": {"test": "npm test", "test_scoped": "npm test -- {scope}", "build": "npm run build"},
     "roadmap": [
-        {"id": "1.1", "title": "Canvas shell", "priority": "P0", "owner": "dev1", "description": "Drag and drop nodes."},
-        {"id": "2.1", "title": "Seed flows", "priority": "P1", "owner": "dev2", "description": "Three demo flows."},
+        {"id": "1.1", "title": "Canvas shell", "priority": "P0", "description": "Drag and drop nodes."},
+        {"id": "2.1", "title": "Seed flows", "priority": "P1", "description": "Three demo flows."},
     ],
 }
 

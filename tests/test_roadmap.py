@@ -4,22 +4,21 @@ import unittest
 from tests.repo_fixture import run_node
 
 TASKS = [
-    {"id": "1.1", "title": "Canvas shell", "priority": "P0", "owner": "Steve", "description": "Drag and drop nodes."},
-    {"id": "2.1", "title": "Seed flows", "priority": "P1", "owner": "Bob", "description": "Three demo flows."},
+    {"id": "1.1", "title": "Canvas shell", "priority": "P0", "description": "Drag and drop nodes."},
+    {"id": "2.1", "title": "Seed flows", "priority": "P1", "description": "Three demo flows."},
 ]
 
-P0 = "## P0: Must-Have for Demo"
-P1 = "## P1: High Impact Polish"
-P2 = "## P2: Post-Hackathon Stretch"
+P0 = "## P0: Must-Have"
+P1 = "## P1: Should-Have"
+P2 = "## P2: Later"
 
 
 class TestRoadmap(unittest.TestCase):
     def render(self, tasks=TASKS):
         options = {
-            "name": "Demo",
-            "desc": "A demo project",
-            "dev1": "Steve",
-            "dev2": "Bob",
+            "name": "Flow Canvas",
+            "desc": "A visual canvas for AI steps",
+            "developer": "Steve",
             "preset": "custom",
             "tasks": tasks,
         }
@@ -39,7 +38,6 @@ class TestRoadmap(unittest.TestCase):
         self.assertLess(first, text.index(P1))
         self.assertLess(text.index(P1), second)
         self.assertLess(second, text.index(P2))
-        self.assertIn("  - **Owner:** Steve", text)
         self.assertIn("  - **Priority:** P0", text)
         self.assertIn("  - **Status:** Backlog", text)
 
@@ -50,14 +48,35 @@ class TestRoadmap(unittest.TestCase):
     def test_contains_all_required_sections(self):
         text = self.render()
         for section in [
-            "Mission & Hackathon Objective",
-            "Current Sprint Focus",
-            "P0: Must-Have for Demo",
-            "P1: High Impact Polish",
-            "P2: Post-Hackathon Stretch",
-            "Rules for Adding Features",
+            "## Mission & Objective",
+            "## Rules for Adding Features",
+            "## Current Focus",
+            P0,
+            P1,
+            P2,
         ]:
             self.assertIn(section, text)
+
+    def test_sections_appear_in_order(self):
+        text = self.render()
+        headings = [
+            "## Mission & Objective",
+            "## Rules for Adding Features",
+            "## Current Focus",
+            P0,
+            P1,
+            P2,
+        ]
+        positions = [text.index(heading) for heading in headings]
+        self.assertEqual(positions, sorted(positions))
+
+    def test_single_developer_wording_and_no_hackathon_terms(self):
+        text = self.render()
+        self.assertIn("> **For Steve and the AI agents:**", text)
+        self.assertIn("Active milestone: **Core scaffolding and first feature loop**", text)
+        self.assertIn("- **Verification:** [`scripts/baton.mjs`](../scripts/baton.mjs)", text)
+        for banned in ["Owner", "Hackathon", "judges", "Demo"]:
+            self.assertNotIn(banned, text)
 
     def test_multiline_text_collapses_to_one_line(self):
         tasks = [dict(TASKS[0], title="Canvas\nshell", description="  Drag\n\nand drop.  ")]

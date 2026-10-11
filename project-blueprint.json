@@ -2,7 +2,7 @@
   "status": "uninitialized",
   "project": {
     "name": "dual-yzentic-setup",
-    "description": "Dual-agent pair programming setup template for Claude Pro and Antigravity",
+    "description": "Dual-agent development setup template for Claude Code and Antigravity",
     "archetype": "fullstack-web",
     "stack": {
       "frontend": "Next.js (App Router) + Tailwind CSS",
@@ -10,10 +10,7 @@
       "database": "Supabase / PostgreSQL",
       "auth": "Supabase Auth"
     },
-    "team": {
-      "dev1": { "name": "Dev 1", "role": "Fullstack & AI" },
-      "dev2": { "name": "Dev 2", "role": "Frontend & Design" }
-    }
+    "developer": "Developer"
   },
   "archetypes": {
     "fullstack-web": {
@@ -21,7 +18,7 @@
       "keep_skills": [
         "caveman", "ponytail", "ui-ux-pro-max", "impeccable",
         "archify", "webapp-testing", "owasp-security", "varlock",
-        "pitch-architect", "demo-seed-data", "fast-track"
+        "demo-seed-data", "fast-track"
       ],
       "rules_preset": "fullstack-web"
     },
@@ -29,7 +26,7 @@
       "name": "AI Agent / LLM Pipeline (FastAPI / Node + Multi-Agent)",
       "keep_skills": [
         "caveman", "ponytail", "prompt-engineer", "agentic-eval",
-        "varlock", "owasp-security", "pitch-architect", "demo-seed-data",
+        "varlock", "owasp-security", "demo-seed-data",
         "archify", "fast-track"
       ],
       "rules_preset": "ai-agent"
@@ -39,15 +36,15 @@
       "keep_skills": [
         "caveman", "ponytail", "ui-ux-pro-max", "impeccable",
         "design-system", "slides", "banner-design", "demo-seed-data",
-        "pitch-architect", "webapp-testing", "fast-track"
+        "webapp-testing", "fast-track"
       ],
       "rules_preset": "frontend-dashboard"
     },
-    "minimal-hackathon": {
-      "name": "Ultra-Lean Hackathon Sprint (Core Essentials Only)",
+    "minimal": {
+      "name": "Lean Starter (Core Essentials Only)",
       "keep_skills": [
         "caveman", "ponytail", "ui-ux-pro-max", "impeccable",
-        "pitch-architect", "demo-seed-data", "fast-track"
+        "demo-seed-data", "fast-track"
       ],
       "rules_preset": "minimal"
     }

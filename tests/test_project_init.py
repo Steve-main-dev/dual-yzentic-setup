@@ -24,30 +24,32 @@ class TestProjectInit(unittest.TestCase):
 
     def test_non_interactive_init_execution(self):
         res = self.run_init(
-            "--preset", "minimal-hackathon",
-            "--name", "demo-ai-hack",
-            "--desc", "AI Hackathon Demo Project",
-            "--dev1", "Steve",
-            "--dev2", "Bob",
+            "--preset", "minimal",
+            "--name", "demo-ai-app",
+            "--desc", "AI Demo Project",
+            "--dev", "Steve",
         )
         self.assertEqual(res.returncode, 0, f"init-project failed: {res.stderr}")
 
         # 1. Blueprint status updated
         blueprint = json.loads((self.fixture / "project-blueprint.json").read_text(encoding="utf-8"))
         self.assertEqual(blueprint["status"], "initialized")
-        self.assertEqual(blueprint["project"]["name"], "demo-ai-hack")
-        self.assertEqual(blueprint["project"]["team"]["dev1"]["name"], "Steve")
+        self.assertEqual(blueprint["project"]["name"], "demo-ai-app")
+        self.assertEqual(blueprint["project"]["developer"], "Steve")
+        self.assertNotIn("team", blueprint["project"])
 
         # 2. Package.json updated
         pkg = json.loads((self.fixture / "package.json").read_text(encoding="utf-8"))
-        self.assertEqual(pkg["name"], "demo-ai-hack")
-        self.assertEqual(pkg["description"], "AI Hackathon Demo Project")
+        self.assertEqual(pkg["name"], "demo-ai-app")
+        self.assertEqual(pkg["description"], "AI Demo Project")
 
         # 3. PLAN.md updated
         plan_content = (self.fixture / "docs" / "PLAN.md").read_text(encoding="utf-8")
-        self.assertIn("demo-ai-hack", plan_content)
-        self.assertIn("Steve", plan_content)
-        self.assertIn("Bob", plan_content)
+        self.assertIn("demo-ai-app", plan_content)
+        self.assertIn("> **For Steve and the AI agents:**", plan_content)
+        self.assertIn("Task 1.1: Core Application Shell & Navigation", plan_content)
+        for banned in ["Owner", "Hackathon", "judges"]:
+            self.assertNotIn(banned, plan_content)
 
         # 4. Handoff reset
         handoff = json.loads((self.fixture / ".agents" / "sync" / "handoff.json").read_text(encoding="utf-8"))
@@ -57,8 +59,29 @@ class TestProjectInit(unittest.TestCase):
         # 5. No git repo in the fixture, so no hook was installed
         self.assertFalse((self.fixture / ".githooks").exists())
 
+    def test_developer_defaults_and_stale_team_is_removed(self):
+        path = self.fixture / "project-blueprint.json"
+        blueprint = json.loads(path.read_text(encoding="utf-8"))
+        blueprint["project"]["team"] = {"dev1": {"name": "Old"}}
+        path.write_text(json.dumps(blueprint), encoding="utf-8")
+
+        res = self.run_init("--preset", "fullstack-web")
+        self.assertEqual(res.returncode, 0, f"init-project failed: {res.stderr}")
+
+        project = json.loads(path.read_text(encoding="utf-8"))["project"]
+        self.assertEqual(project["developer"], "Developer")
+        self.assertEqual(project["name"], "my-app")
+        self.assertEqual(project["description"], "New project")
+        self.assertNotIn("team", project)
+
+    def test_old_preset_name_is_rejected(self):
+        res = self.run_init("--preset", "minimal-hackathon")
+        self.assertEqual(res.returncode, 1)
+        self.assertIn("not found", res.stderr.lower())
+        self.assertIn("frontend-dashboard, minimal", res.stderr)
+
     def test_root_flag_without_value_fails(self):
-        cmd = ["node", str(self.script), "--preset", "minimal-hackathon", "--non-interactive", "--root"]
+        cmd = ["node", str(self.script), "--preset", "minimal", "--non-interactive", "--root"]
         res = subprocess.run(cmd, cwd=self.fixture, capture_output=True, text=True)
         self.assertEqual(res.returncode, 1)
         self.assertIn("--root", res.stderr)
