@@ -77,7 +77,7 @@ New constraints from the developer: the setup is **not for hackathons** and is f
 
 ### Task 2: Root-aware scripts and isolated tests
 
-- [ ] **Status**
+- [x] **Status** (commit `27074f4`)
 
 **Files:**
 - Modify: `scripts/baton.mjs`, `scripts/init-project.mjs`, `scripts/skills-manager.mjs`, `scripts/scaffolder.mjs`, `scripts/install-hooks.mjs`
