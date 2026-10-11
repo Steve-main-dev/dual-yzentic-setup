@@ -209,6 +209,9 @@ export async function main() {
     if (modified.length > 0) {
       console.log(`              ${modified.slice(0, 5).join(', ')}${modified.length > 5 ? '...' : ''}`);
     }
+    const delegations = state.delegations ?? [];
+    const tokens = delegations.reduce((sum, d) => sum + (d.total_tokens || 0), 0);
+    console.log(`Antigravity:  ${delegations.length} launches, ${tokens} tokens (last 20)`);
     console.log('=========================\n');
     process.exit(0);
   }

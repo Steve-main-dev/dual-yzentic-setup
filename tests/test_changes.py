@@ -84,6 +84,87 @@ class TestChanges(unittest.TestCase):
         self.assertEqual(self.call("changes.getLastCommitFiles(root)"), [])
         self.assertEqual(self.call("changes.resolveChangeSet(root)"), {"files": [], "source": "none"})
 
+    def test_test_file_patterns(self):
+        paths = {
+            "tests/helper.js": True,
+            "test/helper.js": True,
+            "src/__tests__/a.js": True,
+            "test_add.py": True,
+            "src/test_add.py": True,
+            "src/add_test.go": True,
+            "src/app.test.js": True,
+            "src/app.spec.ts": True,
+            "src/app.js": False,
+            "src/latest.js": False,
+            "src/testing/app.js": False,
+            "src/contest.py": False,
+            "tests": False,
+        }
+        flags = self.call(f"{json.dumps(list(paths))}.map(changes.isTestFile)")
+        self.assertEqual(flags, list(paths.values()))
+
+    def test_source_file_classification(self):
+        paths = {
+            "src/app.js": True,
+            "package.json": True,
+            "tests/app.test.js": False,
+            "README.md": False,
+            "docs/notes.txt": False,
+            "styles/site.css": False,
+            ".agents/skills/x/SKILL.md": False,
+            ".agents/sync/handoff.json": False,
+        }
+        flags = self.call(f"{json.dumps(list(paths))}.map(changes.isSourceFile)")
+        self.assertEqual(flags, list(paths.values()))
+
+    def test_snapshot_hashes_changed_files_and_maps_a_deletion_to_null(self):
+        self.write("src/app.js")
+        self.write("src/gone.js")
+        repo_fixture.git_init(self.root)
+        self.write("src/app.js", "changed\n")
+        self.write("src/new.js")
+        self.root.joinpath("src", "gone.js").unlink()
+        snapshot = self.call("Object.fromEntries(changes.snapshotChanges(root))")
+        self.assertEqual(sorted(snapshot), ["src/app.js", "src/gone.js", "src/new.js"])
+        self.assertIsNone(snapshot["src/gone.js"])
+        self.assertRegex(snapshot["src/app.js"], r"^[0-9a-f]{40}$")
+        self.assertNotEqual(snapshot["src/app.js"], snapshot["src/new.js"])
+
+    def scope(self, before, after, allow_edits):
+        return self.call(
+            f"changes.checkScope(new Map(Object.entries({json.dumps(before)})), "
+            f"new Map(Object.entries({json.dumps(after)})), {{ allowEdits: {json.dumps(allow_edits)} }})"
+        )
+
+    def test_read_only_scope_rejects_any_change(self):
+        result = self.scope({"src/app.js": "h1"}, {"src/app.js": "h1", "tests/new.test.js": "h2"}, False)
+        self.assertEqual(result, {"testsWritten": [], "outOfScope": ["tests/new.test.js"]})
+
+    def test_edit_scope_splits_tests_from_source(self):
+        after = {"tests/new.test.js": "h1", "src/rogue.js": "h2", "tests/old.test.js": "h4"}
+        result = self.scope({"tests/old.test.js": "h3"}, after, True)
+        self.assertEqual(result, {"testsWritten": ["tests/new.test.js", "tests/old.test.js"], "outOfScope": ["src/rogue.js"]})
+
+    def test_unchanged_paths_are_in_scope(self):
+        state = {"src/app.js": "h1", "tests/a.test.js": "h2", "src/gone.js": None}
+        self.assertEqual(self.scope(state, state, True), {"testsWritten": [], "outOfScope": []})
+
+    def test_file_already_changed_and_modified_again_is_caught_by_its_hash(self):
+        self.write("src/app.js")
+        repo_fixture.git_init(self.root)
+        self.write("src/app.js", "builder edit\n")
+        code = f"""
+        import * as changes from './scripts/changes.mjs';
+        import {{ writeFileSync }} from 'node:fs';
+        const root = {json.dumps(str(self.root))};
+        const before = changes.snapshotChanges(root);
+        writeFileSync(root + '/src/app.js', 'agent edit\\n');
+        console.log(JSON.stringify(changes.checkScope(before, changes.snapshotChanges(root), {{ allowEdits: true }})));
+        """
+        res = repo_fixture.run_node(code)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(json.loads(res.stdout.strip()), {"testsWritten": [], "outOfScope": ["src/app.js"]})
+
 
 if __name__ == "__main__":
     unittest.main()

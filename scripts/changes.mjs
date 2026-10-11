@@ -4,6 +4,8 @@
  */
 
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -17,6 +19,24 @@ const COSMETIC_EXTENSIONS = ['.md', '.css', '.scss', '.svg', '.png', '.jpg', '.j
 export function isCosmeticFile(path) {
   const lower = path.toLowerCase();
   return COSMETIC_EXTENSIONS.some(ext => lower.endsWith(ext)) || lower.startsWith('docs/');
+}
+
+const TEST_DIRS = ['tests', 'test', '__tests__'];
+const TEST_NAME = /^test_.*\.py$|_test\..+$|\.test\..+$|\.spec\..+$/;
+
+/**
+ * A test file lives under tests/, test/ or __tests__/, or is named like one.
+ */
+export function isTestFile(path) {
+  const parts = path.split('/');
+  return parts.slice(0, -1).some(dir => TEST_DIRS.includes(dir)) || TEST_NAME.test(parts[parts.length - 1]);
+}
+
+/**
+ * A source file is anything that is not a test, not cosmetic, and not agent state.
+ */
+export function isSourceFile(path) {
+  return !isTestFile(path) && !isCosmeticFile(path) && !path.startsWith('.agents/');
 }
 
 function git(root, args) {
@@ -63,4 +83,33 @@ export function resolveChangeSet(root = REPO_ROOT) {
   const committed = getLastCommitFiles(root);
   if (committed.length > 0) return { files: committed, source: 'last-commit' };
   return { files: [], source: 'none' };
+}
+
+function hashFile(root, path) {
+  try {
+    return createHash('sha1').update(readFileSync(resolve(root, path))).digest('hex');
+  } catch {
+    return null; // listed by git but gone from disk: a deletion
+  }
+}
+
+/**
+ * Every uncommitted file mapped to a hash of its contents (null for a deletion).
+ */
+export function snapshotChanges(root = REPO_ROOT) {
+  return new Map(getUncommittedFiles(root).map(path => [path, hashFile(root, path)]));
+}
+
+/**
+ * Compare two snapshots. A path changed if it is new in `after` or its hash differs.
+ * Read-only runs may change nothing; with allowEdits only test files may change.
+ */
+export function checkScope(before, after, { allowEdits = false } = {}) {
+  const testsWritten = [];
+  const outOfScope = [];
+  for (const [path, hash] of after) {
+    if (before.has(path) && before.get(path) === hash) continue;
+    (allowEdits && isTestFile(path) ? testsWritten : outOfScope).push(path);
+  }
+  return { testsWritten, outOfScope };
 }
