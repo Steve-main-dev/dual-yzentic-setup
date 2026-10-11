@@ -51,7 +51,7 @@ New constraints from the developer: the setup is **not for hackathons** and is f
 
 ### Task 1: Portable links
 
-- [ ] **Status**
+- [x] **Status** (commit `6198232`)
 
 **Files:**
 - Modify: every tracked `*.md` that contains a `file://` Markdown link; `scripts/roadmap.mjs`; `AGENTS.md` (tenet 2 only); `.agents/skills/tailor-setup/SKILL.md` (section 9, last bullet)
