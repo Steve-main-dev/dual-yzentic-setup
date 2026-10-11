@@ -18,12 +18,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '..');
 
-const BLUEPRINT_PATH = path.resolve(REPO_ROOT, 'project-blueprint.json');
-const PLAN_PATH = path.resolve(REPO_ROOT, 'docs', 'PLAN.md');
-const PACKAGE_PATH = path.resolve(REPO_ROOT, 'package.json');
-const HANDOFF_JSON_PATH = path.resolve(REPO_ROOT, '.agents', 'sync', 'handoff.json');
-const HANDOFF_MD_PATH = path.resolve(REPO_ROOT, '.agents', 'sync', 'handoff.md');
-
 /**
  * Placeholder roadmap tasks for a freshly initialized archetype project
  */
@@ -41,7 +35,13 @@ function defaultTasks(dev1, dev2) {
 /**
  * Initialize project with options
  */
-export function initProject({ preset, name, desc, dev1, dev2, scaffold = true }) {
+export function initProject({ preset, name, desc, dev1, dev2, scaffold = true, root = REPO_ROOT }) {
+  const BLUEPRINT_PATH = path.resolve(root, 'project-blueprint.json');
+  const PLAN_PATH = path.resolve(root, 'docs', 'PLAN.md');
+  const PACKAGE_PATH = path.resolve(root, 'package.json');
+  const HANDOFF_JSON_PATH = path.resolve(root, '.agents', 'sync', 'handoff.json');
+  const HANDOFF_MD_PATH = path.resolve(root, '.agents', 'sync', 'handoff.md');
+
   if (!fs.existsSync(BLUEPRINT_PATH)) {
     throw new Error(`project-blueprint.json not found at ${BLUEPRINT_PATH}`);
   }
@@ -55,7 +55,7 @@ export function initProject({ preset, name, desc, dev1, dev2, scaffold = true })
   }
 
   // 1. Soft-delete skills to match archetype
-  const syncResult = syncSkillsToArchetype(preset);
+  const syncResult = syncSkillsToArchetype(preset, { root });
 
   // 2. Update project-blueprint.json
   blueprint.status = 'initialized';
@@ -124,12 +124,14 @@ export function initProject({ preset, name, desc, dev1, dev2, scaffold = true })
       desc: blueprint.project.description,
       dev1: dev1 || 'Dev 1',
       dev2: dev2 || 'Dev 2',
-      root: REPO_ROOT
+      root
     });
   }
 
-  // 7. Install git pre-commit hook
-  installHooks();
+  // 7. Install git pre-commit hook (only inside a git repo)
+  if (fs.existsSync(path.resolve(root, '.git'))) {
+    installHooks({ root });
+  }
 
   return {
     success: true,
@@ -151,6 +153,7 @@ export async function main() {
   let dev2 = null;
   let isNonInteractive = false;
   let shouldScaffold = true;
+  let root = REPO_ROOT;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--preset' && args[i + 1]) preset = args[++i];
@@ -160,6 +163,13 @@ export async function main() {
     if (args[i] === '--dev2' && args[i + 1]) dev2 = args[++i];
     if (args[i] === '--non-interactive') isNonInteractive = true;
     if (args[i] === '--skip-scaffold') shouldScaffold = false;
+    if (args[i] === '--root') {
+      if (!args[i + 1] || args[i + 1].startsWith('--')) {
+        console.error('\n[Init Project Error] --root requires a path\n');
+        process.exit(1);
+      }
+      root = path.resolve(args[++i]);
+    }
   }
 
   try {
@@ -200,7 +210,8 @@ export async function main() {
       name: name || 'my-hackathon-app',
       desc: desc || 'Hackathon Prototype',
       dev1: dev1 || 'Dev 1',
-      dev2: dev2 || 'Dev 2'
+      dev2: dev2 || 'Dev 2',
+      root
     });
 
     console.log('\n[SUCCESS] Project successfully initialized and tailored!');

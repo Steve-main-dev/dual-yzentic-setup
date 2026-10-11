@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from tests.tailor_fixture import run_node
+from tests.repo_fixture import run_node
 
 TASKS = [
     {"id": "1.1", "title": "Canvas shell", "priority": "P0", "owner": "Steve", "description": "Drag and drop nodes."},
@@ -22,7 +22,6 @@ class TestRoadmap(unittest.TestCase):
             "dev2": "Bob",
             "preset": "custom",
             "tasks": tasks,
-            "batonPath": "/repo/scripts/baton.mjs",
         }
         code = f"""
         import {{ generateRoadmap }} from './scripts/roadmap.mjs';

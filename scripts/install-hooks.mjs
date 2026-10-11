@@ -61,6 +61,16 @@ exit 0
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
-  installHooks();
+  const args = process.argv.slice(2);
+  const options = {};
+  const rootIndex = args.indexOf('--root');
+  if (rootIndex !== -1) {
+    if (!args[rootIndex + 1] || args[rootIndex + 1].startsWith('--')) {
+      console.error('[Hooks Error] --root requires a path');
+      process.exit(1);
+    }
+    options.root = path.resolve(args[rootIndex + 1]);
+  }
+  installHooks(options);
   console.log('[Git Hooks] Pre-commit hook installed to .githooks and configured in git.');
 }

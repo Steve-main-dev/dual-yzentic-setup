@@ -2,8 +2,8 @@ import json
 import tempfile
 import unittest
 
-from tests import tailor_fixture
-from tests.tailor_fixture import make_repo, run_node, skill_dirs
+from tests import repo_fixture
+from tests.repo_fixture import make_repo, run_node, skill_dirs
 
 
 class TestSkillsSyncList(unittest.TestCase):
@@ -67,7 +67,7 @@ class TestSkillsSyncList(unittest.TestCase):
         res = run_node(code)
         self.assertEqual(res.returncode, 0, res.stderr)
         data = json.loads(res.stdout)
-        self.assertEqual(sorted(data["active"]), sorted(tailor_fixture.ACTIVE_SKILLS))
+        self.assertEqual(sorted(data["active"]), sorted(repo_fixture.ACTIVE_SKILLS))
         self.assertEqual(data["archived"], ["gamma"])
 
 

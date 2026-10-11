@@ -198,6 +198,7 @@ export async function main() {
   let desc = 'Rapid Prototype';
   let dev1 = 'Dev 1';
   let dev2 = 'Dev 2';
+  let root = DEFAULT_ROOT;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--preset' && args[i + 1]) preset = args[++i];
@@ -205,9 +206,16 @@ export async function main() {
     if (args[i] === '--desc' && args[i + 1]) desc = args[++i];
     if (args[i] === '--dev1' && args[i + 1]) dev1 = args[++i];
     if (args[i] === '--dev2' && args[i + 1]) dev2 = args[++i];
+    if (args[i] === '--root') {
+      if (!args[i + 1] || args[i + 1].startsWith('--')) {
+        console.error('[Scaffolder Error] --root requires a path');
+        process.exit(1);
+      }
+      root = path.resolve(args[++i]);
+    }
   }
 
-  scaffoldProject({ preset, name, desc, dev1, dev2 });
+  scaffoldProject({ preset, name, desc, dev1, dev2, root });
   console.log(`[Scaffolder] Starter code generated in src/ for preset '\${preset}'.`);
 }
 

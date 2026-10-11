@@ -13,8 +13,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '..');
 
-const BLUEPRINT_PATH = path.resolve(REPO_ROOT, 'project-blueprint.json');
-
 const SKILL_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 
 function skillPaths(root) {
@@ -150,9 +148,10 @@ export function syncSkillsToList(names, { root = REPO_ROOT } = {}) {
 /**
  * Sync skills against an archetype
  */
-export function syncSkillsToArchetype(archetypeName) {
-  ensureDirs();
+export function syncSkillsToArchetype(archetypeName, { root = REPO_ROOT } = {}) {
+  ensureDirs({ root });
 
+  const BLUEPRINT_PATH = path.resolve(root, 'project-blueprint.json');
   if (!fs.existsSync(BLUEPRINT_PATH)) {
     throw new Error(`project-blueprint.json not found at ${BLUEPRINT_PATH}`);
   }
@@ -167,9 +166,9 @@ export function syncSkillsToArchetype(archetypeName) {
 
   // keep_skills may name skills that are not installed; those are ignored
   const keepSkills = archetype.keep_skills || [];
-  const currentSkills = listSkills();
+  const currentSkills = listSkills({ root });
   const known = new Set([...currentSkills.active, ...currentSkills.archived]);
-  const res = syncSkillsToList(keepSkills.filter(name => known.has(name)));
+  const res = syncSkillsToList(keepSkills.filter(name => known.has(name)), { root });
 
   return {
     archetype: archetypeName,
@@ -179,15 +178,26 @@ export function syncSkillsToArchetype(archetypeName) {
 }
 
 /**
+ * Pull `--root <path>` out of the CLI args. Returns the resolved root and the remaining args.
+ */
+function takeRoot(args) {
+  const index = args.indexOf('--root');
+  if (index === -1) return { root: REPO_ROOT, rest: args };
+  const value = args[index + 1];
+  if (!value || value.startsWith('--')) throw new Error('--root requires a path');
+  return { root: path.resolve(value), rest: [...args.slice(0, index), ...args.slice(index + 2)] };
+}
+
+/**
  * CLI Entry point
  */
 export async function main() {
-  const args = process.argv.slice(2);
-  const command = args[0] || 'list';
-
   try {
+    const { root, rest: args } = takeRoot(process.argv.slice(2));
+    const command = args[0] || 'list';
+
     if (command === 'list') {
-      const skills = listSkills();
+      const skills = listSkills({ root });
       if (args.includes('--json')) {
         console.log(JSON.stringify(skills, null, 2));
       } else {
@@ -207,7 +217,7 @@ export async function main() {
         console.error('Error: specify skill name to enable. Example: npm run skill:enable pitch-architect');
         process.exit(1);
       }
-      const res = enableSkill(name);
+      const res = enableSkill(name, { root });
       console.log(`[Skills Manager] ${res.message}`);
       process.exit(0);
     }
@@ -218,14 +228,14 @@ export async function main() {
         console.error('Error: specify skill name to disable. Example: npm run skill:disable archify');
         process.exit(1);
       }
-      const res = disableSkill(name);
+      const res = disableSkill(name, { root });
       console.log(`[Skills Manager] ${res.message}`);
       process.exit(0);
     }
 
     if (command === 'sync') {
       const name = args[1] || 'fullstack-web';
-      const res = syncSkillsToArchetype(name);
+      const res = syncSkillsToArchetype(name, { root });
       console.log(`[Skills Manager] Synced to archetype '${res.archetype}'. Active: ${res.active_count}, Archived: ${res.archived_count}`);
       process.exit(0);
     }

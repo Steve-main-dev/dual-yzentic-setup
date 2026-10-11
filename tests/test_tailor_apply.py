@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tests.tailor_fixture import SCRIPTS, VALID_PROJECT, make_repo, skill_dirs
+from tests.repo_fixture import SCRIPTS, VALID_PROJECT, make_repo, skill_dirs
 
 
 def tailor(root, *flags, env=None):

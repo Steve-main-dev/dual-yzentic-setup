@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tests.tailor_fixture import VALID_PROJECT, make_repo, run_node
+from tests.repo_fixture import VALID_PROJECT, make_repo, run_node
 
 V = {"test": "pnpm test", "test_scoped": "pnpm vitest run {scope}"}
 

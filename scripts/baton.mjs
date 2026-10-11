@@ -15,8 +15,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const REPO_ROOT = resolve(__dirname, '..');
 
-export const SYNC_JSON_PATH = resolve(REPO_ROOT, '.agents/sync/handoff.json');
-export const SYNC_MD_PATH = resolve(REPO_ROOT, '.agents/sync/handoff.md');
+/**
+ * Sync file locations for a repo root.
+ */
+export function syncPaths(root = REPO_ROOT) {
+  return {
+    json: resolve(root, '.agents/sync/handoff.json'),
+    md: resolve(root, '.agents/sync/handoff.md')
+  };
+}
+
+export const SYNC_JSON_PATH = syncPaths().json;
+export const SYNC_MD_PATH = syncPaths().md;
 export const BLUEPRINT_PATH = resolve(REPO_ROOT, 'project-blueprint.json');
 
 const DEFAULT_STATE = {
@@ -168,9 +178,9 @@ export function resolveTestExecution(tier, scope, verify = null) {
 /**
  * Get modified files from git status.
  */
-function getGitModifiedFiles() {
+function getGitModifiedFiles(root = REPO_ROOT) {
   try {
-    const stdout = execSync('git status --porcelain', { cwd: REPO_ROOT, encoding: 'utf-8' });
+    const stdout = execSync('git status --porcelain', { cwd: root, encoding: 'utf-8' });
     return stdout
       .split('\n')
       .filter(line => line.trim().length > 0)
@@ -181,15 +191,30 @@ function getGitModifiedFiles() {
 }
 
 /**
+ * Pull `--root <path>` out of the CLI args. Returns the resolved root and the remaining args.
+ */
+function takeRoot(args) {
+  const index = args.indexOf('--root');
+  if (index === -1) return { root: REPO_ROOT, rest: args };
+  const value = args[index + 1];
+  if (!value || value.startsWith('--')) {
+    console.error('[Baton] --root requires a path');
+    process.exit(1);
+  }
+  return { root: resolve(value), rest: [...args.slice(0, index), ...args.slice(index + 2)] };
+}
+
+/**
  * CLI Entry point
  */
 export async function main() {
-  const args = process.argv.slice(2);
+  const { root, rest: args } = takeRoot(process.argv.slice(2));
   const command = args[0] || 'status';
+  const syncJson = syncPaths(root).json;
 
   if (command === 'status') {
-    const state = readSyncState();
-    const modified = getGitModifiedFiles();
+    const state = readSyncState(syncJson);
+    const modified = getGitModifiedFiles(root);
     const tier = detectExecutionTier(modified);
     console.log('\n=== Baton Sync Status ===');
     console.log(`Status:       ${state.status}`);
@@ -205,13 +230,13 @@ export async function main() {
   }
 
   if (command === 'reset') {
-    writeSyncState(DEFAULT_STATE);
+    writeSyncState(DEFAULT_STATE, syncJson);
     console.log('[Baton] State reset to idle.');
     process.exit(0);
   }
 
   if (command === 'verify') {
-    const state = readSyncState();
+    const state = readSyncState(syncJson);
 
     // Check circuit breaker
     if (!checkCircuitBreaker(state)) {
@@ -234,9 +259,9 @@ export async function main() {
       }
     }
 
-    const modified = getGitModifiedFiles();
+    const modified = getGitModifiedFiles(root);
     const tier = tierOverride || detectExecutionTier(modified);
-    const { command: testCmd, isExpress } = resolveTestExecution(tier, scopeOverride, readVerifyConfig());
+    const { command: testCmd, isExpress } = resolveTestExecution(tier, scopeOverride, readVerifyConfig(resolve(root, 'project-blueprint.json')));
 
     console.log(`\n[Baton] Verifying changes (Tier ${tier}${tierOverride ? ' - manual override' : ' - auto-detected'})...`);
 
@@ -245,7 +270,7 @@ export async function main() {
       state.status = 'verified';
       state.last_updated = new Date().toISOString();
       state.files_modified = modified;
-      writeSyncState(state);
+      writeSyncState(state, syncJson);
       console.log('[Baton] PASS: Verified.\n');
       process.exit(0);
     }
@@ -255,7 +280,7 @@ export async function main() {
     let testOutput = '';
 
     try {
-      testOutput = execSync(testCmd, { cwd: REPO_ROOT, encoding: 'utf-8', stdio: 'pipe' });
+      testOutput = execSync(testCmd, { cwd: root, encoding: 'utf-8', stdio: 'pipe' });
       testSuccess = true;
     } catch (err) {
       testSuccess = false;
@@ -267,7 +292,7 @@ export async function main() {
       state.turn_count = 0; // reset turn count on success
       state.last_updated = new Date().toISOString();
       state.files_modified = modified;
-      writeSyncState(state);
+      writeSyncState(state, syncJson);
 
       console.log('\n[Baton] PASS: All tests passed! Verification completed.');
       console.log('Status set to "verified".\n');
@@ -277,7 +302,7 @@ export async function main() {
       state.turn_count = (state.turn_count || 0) + 1;
       state.last_updated = new Date().toISOString();
       state.files_modified = modified;
-      writeSyncState(state);
+      writeSyncState(state, syncJson);
 
       const distilled = distillDiagnostics(testOutput);
       console.error('\n[Baton] FAIL: Verification failed.');

@@ -1,4 +1,5 @@
 import json
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -53,6 +54,45 @@ def make_repo(tmp, project=None, status="uninitialized"):
 
     blueprint = {"status": status, "project": VALID_PROJECT if project is None else project, "archetypes": {}}
     (root / "project-blueprint.json").write_text(json.dumps(blueprint, indent=2), encoding="utf-8")
+    return root
+
+
+def make_template_repo(tmp):
+    """Build a fixture repo shaped like this template: real blueprint and package.json, stub skills by real name."""
+    root = Path(tmp)
+    for name in ("project-blueprint.json", "package.json"):
+        shutil.copyfile(REPO_ROOT / name, root / name)
+
+    for folder in ("skills", "skills-archive"):
+        (root / ".agents" / folder).mkdir(parents=True)
+        source = REPO_ROOT / ".agents" / folder
+        if source.is_dir():
+            for skill in sorted(source.iterdir()):
+                if skill.is_dir() and not skill.name.startswith("_"):
+                    _write_skill(root / ".agents" / folder, skill.name)
+    (root / ".agents" / "skills" / "_staging").mkdir()
+
+    sync_dir = root / ".agents" / "sync"
+    sync_dir.mkdir()
+    (sync_dir / "handoff.json").write_text("{}", encoding="utf-8")
+    (sync_dir / "handoff.md").write_text("# Handoff\n", encoding="utf-8")
+
+    (root / "docs").mkdir()
+    (root / "docs" / "PLAN.md").write_text("ORIGINAL PLAN\n", encoding="utf-8")
+    return root
+
+
+def git_init(root):
+    """Turn root into a git repo with one commit of everything in it."""
+    def git(*args):
+        subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True)
+
+    git("init", "-q")
+    git("config", "user.name", "Fixture")
+    git("config", "user.email", "fixture@example.com")
+    git("config", "commit.gpgsign", "false")
+    git("add", "-A")
+    git("commit", "-q", "-m", "fixture")
     return root
 
 

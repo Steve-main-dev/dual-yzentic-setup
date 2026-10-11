@@ -3,7 +3,7 @@ import json
 import tempfile
 import unittest
 
-from tests.tailor_fixture import VALID_PROJECT, make_repo, run_node
+from tests.repo_fixture import VALID_PROJECT, make_repo, run_node
 
 
 class TestTailorValidation(unittest.TestCase):
