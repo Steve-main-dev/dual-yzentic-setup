@@ -105,7 +105,7 @@ class TestScout(unittest.TestCase):
     def test_unavailable_exits_0_with_one_line_and_no_brief(self):
         res = self.scout("add login", mode="garbage")
         self.assertEqual(res.returncode, 0, res.stderr)
-        self.assertEqual(res.stdout.strip(), "[Scout] Antigravity unavailable (failed).")
+        self.assertEqual(res.stdout.strip(), "[Scout] Antigravity unavailable (failed: this is not json).")
         self.assertFalse((self.root / ".agents" / "sync" / "scout.md").exists())
 
     def test_a_missing_agy_is_not_installed(self):

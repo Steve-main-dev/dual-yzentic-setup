@@ -30,7 +30,7 @@ class TestAgyLauncher(unittest.TestCase):
         settings = {"BATON_AGY_CMD": cmd or str(STUB), "STUB_MODE": mode, "STUB_ARGS_FILE": str(self.args_file), **(env or {})}
         sets = "\n".join(f"process.env[{json.dumps(k)}] = {json.dumps(v)};" for k, v in settings.items())
         code = f"""
-        import {{ launchAgy, appendDelegation, processTimeoutMs }} from './scripts/agy.mjs';
+        import {{ launchAgy, appendDelegation, processTimeoutMs, timeoutForJob }} from './scripts/agy.mjs';
         import {{ snapshotChanges, checkScope }} from './scripts/changes.mjs';
         delete process.env.BATON_AGY_MODEL;
         delete process.env.BATON_AGY_MODEL_FAST;
@@ -95,6 +95,33 @@ class TestAgyLauncher(unittest.TestCase):
         first, second = self.recorded_args()
         self.assertEqual(first[first.index("--print-timeout") + 1], "600s")
         self.assertEqual(second[second.index("--print-timeout") + 1], "45s")
+
+    def test_timeout_for_job(self):
+        body = """
+        const read = () => ['review', 'scout', 'mystery'].map(job => timeoutForJob(job));
+        const plain = read();
+        process.env.BATON_AGY_TIMEOUT = '45';
+        console.log(JSON.stringify({ plain, overridden: read() }));
+        """
+        data = self.snippet(body)
+        self.assertEqual(data["plain"], [1200, 600, 600])
+        self.assertEqual(data["overridden"], [45, 45, 45])
+
+    def test_a_review_launch_passes_1200_seconds(self):
+        body = """
+        launchAgy({ job: 'review', prompt: 'p', root });
+        console.log('{}');
+        """
+        self.snippet(body)
+        args = self.recorded_args()[0]
+        self.assertEqual(args[args.index("--print-timeout") + 1], "1200s")
+
+    def test_a_non_success_status_is_named_in_the_detail(self):
+        result = self.launch(mode="status_timeout")
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["reason"], "failed")
+        self.assertTrue(result["detail"].startswith("status TIMEOUT"), result["detail"])
+        self.assertEqual(result["entry"]["total_tokens"], 77)
 
     def test_success_parses_the_json_after_a_warning_line(self):
         result = self.launch()

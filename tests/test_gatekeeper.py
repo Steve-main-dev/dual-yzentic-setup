@@ -319,7 +319,7 @@ class TestGatekeeper(unittest.TestCase):
 
     def test_unavailable_still_runs_the_tests_and_prints_the_owed_warning(self):
         for label, kwargs, reason in (
-            ("garbage", {"mode": "garbage"}, "failed"),
+            ("garbage", {"mode": "garbage"}, "failed: this is not json"),
             ("denied", {"mode": "denied"}, "denied"),
             ("missing", {"cmd": "definitely-not-a-real-agy-binary"}, "not_installed"),
         ):

@@ -9,7 +9,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { launchAgy, appendDelegation, PLAIN_PATHS_RULE } from './agy.mjs';
+import { launchAgy, appendDelegation, describeFailure, PLAIN_PATHS_RULE } from './agy.mjs';
 import { snapshotChanges, checkScope } from './changes.mjs';
 import { readSyncState, writeSyncState, syncPaths } from './baton.mjs';
 
@@ -99,7 +99,7 @@ export async function main() {
     return;
   }
   if (!result.ok) {
-    console.log(`[Scout] Antigravity unavailable (${result.reason}).`);
+    console.log(`[Scout] Antigravity unavailable (${describeFailure(result.reason, result.detail)}).`);
     return;
   }
 

@@ -206,7 +206,7 @@ class TestReview(unittest.TestCase):
     def test_unavailable_exits_1_with_one_line_and_no_review(self):
         res = self.review(mode="garbage")
         self.assertEqual(res.returncode, 1)
-        self.assertEqual(res.stderr.strip(), "[Review] Antigravity unavailable (failed).")
+        self.assertEqual(res.stderr.strip(), "[Review] Antigravity unavailable (failed: this is not json).")
         self.assertFalse((self.root / ".agents" / "sync" / "review.md").exists())
 
     def test_a_missing_agy_is_not_installed(self):

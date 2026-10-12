@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import { isCosmeticFile, resolveChangeSet, fingerprintChanges } from './changes.mjs';
 import { gatekeeperDisabled, shouldWriteTests, writeTests, shouldDiagnose, diagnoseFailure, writeHandoff } from './gatekeeper.mjs';
+import { describeFailure } from './agy.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -314,7 +315,7 @@ export async function main() {
         process.exit(1);
       }
       if (outcome.result === 'skipped') {
-        console.log(`[Baton] Gatekeeper skipped (${outcome.reason}): tests for this change are still owed.`);
+        console.log(`[Baton] Gatekeeper skipped (${describeFailure(outcome.reason, outcome.detail)}): tests for this change are still owed.`);
       } else if (outcome.testsWritten.length > 0) {
         console.log(`[Baton] Gatekeeper wrote: ${outcome.testsWritten.join(', ')}`);
       }

@@ -6,7 +6,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
-import { launchAgy, appendDelegation, PLAIN_PATHS_RULE } from './agy.mjs';
+import { launchAgy, appendDelegation, describeFailure, PLAIN_PATHS_RULE } from './agy.mjs';
 import { isSourceFile, isTestFile, snapshotChanges, checkScope } from './changes.mjs';
 
 const FAILURE_LOG = '.agents/sync/last-failure.log';
@@ -102,7 +102,7 @@ export function writeTests({ root, state, files, saveState = () => {} }) {
     root
   });
   const { testsWritten, outOfScope } = checkScope(before, snapshotChanges(root), { allowEdits: true });
-  return { result: launch.ok ? 'ran' : 'skipped', testsWritten, outOfScope, reason: launch.reason };
+  return { result: launch.ok ? 'ran' : 'skipped', testsWritten, outOfScope, reason: launch.reason, detail: launch.detail };
 }
 
 /**
@@ -131,7 +131,7 @@ export function diagnoseFailure({ root, state, output, saveState = () => {} }) {
   const { outOfScope } = checkScope(before, snapshotChanges(root));
 
   if (!launch.ok) {
-    console.error(`[Baton] Gatekeeper diagnosis unavailable (${launch.reason}).`);
+    console.error(`[Baton] Gatekeeper diagnosis unavailable (${describeFailure(launch.reason, launch.detail)}).`);
     return { note: null, outOfScope };
   }
   return { note: launch.response.trim(), outOfScope };

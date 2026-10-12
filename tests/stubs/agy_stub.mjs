@@ -44,6 +44,8 @@ if (mode === 'success') {
   console.log('this is not json\n\nsecond line\nthird line\nfourth line');
 } else if (mode === 'sleep') {
   setTimeout(() => report(), Number(process.env.STUB_SLEEP || 60) * 1000);
+} else if (mode === 'status_timeout') {
+  report({ status: 'TIMEOUT', response: '', usage: { total_tokens: 77 } });
 } else if (mode === 'fail_exit') {
   console.error('error: invalid model selection');
   process.exit(3);
