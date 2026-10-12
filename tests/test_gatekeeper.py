@@ -459,8 +459,8 @@ class TestGatekeeper(unittest.TestCase):
         self.assertNotIn(DIAGNOSIS_HEADING, res.stderr)
         self.assertFalse((root / ".agents" / "sync" / "last-failure.log").exists())
 
-    def test_the_threshold_is_forty_non_empty_lines(self):
-        for count, launched in ((40, 0), (41, 1)):
+    def test_the_threshold_is_150_non_empty_lines(self):
+        for count, launched in ((150, 0), (151, 1)):
             with self.subTest(lines=count):
                 self.launches_reset()
                 root = self.failing_fixture(self.lines_failing(count))

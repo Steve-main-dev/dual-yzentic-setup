@@ -63,5 +63,29 @@ class TestBatonRunner(unittest.TestCase):
         data = json.loads(res.stdout.strip())
         self.assertLessEqual(data["lineCount"], 25)
 
+    def test_distill_keeps_the_pieces_of_a_node_test_failure(self):
+        code = """
+        import { readFileSync } from 'node:fs';
+        import { distillDiagnostics } from './scripts/baton.mjs';
+        const raw = readFileSync('tests/fixtures/node_test_failure.txt', 'utf-8');
+        console.log(JSON.stringify({ text: distillDiagnostics(raw) }));
+        """
+        res = self.run_node_eval(code)
+        self.assertEqual(res.returncode, 0, f"Error: {res.stderr}")
+        text = json.loads(res.stdout.strip())["text"]
+        self.assertLessEqual(len(text.splitlines()), 25)
+        for piece in ("clamps percent above 100", "expected: 0", "actual: -25", "location:"):
+            self.assertIn(piece, text)
+
+    def test_distill_returns_a_short_output_whole(self):
+        code = """
+        import { distillDiagnostics } from './scripts/baton.mjs';
+        const out = Array.from({ length: 20 }, (_, i) => `Line ${i + 1}`).join('\\n');
+        console.log(JSON.stringify({ same: distillDiagnostics(out) === out }));
+        """
+        res = self.run_node_eval(code)
+        self.assertEqual(res.returncode, 0, f"Error: {res.stderr}")
+        self.assertTrue(json.loads(res.stdout.strip())["same"])
+
 if __name__ == "__main__":
     unittest.main()

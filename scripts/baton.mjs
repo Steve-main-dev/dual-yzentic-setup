@@ -92,7 +92,7 @@ export function distillDiagnostics(rawOutput) {
 
   // Look for error, fail, or traceback markers
   const errorLines = lines.filter(l => 
-    /error|fail|exception|assert|traceback|expected|received/i.test(l)
+    /error|fail|exception|assert|traceback|expected|received|not ok|actual|location|✖/i.test(l)
   );
 
   const selected = errorLines.length > 0 ? errorLines.slice(0, 22) : lines.slice(-22);
