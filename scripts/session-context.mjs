@@ -55,7 +55,8 @@ export function buildContext(root = REPO_ROOT) {
     'Project session context (injected by .claude/settings.json):',
     blueprintLine(root),
     'Process by tier: Tier 1 = fast-track only, no documents or agents. Tier 2 = a few lines of design in chat, '
-      + 'wait for a yes, no spec or plan file. Tier 3 = spec, plan, builder agent per task, `npm run review`.',
+      + 'wait for a yes, no spec or plan file. Tier 3 = design in chat, one design-and-plan document with one approval, '
+      + 'builder runs, `npm run review`.',
     'Tests: never run a full suite directly; use `npm run verify:agent`. '
       + 'Start from the handoff below and open only the files it lists.',
     '',

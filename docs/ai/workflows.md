@@ -32,31 +32,31 @@ To balance engineering rigor with token efficiency and speed, tasks follow one o
 
 ### The End-to-End Lifecycle (Tier 3)
 
-Major architectural and multi-step tasks progress through this complete pipeline:
+Major architectural and multi-step tasks progress through this pipeline:
 
 ```text
-1. BRAINSTORMING (superpowers:brainstorming)
+1. DESIGN (in chat; superpowers:brainstorming for the questions)
    ├── Requirements discovery & edge-case mapping
-   ├── Design spec: docs/specs/YYYY-MM-DD-<name>-design.md
-   └── Developer approval gate before implementation
+   └── Agreement on the approach
 
-2. PLANNING (superpowers:writing-plans)
-   ├── Implementation plan: docs/specs/YYYY-MM-DD-<name>-plan.md
-   └── Bite-sized, independently testable tasks
+2. ONE DOCUMENT, ONE APPROVAL (superpowers:writing-plans for the task format)
+   ├── docs/specs/YYYY-MM-DD-<name>-plan.md: design first, tasks after
+   └── The developer approves once, before any code
 
-3. EXECUTION (builder agent, one plan task per launch)
-   ├── npm run scout -- "<task>" where the plan does not already name the files
-   ├── Sonnet builder implements the task on a feature branch
-   └── npm run verify:agent after each task; commit per task
+3. EXECUTION (builder agent; tasks grouped into as few runs as stay reviewable)
+   ├── npm run scout -- "<task>" only where the plan does not name the files
+   ├── Sonnet builder implements the tasks on a feature branch
+   └── One commit per task; the pre-commit hook blocks a failing one
 
 4. VERIFICATION & QUALITY GATE (the baton)
-   ├── Gatekeeper writes tests for changes that have none
-   ├── Baton runs the suite: npm run verify:agent -- --tier 3
-   ├── On failure, Gatekeeper writes a root-cause note for the Builder
+   ├── Gatekeeper writes tests for changes that have none, unit tests first
+   ├── Baton runs the fast suite: npm run verify:agent -- --tier 3
+   ├── A long or browser failure gets a Gatekeeper root-cause note
+   ├── End-to-end suite, once: npm run verify:agent -- --e2e
    └── The project's build command, when project.verify.build is set
 
 5. REVIEW & BRANCH FINISH
-   ├── npm run review (Gatekeeper reviews the diff against spec and plan)
+   ├── npm run review (Gatekeeper reviews the diff against the plan)
    ├── Builder re-grades findings and fixes what stands
    └── Merge, then rewrite .agents/sync/session.md
 ```
@@ -75,6 +75,7 @@ Major architectural and multi-step tasks progress through this complete pipeline
   - **VERIFY GREEN:** Run tests to confirm clean passing output.
   - **REFACTOR:** Clean up code while keeping tests green.
 - Tests are run by the baton, never directly: `npm run verify:agent -- --tier 2 --scope <test file>` for one file, `-- --tier 3` for the suite.
+- **Fast by default.** Unit and component tests are the norm. An end-to-end test is written only for a user journey named in the spec, lives under `e2e/`, and runs only with `npm run verify:agent -- --e2e`. The commit hook never runs it.
 
 ### Web Testing Pyramid
 Web applications in this repository adhere to a three-tier testing pyramid:
@@ -105,6 +106,7 @@ Enforced via `superpowers:systematic-debugging`:
 ### Pull Request & Pre-Merge Checklist
 Before completing a task, opening a PR, or merging into `main`:
 - [ ] **Automated Tests Green:** `npm run verify:agent -- --tier 3` passes. Do not run the suite directly.
+- [ ] **End-to-End Green:** `npm run verify:agent -- --e2e` passes, when the project defines `verify.e2e`.
 - [ ] **Reviewed:** `npm run review` findings are fixed or answered.
 - [ ] **Acceptance Criteria Met:** Feature satisfies Given/When/Then scenarios defined in [`docs/rules/requirements.md`](../rules/requirements.md).
 - [ ] **The 4 UI States Handled:** Loading (skeletons), Empty, Error, and Success states verified.

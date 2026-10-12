@@ -58,6 +58,7 @@ Extend the existing `project` block. Do not remove `archetypes`.
   "verify": {
     "test": "npm test",
     "test_scoped": "npm test -- {scope}",
+    "e2e": "npx playwright test",
     "build": "npm run build"
   },
   "roadmap": [
@@ -74,8 +75,9 @@ Extend the existing `project` block. Do not remove `archetypes`.
 | `stack` | yes | Object of free-form strings. Keys are not fixed; a CLI tool may have only `runtime`. |
 | `developer` | no | The developer's name, a non-empty string when present. The roadmap says "the developer" when absent. |
 | `skills` | yes | Names that exist in `.agents/skills/` or `.agents/skills-archive/`. |
-| `verify.test` | yes | Shell command for the project's full test suite. |
+| `verify.test` | yes | Shell command for the fast suite: unit and component tests. It runs on every verify and every commit, so keep browser tests out of it. |
 | `verify.test_scoped` | no | Shell command containing `{scope}`. |
+| `verify.e2e` | no | Shell command for the slow browser or end-to-end suite. It runs only with `npm run verify:agent -- --e2e`. |
 | `verify.build` | no | Production build command. Recorded for agents; the baton does not run it. |
 | `roadmap` | yes | At least one task. `id` unique; `priority` is `P0`, `P1`, or `P2`. |
 

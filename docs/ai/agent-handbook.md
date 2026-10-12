@@ -14,7 +14,7 @@ Whenever starting a new session in this repository:
 3. **Check the Universal Living Roadmap:** Find the entry for the task at hand in [`docs/PLAN.md`](../PLAN.md).
 4. **Load on demand:** Open a skill in [`.agents/skills/`](../../.agents/skills/) or a rule file in [`docs/rules/`](../rules/README.md) only when the task needs it.
 
-Do not survey the repository, recent history, or the skills catalogue up front. For a Tier 2 or 3 task, `npm run scout -- "<task>"` returns the files that matter.
+Do not survey the repository, recent history, or the skills catalogue up front. When a task does not say where its code lives and a quick search does not find it, `npm run scout -- "<task>"` returns the files that matter. Skip it when the task or plan names the files.
 
 ---
 
@@ -31,8 +31,8 @@ Do not survey the repository, recent history, or the skills catalogue up front. 
 
   | Command | Gatekeeper job | Returns |
   | :--- | :--- | :--- |
-  | `npm run scout -- "<task>"` | Find the files and ranges a task touches | A brief of at most 40 lines |
-  | `npm run verify:agent` | Write tests for untested changes; diagnose failures | Pass, or a root-cause note |
+  | `npm run scout -- "<task>"` | Find the files and ranges a task touches, when they are not known | A brief of at most 40 lines |
+  | `npm run verify:agent` | Write tests for untested changes; diagnose long or browser failures | Pass, an excerpt, or a root-cause note |
   | `npm run review` | Review the branch diff against its spec and plan | Findings, at most 60 lines |
 
 ---
@@ -51,9 +51,9 @@ Do not survey the repository, recent history, or the skills catalogue up front. 
 | Scenario / Task | Process Skill | Purpose |
 | :--- | :--- | :--- |
 | **Tier 3 work only** | `superpowers:using-superpowers` | Process skills apply to Tier 3. Tier 1 uses `fast-track`; Tier 2 uses a short design in chat |
-| **New subsystem or architectural change** | `superpowers:brainstorming` | Discovery of intent, requirements, and design before implementation |
-| **Tier 3 implementation planning** | `superpowers:writing-plans` | Implementation plan in `docs/specs/`, one task per `builder` agent |
-| **Executing implementation plans** | `builder` agent (`.claude/agents/builder.md`) | One plan task per launch, on Sonnet, with a fresh context |
+| **New subsystem or architectural change** | `superpowers:brainstorming` | Discovery of intent, requirements, and design, in chat |
+| **Tier 3 design and plan** | `superpowers:writing-plans` | One design-and-plan document in `docs/specs/`, one approval; tasks grouped into `builder` runs |
+| **Executing implementation plans** | `builder` agent (`.claude/agents/builder.md`) | A group of plan tasks per launch, on Sonnet, with a fresh context |
 | **Writing a test yourself** | `superpowers:test-driven-development` | Red-Green-Refactor, when the Gatekeeper was skipped or a plan task supplies the test |
 | **Bug fixing or troubleshooting** | `superpowers:systematic-debugging` | Root-cause investigation before proposing fixes (no guessing) |
 | **Pre-completion claim** | `superpowers:verification-before-completion` | Pre-completion evidence gate (verify tests before claiming complete) |

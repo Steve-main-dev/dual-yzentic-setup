@@ -16,7 +16,7 @@ To prevent token waste and latency, all tasks are classified into three operatio
 | :--- | :--- | :--- |
 | **Tier 1: Express Lane** *(Micro / Cosmetic)* | Pure CSS/Tailwind tweaks, copy/text edits, icon swaps, single-file non-structural adjustments. | Use [`fast-track`](.agents/skills/fast-track/SKILL.md). Auto-detected by `npm run verify:agent` or explicitly via `-- --tier 1`. **Exempt from tests, full regression runs, and production build.** |
 | **Tier 2: Standard Bounded Lane** *(Component / Fix)* | Localized component logic, single API route, or isolated bug fix. | A short design agreed in chat; no spec or plan file. Verified via `npm run verify:agent` (the Gatekeeper writes missing tests), or `-- --tier 2 --scope <test file>` when the covering test already exists. |
-| **Tier 3: Architectural Deep Lane** *(Full Features)* | Multi-file features, database schema/migrations, authentication, breaking architectural changes. | Spec (`superpowers:brainstorming`) → Plan (`superpowers:writing-plans`) → one plan task per `builder` agent → full suite via `npm run verify:agent -- --tier 3` → the project's build command, when the blueprint defines one → `npm run review`. |
+| **Tier 3: Architectural Deep Lane** *(Full Features)* | Multi-file features, database schema/migrations, authentication, breaking architectural changes. | Design agreed in chat → one design-and-plan document, one approval → `builder` runs → full suite via `npm run verify:agent -- --tier 3` → `npm run verify:agent -- --e2e` and the build command, when the blueprint defines them → `npm run review`. |
 
 ---
 
@@ -31,11 +31,12 @@ To prevent token waste and latency, all tasks are classified into three operatio
    - For Tier 1 micro-tasks, use only [`fast-track`](.agents/skills/fast-track/SKILL.md).
 2. **Gate 2: Design Before Code, Sized to the Tier**
    - **Tier 2:** state the design in a few lines in chat and wait for the developer's approval. Do not write a spec or plan file.
-   - **Tier 3:** complete requirements discovery (`superpowers:brainstorming`) and write an implementation plan (`superpowers:writing-plans`) in [`docs/specs/`](docs/specs/), as `YYYY-MM-DD-<name>-design.md` and `YYYY-MM-DD-<name>-plan.md`, before editing code.
+   - **Tier 3:** work out the design with the developer in chat, then write one design-and-plan document in [`docs/specs/`](docs/specs/), named `YYYY-MM-DD-<name>-plan.md` (design first, tasks after), and get one approval before editing code. Do not write a separate spec and plan. A project's kickoff spec, the one `tailor-setup` reads, is the exception: it is a `-design.md`.
    - Log all planned work in [`docs/PLAN.md`](docs/PLAN.md).
 3. **Gate 3: Tests for Every Logic Change (Tier 2 & Tier 3)**
    - No logic change, mutation, or endpoint is complete until tests for it exist and pass.
    - **Authorship:** the Gatekeeper writes them. `npm run verify:agent` launches it when source files changed and no test file did.
+   - **Speed:** unit and component tests by default. An end-to-end test is written only for a user journey named in the spec, lives under `e2e/`, and runs only through `npm run verify:agent -- --e2e`.
    - **Fallback:** when the baton reports the Gatekeeper was skipped (not installed, not logged in, out of quota, or disabled), or when a plan task supplies the test, the Builder writes the test first and watches it fail (`superpowers:test-driven-development`).
 4. **Gate 4: Systematic Root-Cause Debugging**
    - Never guess or blindly patch bugs. Investigate root causes with evidence before touching implementation (`superpowers:systematic-debugging`).

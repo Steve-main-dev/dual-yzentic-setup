@@ -202,3 +202,15 @@ Implemented by Tasks 4 to 7 of [`2026-10-11-workflow-remediation-plan.md`](2026-
 - **Configuration is not source.** Dotfiles and dot-directories, `package.json`, `project-blueprint.json`, and lockfiles never trigger a test-writing launch.
 - **Scope guard.** A file that was changed before a launch and is gone from the change set after it (deleted, or restored to its committed content) is out of scope. Violations are recorded in `gatekeeper.out_of_scope` and listed in `handoff.md`, for the diagnosis step as well as the write step.
 - **Measured cost** on `gemini-3.8-flash-high`: scout 240 s and 121,403 tokens; test writing 128 s and 149,514; diagnosis 22 s and 60,807; a 3,500-line branch review 374 s and about 246,000.
+
+---
+
+## Amendments (2026-10-12)
+
+Changed by [`2026-10-12-faster-verification-plan.md`](2026-10-12-faster-verification-plan.md).
+
+- **Models per job.** Scout and diagnosis use `BATON_AGY_MODEL_FAST` (default `gemini-3.8-flash-low`); test writing and review use `BATON_AGY_MODEL_DEEP` (default `gemini-3.8-flash-high`). `BATON_AGY_MODEL` overrides both.
+- **Diagnosis is conditional.** A failed run is diagnosed only when its output is longer than `BATON_DIAGNOSE_MIN_LINES` (default 40), when browser artefact folders exist, or when the e2e command failed. Shorter failures are printed as a distilled excerpt.
+- **End-to-end tests.** `project.verify.e2e` is a separate command that runs only with `verify --e2e`. The Gatekeeper writes unit or component tests unless a change alters a user journey named in the spec, and puts end-to-end tests under `e2e/`.
+- **Commit hook.** In hook mode the baton skips the run when the same content already passed the same command.
+- **Scout is on demand,** not a step before every task.

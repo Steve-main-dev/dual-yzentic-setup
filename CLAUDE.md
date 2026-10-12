@@ -21,14 +21,15 @@ You own application architecture, feature planning, and source code in `src/`.
      ```
    - If changes are purely cosmetic (CSS/typos), the baton auto-detects Tier 1 and passes in < 1 second.
    - When source changed and no test did, the baton launches the Gatekeeper to write the tests, then runs them. Do not write tests for a change yourself unless the baton reports the Gatekeeper was skipped, or the plan task supplies the test.
-   - If tests fail, you receive the Gatekeeper's root-cause note, or a distilled excerpt when it is unavailable. Fix only the reported issue and re-run `npm run verify:agent`.
+   - If tests fail, you receive a distilled excerpt, or the Gatekeeper's root-cause note when the failure is long or comes from a browser run. Fix only the reported issue and re-run `npm run verify:agent`.
+   - Keep `verify.test` fast. Browser and end-to-end suites belong in `verify.e2e` and run only with `npm run verify:agent -- --e2e`: once per Tier 3 branch before the review, or when the developer asks.
 3. **Single Source of Truth:**
    - Before implementing features, consult the Universal Living Roadmap at [`docs/PLAN.md`](docs/PLAN.md).
    - Log any new features or scope adjustments in `docs/PLAN.md`.
-4. **Scout Before Exploring:**
-   - Before a Tier 2 or 3 task, run `npm run scout -- "<task>"` and open only the files and ranges it lists. Explore further only where the brief proves insufficient, and say so when that happens.
+4. **Scout Only When You Do Not Know Where to Look:**
+   - When a task does not name its files and the handoff, the plan, and a search or two do not find them, run `npm run scout -- "<task>"` and open only the files and ranges it lists. Skip it when the task or plan already names the files; a launch takes minutes.
 5. **Review Through the Gatekeeper:**
-   - Finish a Tier 3 branch with `npm run review`. Re-grade each finding, fix what stands, and report what you declined and why. Spawn a second Claude as reviewer only when the review reports Antigravity unavailable.
+   - Finish a Tier 3 branch with `npm run verify:agent -- --e2e`, when the project has an e2e command, and then `npm run review`. Re-grade each finding, fix what stands, and report what you declined and why. Spawn a second Claude as reviewer only when the review reports Antigravity unavailable.
 
 ---
 
@@ -53,12 +54,13 @@ Classify the task by the tiers in [`AGENTS.md`](AGENTS.md) before doing anything
 | :--- | :--- | :--- |
 | **Tier 1** | `fast-track` only: edit, glance at the diff, commit. | Load any other skill, write any document, or spawn any agent. |
 | **Tier 2** | Two to five lines of design in chat, wait for a yes, implement, `npm run verify:agent`. | Write a spec or plan file, load brainstorming or planning skills, or spawn a reviewer. |
-| **Tier 3** | Full lifecycle: spec, plan, one `builder` agent per plan task, `npm run review`. | Skip the spec or the review. |
+| **Tier 3** | Design in chat, then one design-and-plan document with one approval, `builder` runs, `npm run review`. | Write a separate spec and plan, ask for separate approvals, or skip the review. |
 
 When a task turns out larger than its tier, stop, say so, and move up. Never move down mid-task.
 
 ### 3.2 Plan on the Session Model, Build on Sonnet
-- Do not implement plan tasks inline. Hand each Tier 3 plan task to the `builder` agent ([`.claude/agents/builder.md`](.claude/agents/builder.md)), which runs on Sonnet with a fresh context. Give it the plan path, the task number, and the branch.
+- Do not implement plan tasks inline. Hand Tier 3 plan tasks to the `builder` agent ([`.claude/agents/builder.md`](.claude/agents/builder.md)), which runs on Sonnet with a fresh context. Give it the plan path, the task numbers, and the branch.
+- Group tasks into as few runs as stay reviewable. Tasks that touch the same files, or that are small, go in one run with one commit per task. Every run starts cold, so each extra run costs minutes.
 - Tier 2 changes may also go to `builder` once their design is approved. Tier 1 edits are done directly.
 - Read the builder's report, not its transcript. Act on its "Deviations" and "Open" lines.
 - Run builders one at a time. They share the working tree.
