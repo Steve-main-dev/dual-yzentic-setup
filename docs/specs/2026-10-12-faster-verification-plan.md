@@ -202,8 +202,24 @@ Found by running the result of Tasks 1 to 4 for real on 2026-10-12. One grouped 
 
 ### Task 6: Measure and review (planner)
 
-- [ ] **Status**
+- [x] **Status** (review fixes in commit `3a581df`)
 
 - One real scout on the fast model: time, tokens, and whether the brief is usable.
 - `npm run review` on the branch; re-grade, one fix pass.
 - Full suite in a fresh clone; merge to `main`.
+
+**Results (2026-10-12):**
+
+| Measure | Before | After |
+| :--- | :--- | :--- |
+| This repository's suite | 190 s | 56 s |
+| Tests on commit, after a passing `verify` | 190 s | 1 s |
+| Scout | 240 s, 121,403 tokens (deep model) | 93 s, 180,591 tokens (fast model) |
+| Diagnosis | 21.8 s, 60,807 tokens | 12.5 s, 57,692 tokens |
+| `test_gatekeeper.py` | 73 s | 40 s |
+| Four plan tasks | about 100,000 Sonnet tokens each, one run each | 117,462 for all four in one run |
+
+- The fast model makes scout quicker but not cheaper in tokens, and its brief named a slightly wrong test file.
+- The first review of this branch ran 590 s, used 265,009 tokens, and returned nothing; the second, with a 1200 s limit, took 607 s and 319,381 tokens and found the stale-artefact bug fixed in `3a581df`.
+- One failing `node --test` test prints 59 lines, which is why the diagnosis threshold moved from 40 to 150.
+- Not fixed, found on the way: `npm run init:project` writes no `verify` commands, so a wizard-started project keeps running this template's suite.
