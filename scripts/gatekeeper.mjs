@@ -28,18 +28,18 @@ export function shouldWriteTests({ tier, files, disabled = false }) {
 }
 
 /**
- * The blueprint's source spec and test command; either is null when absent or the blueprint is unreadable.
+ * The blueprint's source spec, test command and e2e command; each is null when absent or the blueprint is unreadable.
  */
 function readProject(root) {
   try {
     const project = JSON.parse(readFileSync(resolve(root, 'project-blueprint.json'), 'utf-8')).project;
-    return { spec: project?.source_spec || null, testCommand: project?.verify?.test || null };
+    return { spec: project?.source_spec || null, testCommand: project?.verify?.test || null, e2eCommand: project?.verify?.e2e || null };
   } catch {
-    return { spec: null, testCommand: null };
+    return { spec: null, testCommand: null, e2eCommand: null };
   }
 }
 
-function buildWritePrompt(sources, { spec, testCommand }) {
+function buildWritePrompt(sources, { spec, testCommand, e2eCommand }) {
   return [
     'You are the Gatekeeper of this repository (your role is defined in GEMINI.md).',
     'The Builder changed these source files and changed no tests:',
@@ -51,6 +51,9 @@ function buildWritePrompt(sources, { spec, testCommand }) {
     '- Touch test files only.',
     '- Run nothing.',
     '- Where the code contradicts the spec, test to the spec and say so in one line.',
+    e2eCommand
+      ? 'Write unit or component tests. Write an end-to-end test only when the change adds or alters a user journey named in the spec, and put it under e2e/.'
+      : 'Write unit or component tests only. Do not write end-to-end or browser tests.',
     PLAIN_PATHS_RULE
   ].join('\n');
 }
@@ -143,6 +146,8 @@ export function renderHandoff({ state, tier, files, diagnosis = null }) {
   if (state.gatekeeper?.result === 'skipped') {
     report.push('', 'Gatekeeper skipped: tests for this change are still owed.');
   }
+
+  report.push('', `E2E: ${{ passed: 'passed', failed: 'failed' }[state.e2e] ?? 'not run'}`);
 
   return [
     `# Agent Handoff Ticket: ${state.task_id ?? 'TASK-00'}`,

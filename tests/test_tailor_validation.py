@@ -41,6 +41,8 @@ class TestTailorValidation(unittest.TestCase):
             (lambda p: p.update(skills=["alpha", "nope"]), "project.skills"),
             (lambda p: p["verify"].pop("test"), "project.verify.test"),
             (lambda p: p["verify"].update(test_scoped="npm test"), "project.verify.test_scoped"),
+            (lambda p: p["verify"].update(e2e=""), "project.verify.e2e"),
+            (lambda p: p["verify"].update(e2e=7), "project.verify.e2e"),
             (lambda p: p.update(roadmap=[]), "project.roadmap"),
             (lambda p: p["roadmap"][0].update(priority="P3"), "project.roadmap[0].priority"),
             (lambda p: p["roadmap"][1].update(id="1.1"), "project.roadmap[1].id"),
@@ -59,6 +61,13 @@ class TestTailorValidation(unittest.TestCase):
                 found = self.problems(project)
                 self.assertEqual(len(found), 1, found)
                 self.assertTrue(found[0].startswith(expected), found[0])
+
+    def test_e2e_command_is_optional_and_valid_when_text(self):
+        project = copy.deepcopy(VALID_PROJECT)
+        project["verify"].pop("e2e", None)
+        self.assertEqual(self.problems(project), [])
+        project["verify"]["e2e"] = "npx playwright test"
+        self.assertEqual(self.problems(project), [])
 
     def test_all_problems_reported_together(self):
         project = copy.deepcopy(VALID_PROJECT)

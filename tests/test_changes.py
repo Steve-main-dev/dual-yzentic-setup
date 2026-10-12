@@ -99,6 +99,8 @@ class TestChanges(unittest.TestCase):
             "src/testing/app.js": False,
             "src/contest.py": False,
             "tests": False,
+            "e2e/login.spec.ts": True,
+            "e2e/helpers/auth.js": True,
         }
         flags = self.call(f"{json.dumps(list(paths))}.map(changes.isTestFile)")
         self.assertEqual(flags, list(paths.values()))

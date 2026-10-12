@@ -93,6 +93,9 @@ export function validateManifest(blueprint, { root = REPO_ROOT } = {}) {
     add('project.verify.test_scoped', 'must be a command containing {scope}');
   }
 
+  const e2e = project.verify?.e2e;
+  if (e2e !== undefined && !isText(e2e)) add('project.verify.e2e', 'must be a non-empty command');
+
   if (!Array.isArray(project.roadmap) || project.roadmap.length === 0) {
     add('project.roadmap', 'must contain at least one task');
   } else {

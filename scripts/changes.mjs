@@ -21,11 +21,11 @@ export function isCosmeticFile(path) {
   return COSMETIC_EXTENSIONS.some(ext => lower.endsWith(ext)) || lower.startsWith('docs/');
 }
 
-const TEST_DIRS = ['tests', 'test', '__tests__'];
+const TEST_DIRS = ['tests', 'test', '__tests__', 'e2e'];
 const TEST_NAME = /^test_.*\.py$|_test\..+$|\.test\..+$|\.spec\..+$/;
 
 /**
- * A test file lives under tests/, test/ or __tests__/, or is named like one.
+ * A test file lives under tests/, test/, __tests__/ or e2e/, or is named like one.
  */
 export function isTestFile(path) {
   const parts = path.split('/');

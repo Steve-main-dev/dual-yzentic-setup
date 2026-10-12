@@ -41,6 +41,11 @@ setTimeout(() => {}, 60000);
 """
 
 
+def appender(letter, exit_code=0):
+    """A command that appends `letter` to the file named by RUNS_FILE, to prove it ran and in what order."""
+    return f"node -e \"require('fs').appendFileSync(process.env.RUNS_FILE, '{letter}'); process.exit({exit_code})\""
+
+
 def git(root, *args):
     subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True)
 
@@ -57,7 +62,7 @@ class TestGatekeeper(unittest.TestCase):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text, encoding="utf-8", newline="\n")
 
-    def make_fixture(self, test_command=PASS, changes=None, commit=False):
+    def make_fixture(self, test_command=PASS, changes=None, commit=False, e2e=None):
         """An initialized project committed once, then `changes` (path -> text) written without committing."""
         self.fixtures += 1
         fixture = Path(self.tmp.name) / f"fixture{self.fixtures}"
@@ -67,6 +72,8 @@ class TestGatekeeper(unittest.TestCase):
         blueprint = json.loads(blueprint_path.read_text(encoding="utf-8"))
         blueprint["status"] = "initialized"
         blueprint["project"] = {"source_spec": SPEC, "verify": {"test": test_command}}
+        if e2e is not None:
+            blueprint["project"]["verify"]["e2e"] = e2e
         blueprint_path.write_text(json.dumps(blueprint, indent=2) + "\n", encoding="utf-8")
         repo_fixture.git_init(root)
         for rel, text in (changes if changes is not None else {"src/app.js": "module.exports = 1;\n"}).items():
@@ -93,6 +100,9 @@ class TestGatekeeper(unittest.TestCase):
         if not self.args_file.exists():
             return []
         return [json.loads(line) for line in self.args_file.read_text(encoding="utf-8").splitlines()]
+
+    def launches_reset(self):
+        self.args_file.unlink(missing_ok=True)
 
     def prompt(self, index=0):
         return self.launches()[index][1]
@@ -320,6 +330,89 @@ class TestGatekeeper(unittest.TestCase):
                 self.assertIn("Executing test command", res.stdout)
                 self.assertEqual(self.state(root)["gatekeeper"], {"result": "skipped", "tests_written": [], "out_of_scope": []})
                 self.assertIn("still owed", self.handoff(root))
+
+    # End-to-end tests are opt-in
+
+    def runs(self):
+        path = Path(self.tmp.name) / "runs.txt"
+        return path.read_text(encoding="utf-8") if path.exists() else ""
+
+    def e2e_env(self, **extra):
+        return {"RUNS_FILE": str(Path(self.tmp.name) / "runs.txt"), **extra}
+
+    def test_the_e2e_command_does_not_run_without_the_flag(self):
+        for name, changes in (
+            ("tier 2", {"src/app.js": "module.exports = 1;\n", "tests/app.test.js": "// t\n"}),
+            ("tier 3", {f"src/{n}.js": "module.exports = 1;\n" for n in "abcd"}),
+        ):
+            with self.subTest(name):
+                root = self.make_fixture(appender("t"), changes=changes, e2e=appender("e"))
+                res = self.baton(root, "--no-gatekeeper", env=self.e2e_env())
+                self.assertEqual(res.returncode, 0, res.stderr)
+                self.assertEqual(self.state(root)["e2e"], "not_run")
+                self.assertIn("E2E: not run", self.handoff(root))
+        self.assertEqual(self.runs(), "tt")
+
+    def test_with_the_flag_the_test_command_runs_first_and_then_the_e2e_command(self):
+        root = self.make_fixture(appender("t"), e2e=appender("e"))
+        res = self.baton(root, "--e2e", "--no-gatekeeper", env=self.e2e_env())
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(self.runs(), "te")
+        self.assertIn("Executing e2e command:", res.stdout)
+        self.assertEqual(self.state(root)["e2e"], "passed")
+        self.assertTrue(self.handoff(root).rstrip().endswith("E2E: passed"))
+
+    def test_the_e2e_flag_on_tier_1_runs_only_the_e2e_command(self):
+        root = self.make_fixture(appender("t"), changes={"README.md": "# hi\n"}, e2e=appender("e"))
+        res = self.baton(root, "--e2e", env=self.e2e_env())
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(self.runs(), "e")
+        self.assertEqual(self.state(root)["status"], "verified")
+        self.assertEqual(self.state(root)["e2e"], "passed")
+
+    def test_a_failing_e2e_command_fails_the_verify(self):
+        root = self.make_fixture(appender("t"), e2e=appender("e", 1))
+        res = self.baton(root, "--e2e", "--no-gatekeeper", env=self.e2e_env())
+        self.assertEqual(res.returncode, 1, res.stdout)
+        state = self.state(root)
+        self.assertEqual((state["status"], state["turn_count"], state["e2e"]), ("verification_failed", 1, "failed"))
+        self.assertTrue(self.handoff(root).rstrip().endswith("E2E: failed"))
+
+    def test_a_failing_test_command_skips_the_e2e_command(self):
+        root = self.make_fixture(appender("t", 1), e2e=appender("e"))
+        res = self.baton(root, "--e2e", "--no-gatekeeper", env=self.e2e_env())
+        self.assertEqual(res.returncode, 1, res.stdout)
+        self.assertEqual(self.runs(), "t")
+        self.assertEqual(self.state(root)["e2e"], "not_run")
+
+    def test_the_e2e_flag_without_a_configured_command_changes_nothing(self):
+        root = self.make_fixture(appender("t"))
+        self.baton(root, "--no-gatekeeper", env=self.e2e_env())
+        before = (root / ".agents" / "sync" / "handoff.json").read_bytes()
+        res = self.baton(root, "--e2e", env=self.e2e_env())
+        self.assertEqual(res.returncode, 1)
+        self.assertIn("[Baton] No e2e command configured (project.verify.e2e).", res.stderr)
+        self.assertEqual(self.runs(), "t")
+        self.assertEqual((root / ".agents" / "sync" / "handoff.json").read_bytes(), before)
+
+    def test_npm_config_e2e_behaves_as_the_flag(self):
+        root = self.make_fixture(appender("t"), e2e=appender("e"))
+        res = self.baton(root, "--no-gatekeeper", env=self.e2e_env(npm_config_e2e="true"))
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(self.runs(), "te")
+
+    def test_the_write_prompt_says_whether_e2e_tests_are_wanted(self):
+        with_e2e = "Write unit or component tests. Write an end-to-end test only when the change adds or alters a user journey named in the spec, and put it under e2e/."
+        without = "Write unit or component tests only. Do not write end-to-end or browser tests."
+        for e2e, expected, absent in ((PASS, with_e2e, without), (None, without, with_e2e)):
+            with self.subTest(e2e=e2e):
+                self.launches_reset()
+                root = self.make_fixture(e2e=e2e)
+                self.baton(root)
+                prompt = self.prompt()
+                self.assertIn(expected, prompt)
+                self.assertNotIn(absent, prompt)
+                self.assertTrue(prompt.endswith(PLAIN_PATHS_RULE), prompt)
 
     # Diagnosing failures
 

@@ -225,6 +225,13 @@ export async function main() {
   }
 
   if (command === 'verify') {
+    const verifyConfig = readVerifyConfig(resolve(root, 'project-blueprint.json'));
+    const wantE2e = args.includes('--e2e') || process.env.npm_config_e2e === 'true';
+    if (wantE2e && !verifyConfig?.e2e) {
+      console.error('[Baton] No e2e command configured (project.verify.e2e).');
+      process.exit(1);
+    }
+
     const state = readSyncState(syncJson);
 
     // Check circuit breaker
@@ -257,7 +264,7 @@ export async function main() {
     const { files: modified, source } = resolveChangeSet(root);
     if (source === 'last-commit') console.log(CLEAN_TREE_NOTE);
     const tier = tierOverride || detectExecutionTier(modified);
-    const { command: testCmd, isExpress } = resolveTestExecution(tier, scopeOverride, readVerifyConfig(resolve(root, 'project-blueprint.json')));
+    const { command: testCmd, isExpress } = resolveTestExecution(tier, scopeOverride, verifyConfig);
     const disabled = gatekeeperDisabled(args);
     const saveState = () => writeSyncState(state, syncJson);
 
@@ -272,12 +279,15 @@ export async function main() {
 
     console.log(`\n[Baton] Verifying changes (Tier ${tier}${tierOverride ? ' - manual override' : ' - auto-detected'})...`);
     state.gatekeeper = { result: 'not_needed', tests_written: [], out_of_scope: [] };
+    state.e2e = 'not_run';
 
     if (isExpress) {
       console.log('[Baton] Tier 1 Express Lane: Cosmetic/asset changes detected. Full tests bypassed.');
-      settle('verified');
-      console.log('[Baton] PASS: Verified.\n');
-      process.exit(0);
+      if (!wantE2e) {
+        settle('verified');
+        console.log('[Baton] PASS: Verified.\n');
+        process.exit(0);
+      }
     }
 
     // An explicit --scope names the test that covers the change, so no tests are owed
@@ -299,16 +309,25 @@ export async function main() {
       }
     }
 
-    console.log(`[Baton] Executing test command: ${testCmd}`);
-    let testSuccess = false;
+    const runCommand = (cmd) => {
+      try {
+        return { success: true, output: execSync(cmd, { cwd: root, encoding: 'utf-8', stdio: 'pipe' }) };
+      } catch (err) {
+        return { success: false, output: (err.stdout || '') + '\n' + (err.stderr || '') };
+      }
+    };
+
+    let testSuccess = true;
     let testOutput = '';
 
-    try {
-      testOutput = execSync(testCmd, { cwd: root, encoding: 'utf-8', stdio: 'pipe' });
-      testSuccess = true;
-    } catch (err) {
-      testSuccess = false;
-      testOutput = (err.stdout || '') + '\n' + (err.stderr || '');
+    if (!isExpress) {
+      console.log(`[Baton] Executing test command: ${testCmd}`);
+      ({ success: testSuccess, output: testOutput } = runCommand(testCmd));
+    }
+    if (testSuccess && wantE2e) {
+      console.log(`[Baton] Executing e2e command: ${verifyConfig.e2e}`);
+      ({ success: testSuccess, output: testOutput } = runCommand(verifyConfig.e2e));
+      state.e2e = testSuccess ? 'passed' : 'failed';
     }
 
     if (testSuccess) {
