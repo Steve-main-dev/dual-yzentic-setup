@@ -151,7 +151,7 @@ Changes 1 to 4 are code (Tasks 1 to 4). Changes 5 to 7 are rules (Task 5). This 
 
 ### Task 7: Fixes from real runs
 
-- [ ] **Status**
+- [x] **Status** (commits `8fd9490`, `c6c12aa`, `8eb5339`)
 
 Found by running the result of Tasks 1 to 4 for real on 2026-10-12. One grouped builder run, three commits.
 

@@ -210,7 +210,10 @@ Implemented by Tasks 4 to 7 of [`2026-10-11-workflow-remediation-plan.md`](2026-
 Changed by [`2026-10-12-faster-verification-plan.md`](2026-10-12-faster-verification-plan.md).
 
 - **Models per job.** Scout and diagnosis use `BATON_AGY_MODEL_FAST` (default `gemini-3.8-flash-low`); test writing and review use `BATON_AGY_MODEL_DEEP` (default `gemini-3.8-flash-high`). `BATON_AGY_MODEL` overrides both.
-- **Diagnosis is conditional.** A failed run is diagnosed only when its output is longer than `BATON_DIAGNOSE_MIN_LINES` (default 40), when browser artefact folders exist, or when the e2e command failed. Shorter failures are printed as a distilled excerpt.
+- **Diagnosis is conditional.** A failed run is diagnosed only when its output is longer than `BATON_DIAGNOSE_MIN_LINES` (default 150; one failing `node --test` test prints 59 lines), when browser artefact folders exist, or when the e2e command failed. Shorter failures are printed as a distilled excerpt.
 - **End-to-end tests.** `project.verify.e2e` is a separate command that runs only with `verify --e2e`. The Gatekeeper writes unit or component tests unless a change alters a user journey named in the spec, and puts end-to-end tests under `e2e/`.
 - **Commit hook.** In hook mode the baton skips the run when the same content already passed the same command.
 - **Scout is on demand,** not a step before every task.
+- **Timeouts.** A review launch gets 1200 seconds, every other job 600. A launch that is not `ok` reports the reason and the first line of its detail.
+- **The excerpt.** `distillDiagnostics` keeps test names, actual values, and locations, so a short failure is readable without a launch.
+- **Measured on the fast model:** scout 93 s and 180,591 tokens (240 s and 121,403 on the deep model); diagnosis 12.5 s and 57,692 (21.8 s and 60,807).

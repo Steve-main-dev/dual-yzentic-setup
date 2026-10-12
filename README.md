@@ -143,11 +143,21 @@ npm run hook:install             # install the pre-commit hook
 | `BATON_AGY_MODEL_FAST` | Model for scout and diagnosis. Default `gemini-3.8-flash-low`. |
 | `BATON_AGY_MODEL_DEEP` | Model for test writing and review. Default `gemini-3.8-flash-high`. |
 | `BATON_AGY_MODEL` | One model for every launch, overriding both. |
-| `BATON_DIAGNOSE_MIN_LINES` | A failure longer than this many lines gets a diagnosis. Default `40`; `0` means always. |
-| `BATON_AGY_TIMEOUT` | Seconds before a launch is abandoned. Default `600`. |
+| `BATON_DIAGNOSE_MIN_LINES` | A failure longer than this many lines gets a diagnosis. Default `150`; `0` means always. |
+| `BATON_AGY_TIMEOUT` | Seconds before a launch is abandoned. Default `600`, and `1200` for a review. |
 | `BATON_AGY_CMD` | Executable to launch. Default `agy`. |
 
-A launch is not free. The first real scout on the default model took four minutes and about 120,000 Antigravity tokens. `npm run sync:status` shows the running total. Set `BATON_AGY_MODEL` to a lighter model, such as `gemini-3.8-flash-low`, to trade depth for speed.
+A launch is not free, and a launch that runs out of time still costs its full time and tokens. Measured in this repository:
+
+| Job | Model | Time | Antigravity tokens |
+| :--- | :--- | :--- | :--- |
+| Scout | fast | 93 s | 181,000 |
+| Scout | deep | 240 s | 121,000 |
+| Diagnosis | fast | 13 s | 58,000 |
+| Test writing | deep | 128 s | 150,000 |
+| Branch review | deep | 374 s | 246,000 |
+
+One review of a smaller branch ran for 590 seconds and returned nothing. `npm run sync:status` shows the running total.
 
 ---
 
