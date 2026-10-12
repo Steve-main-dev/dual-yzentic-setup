@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 import tempfile
@@ -40,6 +41,29 @@ class TestRunParallel(unittest.TestCase):
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
         last = res.stdout.strip().splitlines()[-1]
         self.assertRegex(last, r"^Ran 2 test modules in [\d.]+s: 2 passed, 0 failed$")
+
+    def test_a_directory_without_modules_exits_one(self):
+        tests_dir = self.make_tests_dir({})
+        res = self.run_runner(tests_dir)
+        self.assertEqual(res.returncode, 1)
+        self.assertIn(f"No test modules found in {tests_dir}", res.stderr)
+
+    def test_a_missing_directory_exits_one(self):
+        tests_dir = self.make_tests_dir({}) / "nope"
+        res = self.run_runner(tests_dir)
+        self.assertEqual(res.returncode, 1)
+        self.assertIn(f"No test modules found in {tests_dir}", res.stderr)
+
+    def test_npm_config_variables_are_stripped_case_insensitively(self):
+        body = (
+            "import os, unittest\n\nclass T(unittest.TestCase):\n    def test_unset(self):\n"
+            "        self.assertIsNone(os.environ.get('NPM_CONFIG_TIER'))\n"
+            "        self.assertIsNone(os.environ.get('npm_config_tier'))\n"
+        )
+        tests_dir = self.make_tests_dir({"test_env.py": body})
+        env = {**os.environ, "NPM_CONFIG_TIER": "2", "npm_config_tier": "2"}
+        res = subprocess.run([sys.executable, str(RUNNER), str(tests_dir)], cwd=tests_dir.parent.parent, env=env, capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
 
 
 if __name__ == "__main__":

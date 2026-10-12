@@ -322,6 +322,7 @@ export async function main() {
     }
 
     const runCommand = (cmd) => {
+      commandStarted = Date.now();
       try {
         return { success: true, output: execSync(cmd, { cwd: root, encoding: 'utf-8', stdio: 'pipe' }) };
       } catch (err) {
@@ -331,6 +332,7 @@ export async function main() {
 
     let testSuccess = true;
     let testOutput = '';
+    let commandStarted = Date.now();
 
     if (!isExpress) {
       console.log(`[Baton] Executing test command: ${testCmd}`);
@@ -351,7 +353,7 @@ export async function main() {
       process.exit(0);
     } else {
       state.turn_count = (state.turn_count || 0) + 1;
-      const { note: diagnosis, outOfScope } = disabled || !shouldDiagnose({ root, output: testOutput, isE2e: state.e2e === 'failed' })
+      const { note: diagnosis, outOfScope } = disabled || !shouldDiagnose({ root, output: testOutput, isE2e: state.e2e === 'failed', since: commandStarted })
         ? { note: null, outOfScope: [] }
         : diagnoseFailure({ root, state, output: testOutput, saveState });
       state.gatekeeper.out_of_scope = outOfScope;

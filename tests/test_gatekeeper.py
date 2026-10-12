@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -467,11 +468,34 @@ class TestGatekeeper(unittest.TestCase):
                 self.baton(root, env={"BATON_DIAGNOSE_MIN_LINES": ""})
                 self.assertEqual(len(self.launches()), launched)
 
-    def test_an_artifact_folder_makes_a_short_failure_worth_diagnosing(self):
-        root = self.failing_fixture(FAIL)
-        (root / "playwright-report").mkdir()
+    def test_an_artifact_folder_made_by_the_failing_run_makes_a_short_failure_worth_diagnosing(self):
+        command = "node -e \"require('fs').mkdirSync('playwright-report',{recursive:true});require('fs').writeFileSync('playwright-report/index.html','x');console.error('boom');process.exit(1)\""
+        root = self.failing_fixture(command)
         self.baton(root, env={"BATON_DIAGNOSE_MIN_LINES": ""})
         self.assertEqual(len(self.launches()), 1)
+
+    def test_a_stale_artifact_folder_does_not_make_a_short_failure_worth_diagnosing(self):
+        root = self.failing_fixture(FAIL)
+        report = root / "playwright-report"
+        report.mkdir()
+        (report / "index.html").write_text("old", encoding="utf-8")
+        old = time.time() - 3600
+        for path in (report / "index.html", report):
+            os.utime(path, (old, old))
+        res = self.baton(root, env={"BATON_DIAGNOSE_MIN_LINES": ""})
+        self.assertEqual(self.launches(), [])
+        self.assertIn(EXCERPT_HEADING, res.stderr)
+
+    def test_should_diagnose_treats_missing_output_as_empty(self):
+        code = """
+        import { shouldDiagnose } from './scripts/gatekeeper.mjs';
+        const root = process.cwd() + '/no-such-dir';
+        const env = { BATON_DIAGNOSE_MIN_LINES: '' };
+        console.log(JSON.stringify([shouldDiagnose({ root, output: undefined, env }), shouldDiagnose({ root, output: null, env }), shouldDiagnose({ root, output: 5, env })]));
+        """
+        res = repo_fixture.run_node(code)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(json.loads(res.stdout.strip()), [False, False, False])
 
     def test_a_failing_e2e_command_is_always_diagnosed(self):
         root = self.failing_fixture(PASS, e2e=FAIL)

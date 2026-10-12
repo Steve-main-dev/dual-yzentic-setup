@@ -4,11 +4,12 @@
  * The baton imports this module, so it never imports the baton: state and a saveState callback come in as arguments.
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { launchAgy, appendDelegation, describeFailure, PLAIN_PATHS_RULE } from './agy.mjs';
 import { isSourceFile, isTestFile, snapshotChanges, checkScope } from './changes.mjs';
 
+const ARTIFACT_SLACK_MS = 2000; // coarse filesystem timestamps
 const FAILURE_LOG = '.agents/sync/last-failure.log';
 const FAILURE_FOLDERS = ['test-results', 'playwright-report'];
 
@@ -106,12 +107,28 @@ export function writeTests({ root, state, files, saveState = () => {} }) {
 }
 
 /**
+ * Whether an artifact folder exists and, when `since` (ms since the epoch) is given, was touched by the failing run:
+ * the folder or one of its direct children was modified at or after `since`, give or take the slack.
+ */
+function isFreshFolder(folder, since) {
+  if (!existsSync(folder)) return false;
+  if (since === null) return true;
+  const cutoff = since - ARTIFACT_SLACK_MS;
+  try {
+    return [folder, ...readdirSync(folder).map(name => resolve(folder, name))].some(path => statSync(path).mtimeMs >= cutoff);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * A failure is worth a diagnosis launch only when it is not readable as it is: the output is longer than
  * BATON_DIAGNOSE_MIN_LINES non-empty lines (default 150, 0 always diagnoses), a browser run left its artifacts
- * in the project root, or the command that failed was the e2e command.
+ * in the project root during the run (see isFreshFolder), or the command that failed was the e2e command.
  */
-export function shouldDiagnose({ root, output, isE2e = false, env = process.env }) {
-  if (isE2e || FAILURE_FOLDERS.some(name => existsSync(resolve(root, name)))) return true;
+export function shouldDiagnose({ root, output, isE2e = false, since = null, env = process.env }) {
+  if (isE2e || FAILURE_FOLDERS.some(name => isFreshFolder(resolve(root, name), since))) return true;
+  output = typeof output === 'string' ? output : '';
   const raw = (env.BATON_DIAGNOSE_MIN_LINES ?? '').trim();
   const threshold = raw !== '' && Number.isFinite(Number(raw)) && Number(raw) >= 0 ? Number(raw) : 150;
   return output.split('\n').filter(line => line.trim().length > 0).length > threshold;

@@ -11,11 +11,11 @@ from pathlib import Path
 
 MAX_WORKERS = 8
 # The pre-commit hook and some tests export these; a child must start from a clean environment.
-STRIPPED_PREFIXES = ("BATON_HOOK", "BATON_GATEKEEPER", "BATON_AGY_", "BATON_DIAGNOSE_MIN_LINES", "STUB_", "npm_config_")
+STRIPPED_PREFIXES = ("BATON_HOOK", "BATON_GATEKEEPER", "BATON_AGY_", "BATON_DIAGNOSE_MIN_LINES", "STUB_", "NPM_CONFIG_")
 
 
 def clean_env():
-    return {k: v for k, v in os.environ.items() if not k.startswith(STRIPPED_PREFIXES)}
+    return {k: v for k, v in os.environ.items() if not k.upper().startswith(STRIPPED_PREFIXES)}
 
 
 def run_module(tests_dir, module):
@@ -27,6 +27,9 @@ def run_module(tests_dir, module):
 def main(argv):
     tests_dir = Path(argv[1] if len(argv) > 1 else Path(__file__).resolve().parent).resolve()
     modules = sorted(tests_dir.glob("test_*.py"))
+    if not modules:
+        print(f"No test modules found in {tests_dir}", file=sys.stderr)
+        return 1
     started = time.time()
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
         results = list(pool.map(lambda m: run_module(tests_dir, m), modules))
