@@ -58,6 +58,11 @@ Active milestone: **Workflow setup complete; waiting for a project to start**
   - **Status:** Done
   - **Description:** Fixes from the 2026-10-11 audit: a gate that blocks, tests isolated from the real repo, portable links, one consistent rule set, enforcement hooks, single-developer framing. Plan: [`2026-10-11-workflow-remediation-plan.md`](specs/2026-10-11-workflow-remediation-plan.md).
 
+- [ ] **Task 0.6: Faster Verification**
+  - **Priority:** P0
+  - **Status:** In Progress
+  - **Description:** Opt-in end-to-end runs, no repeated run on commit, diagnosis only when needed, a fast model for scout and diagnosis, and lighter process rules. Plan: [`2026-10-12-faster-verification-plan.md`](specs/2026-10-12-faster-verification-plan.md).
+
 - [ ] **Task 1.1: Core Application Shell & Navigation**
   - **Priority:** P0
   - **Status:** Backlog
