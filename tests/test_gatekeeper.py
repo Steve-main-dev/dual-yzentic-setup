@@ -67,7 +67,7 @@ class TestGatekeeper(unittest.TestCase):
         self.fixtures += 1
         fixture = Path(self.tmp.name) / f"fixture{self.fixtures}"
         fixture.mkdir()
-        root = repo_fixture.make_template_repo(fixture)
+        root = repo_fixture.make_template_repo(fixture, skills=False)
         blueprint_path = root / "project-blueprint.json"
         blueprint = json.loads(blueprint_path.read_text(encoding="utf-8"))
         blueprint["status"] = "initialized"

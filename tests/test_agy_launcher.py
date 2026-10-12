@@ -197,7 +197,7 @@ class TestAgyLauncher(unittest.TestCase):
     def baton_status(self, state):
         fixture_tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(fixture_tmp.cleanup)
-        root = repo_fixture.git_init(repo_fixture.make_template_repo(fixture_tmp.name))
+        root = repo_fixture.git_init(repo_fixture.make_template_repo(fixture_tmp.name, skills=False))
         (root / ".agents" / "sync" / "handoff.json").write_text(json.dumps(state), encoding="utf-8")
         res = subprocess.run(["node", str(BATON), "status", "--root", str(root)], cwd=root, capture_output=True, text=True, env=os.environ.copy())
         self.assertEqual(res.returncode, 0, res.stderr)

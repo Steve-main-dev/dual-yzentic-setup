@@ -46,7 +46,7 @@ class TestReview(unittest.TestCase):
 
     def make_fixture(self, fixture, source_spec=None, plans=False):
         fixture.mkdir()
-        root = repo_fixture.make_template_repo(fixture)
+        root = repo_fixture.make_template_repo(fixture, skills=False)
         blueprint = json.loads((root / "project-blueprint.json").read_text(encoding="utf-8"))
         if source_spec:
             blueprint["project"]["source_spec"] = source_spec

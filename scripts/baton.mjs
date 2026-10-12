@@ -170,7 +170,7 @@ export function resolveTestExecution(tier, scope, verify = null) {
   }
 
   // Default test command
-  return { command: 'python3 -m unittest discover tests', isExpress: false };
+  return { command: 'python3 tests/run_parallel.py', isExpress: false };
 }
 
 const CLEAN_TREE_NOTE = '[Baton] Working tree clean: classifying the last commit.';

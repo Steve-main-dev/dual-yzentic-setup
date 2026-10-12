@@ -27,7 +27,7 @@ class TestSyncSchema(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(self.tmp.cleanup)
-        self.fixture = repo_fixture.git_init(repo_fixture.make_template_repo(self.tmp.name))
+        self.fixture = repo_fixture.git_init(repo_fixture.make_template_repo(self.tmp.name, skills=False))
         self.json_path = self.fixture / ".agents" / "sync" / "handoff.json"
         self.json_path.unlink()  # start from nothing so the baton has to generate the whole file
 

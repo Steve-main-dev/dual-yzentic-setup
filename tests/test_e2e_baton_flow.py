@@ -35,13 +35,13 @@ class TestE2EBatonFlow(unittest.TestCase):
         """A git-initialised template repo, separate from the sync file used by the snippet tests."""
         fixture_tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(fixture_tmp.cleanup)
-        return repo_fixture.git_init(repo_fixture.make_template_repo(fixture_tmp.name))
+        return repo_fixture.git_init(repo_fixture.make_template_repo(fixture_tmp.name, skills=False))
 
     def make_verify_fixture(self, test_command, scoped_command=None):
         """An initialized project whose last commit changed only src/app.js and whose tree is clean."""
         fixture_tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(fixture_tmp.cleanup)
-        root = repo_fixture.make_template_repo(fixture_tmp.name)
+        root = repo_fixture.make_template_repo(fixture_tmp.name, skills=False)
         blueprint_path = root / "project-blueprint.json"
         blueprint = json.loads(blueprint_path.read_text(encoding="utf-8"))
         blueprint["status"] = "initialized"

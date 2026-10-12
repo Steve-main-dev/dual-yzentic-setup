@@ -57,8 +57,8 @@ def make_repo(tmp, project=None, status="uninitialized"):
     return root
 
 
-def make_template_repo(tmp):
-    """Build a fixture repo shaped like this template: real blueprint and package.json, stub skills by real name."""
+def make_template_repo(tmp, skills=True):
+    """Build a fixture repo shaped like this template: real blueprint and package.json, stub skills by real name unless skills=False."""
     root = Path(tmp)
     for name in ("project-blueprint.json", "package.json"):
         shutil.copyfile(REPO_ROOT / name, root / name)
@@ -66,7 +66,7 @@ def make_template_repo(tmp):
     for folder in ("skills", "skills-archive"):
         (root / ".agents" / folder).mkdir(parents=True)
         source = REPO_ROOT / ".agents" / folder
-        if source.is_dir():
+        if skills and source.is_dir():
             for skill in sorted(source.iterdir()):
                 if skill.is_dir() and not skill.name.startswith("_"):
                     _write_skill(root / ".agents" / folder, skill.name)

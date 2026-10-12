@@ -10,7 +10,7 @@ class TestGitHooks(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(self.tmp.cleanup)
-        self.fixture = repo_fixture.git_init(repo_fixture.make_template_repo(self.tmp.name))
+        self.fixture = repo_fixture.git_init(repo_fixture.make_template_repo(self.tmp.name, skills=False))
         self.pre_commit_hook = self.fixture / ".githooks" / "pre-commit"
         self.install_script = repo_fixture.SCRIPTS / "install-hooks.mjs"
 

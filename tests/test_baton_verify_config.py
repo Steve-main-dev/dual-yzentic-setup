@@ -30,7 +30,7 @@ class TestBatonVerifyConfig(unittest.TestCase):
         self.assertEqual(self.resolve(1, None, V), {"command": "git diff --stat", "isExpress": True})
 
     def test_resolve_falls_back_without_verify(self):
-        self.assertEqual(self.resolve(3, None)["command"], "python3 -m unittest discover tests")
+        self.assertEqual(self.resolve(3, None)["command"], "python3 tests/run_parallel.py")
         self.assertEqual(self.resolve(2, "tests/x.py")["command"], "python3 -m unittest tests/x.py")
         self.assertEqual(self.resolve(2, "src/a.test.ts")["command"], "npm test -- src/a.test.ts")
 
