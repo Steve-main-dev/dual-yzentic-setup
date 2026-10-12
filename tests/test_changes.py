@@ -156,6 +156,23 @@ class TestChanges(unittest.TestCase):
         self.assertRegex(snapshot["src/app.js"], r"^[0-9a-f]{40}$")
         self.assertNotEqual(snapshot["src/app.js"], snapshot["src/new.js"])
 
+    def test_fingerprint_is_stable_and_follows_content_new_files_and_head(self):
+        self.fixture()
+        self.write("src/app.js", "one\n")
+        first = self.call("changes.fingerprintChanges(root)")
+        self.assertRegex(first, r"^[0-9a-f]{40}$")
+        self.assertEqual(self.call("changes.fingerprintChanges(root)"), first)
+        self.write("src/app.js", "two\n")
+        edited = self.call("changes.fingerprintChanges(root)")
+        self.assertNotEqual(edited, first)
+        self.write("src/other.js", "x\n")
+        added = self.call("changes.fingerprintChanges(root)")
+        self.assertNotEqual(added, edited)
+        self.commit_all("add")
+        clean_one = self.call("changes.fingerprintChanges(root)")
+        self.git("commit", "-q", "--allow-empty", "-m", "empty")
+        self.assertNotEqual(self.call("changes.fingerprintChanges(root)"), clean_one)
+
     def scope(self, before, after, allow_edits):
         return self.call(
             f"changes.checkScope(new Map(Object.entries({json.dumps(before)})), "

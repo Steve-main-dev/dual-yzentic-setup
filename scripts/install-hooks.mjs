@@ -34,6 +34,7 @@ baton_pre_commit() {
 
   echo "[Git Hook] Running Baton pre-commit verification..."
   export BATON_GATEKEEPER=0
+  export BATON_HOOK=1
   node scripts/baton.mjs verify
 
   EXIT_CODE=$?

@@ -51,6 +51,7 @@ class TestGitHooks(unittest.TestCase):
         self.assertNotIn(b"\r", raw, "hook must not contain CR bytes")
         content = raw.decode("utf-8")
         self.assertIn("BATON_GATEKEEPER=0", content)
+        self.assertIn("BATON_HOOK=1", content)
         self.assertNotIn("git add", content)
 
     def test_hook_blocks_the_commit_when_baton_fails(self):

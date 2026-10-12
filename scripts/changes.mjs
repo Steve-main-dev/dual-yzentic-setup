@@ -135,3 +135,18 @@ export function checkScope(before, after, { allowEdits = false } = {}) {
   }
   return { testsWritten, outOfScope };
 }
+
+/**
+ * A hash of the current HEAD commit id (empty when there is no commit) and every uncommitted file with its content hash.
+ * On a clean tree the change set is empty, so the commit id is what tells two commits apart.
+ */
+export function fingerprintChanges(root = REPO_ROOT) {
+  let head = '';
+  try {
+    head = git(root, ['rev-parse', 'HEAD']).trim();
+  } catch {
+    // no commit yet
+  }
+  const pairs = [...snapshotChanges(root)].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return createHash('sha1').update(JSON.stringify([head, pairs])).digest('hex');
+}

@@ -10,7 +10,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
-import { isCosmeticFile, resolveChangeSet } from './changes.mjs';
+import { isCosmeticFile, resolveChangeSet, fingerprintChanges } from './changes.mjs';
 import { gatekeeperDisabled, shouldWriteTests, writeTests, diagnoseFailure, writeHandoff } from './gatekeeper.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -266,6 +266,16 @@ export async function main() {
     const tier = tierOverride || detectExecutionTier(modified);
     const { command: testCmd, isExpress } = resolveTestExecution(tier, scopeOverride, verifyConfig);
     const disabled = gatekeeperDisabled(args);
+    const verifiedCommand = isExpress ? 'express' : testCmd;
+
+    // The commit hook repeats nothing: the same command already passed on the same content
+    if (process.env.BATON_HOOK === '1' && state.status === 'verified' && state.verified) {
+      const { fingerprint, command: ranCommand } = state.verified;
+      if (ranCommand === verifiedCommand && fingerprint === fingerprintChanges(root)) {
+        console.log('[Baton] Already verified for this content; skipping.');
+        process.exit(0);
+      }
+    }
     const saveState = () => writeSyncState(state, syncJson);
 
     // Record the verdict in handoff.json and rewrite handoff.md
@@ -273,6 +283,7 @@ export async function main() {
       state.status = status;
       state.last_updated = new Date().toISOString();
       state.files_modified = modified;
+      state.verified = status === 'verified' ? { fingerprint: fingerprintChanges(root), command: verifiedCommand } : null;
       saveState();
       writeHandoff(syncPaths(root).md, { state, tier, files: modified, diagnosis });
     };

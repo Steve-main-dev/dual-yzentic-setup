@@ -37,7 +37,7 @@ class TestE2EBatonFlow(unittest.TestCase):
         self.addCleanup(fixture_tmp.cleanup)
         return repo_fixture.git_init(repo_fixture.make_template_repo(fixture_tmp.name))
 
-    def make_verify_fixture(self, test_command):
+    def make_verify_fixture(self, test_command, scoped_command=None):
         """An initialized project whose last commit changed only src/app.js and whose tree is clean."""
         fixture_tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(fixture_tmp.cleanup)
@@ -46,6 +46,8 @@ class TestE2EBatonFlow(unittest.TestCase):
         blueprint = json.loads(blueprint_path.read_text(encoding="utf-8"))
         blueprint["status"] = "initialized"
         blueprint["project"] = {"verify": {"test": test_command}}
+        if scoped_command:
+            blueprint["project"]["verify"]["test_scoped"] = scoped_command
         blueprint_path.write_text(json.dumps(blueprint, indent=2) + "\n", encoding="utf-8")
         repo_fixture.git_init(root)
         (root / "src").mkdir()
@@ -56,7 +58,7 @@ class TestE2EBatonFlow(unittest.TestCase):
 
     def baton(self, fixture, *args, env=None):
         cmd = ["node", str(BATON), *args, "--root", str(fixture)]
-        base_env = {k: v for k, v in os.environ.items() if k not in ("npm_config_tier", "npm_config_scope")}
+        base_env = {k: v for k, v in os.environ.items() if k not in ("npm_config_tier", "npm_config_scope", "BATON_HOOK")}
         base_env["BATON_GATEKEEPER"] = "0"  # these runs are about the gate, so they must never launch the real agy
         return subprocess.run(cmd, cwd=fixture, capture_output=True, text=True, env={**base_env, **(env or {})})
 
@@ -188,6 +190,74 @@ class TestE2EBatonFlow(unittest.TestCase):
         self.assertEqual(res.returncode, 0, res.stderr)
         change_set = json.loads(res.stdout)
         self.assertEqual([f for f in change_set["files"] if f.startswith(".agents/sync/")], [])
+
+    # The commit hook does not repeat a run that already passed on the same content
+
+    def counted(self, letter="t", exit_code=0):
+        return f"node -e \"require('fs').appendFileSync(process.env.RUNS_FILE, '{letter}'); process.exit({exit_code})\""
+
+    def counter_env(self, **extra):
+        return {"RUNS_FILE": str(Path(self.tmp.name) / "runs.txt"), **extra}
+
+    def runs(self):
+        path = Path(self.tmp.name) / "runs.txt"
+        return path.read_text(encoding="utf-8") if path.exists() else ""
+
+    SKIP_LINE = "[Baton] Already verified for this content; skipping."
+
+    def test_the_hook_skips_a_run_that_already_passed_on_the_same_content(self):
+        fixture = self.make_verify_fixture(self.counted())
+        self.assertEqual(self.baton(fixture, "verify", env=self.counter_env()).returncode, 0)
+        res = self.baton(fixture, "verify", env=self.counter_env(BATON_HOOK="1"))
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertIn(self.SKIP_LINE, res.stdout)
+        self.assertNotIn("Verifying changes", res.stdout)
+        self.assertEqual(self.runs(), "t")
+
+    def test_the_skip_leaves_the_handoff_untouched(self):
+        fixture = self.make_verify_fixture(self.counted())
+        self.baton(fixture, "verify", env=self.counter_env())
+        paths = [fixture / ".agents" / "sync" / name for name in ("handoff.json", "handoff.md")]
+        before = [path.read_bytes() for path in paths]
+        self.baton(fixture, "verify", env=self.counter_env(BATON_HOOK="1"))
+        self.assertEqual([path.read_bytes() for path in paths], before)
+
+    def test_editing_a_file_between_the_runs_makes_the_hook_run_the_command(self):
+        fixture = self.make_verify_fixture(self.counted())
+        self.baton(fixture, "verify", env=self.counter_env())
+        (fixture / "src" / "app.js").write_text("module.exports = 2;\n", encoding="utf-8")
+        res = self.baton(fixture, "verify", env=self.counter_env(BATON_HOOK="1"))
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertNotIn(self.SKIP_LINE, res.stdout)
+        self.assertEqual(self.runs(), "tt")
+
+    def test_a_scoped_first_run_does_not_let_the_hook_skip(self):
+        fixture = self.make_verify_fixture(self.counted("t"), scoped_command=self.counted("s") + " {scope}")
+        self.baton(fixture, "verify", "--tier", "2", "--scope", "x", env=self.counter_env())
+        res = self.baton(fixture, "verify", env=self.counter_env(BATON_HOOK="1"))
+        self.assertNotIn(self.SKIP_LINE, res.stdout)
+        self.assertEqual(self.runs(), "st")
+
+    def test_a_failing_first_run_does_not_let_the_hook_skip(self):
+        fixture = self.make_verify_fixture(self.counted("t", 1))
+        self.assertEqual(self.baton(fixture, "verify", env=self.counter_env()).returncode, 1)
+        res = self.baton(fixture, "verify", env=self.counter_env(BATON_HOOK="1"))
+        self.assertNotIn(self.SKIP_LINE, res.stdout)
+        self.assertEqual(self.runs(), "tt")
+
+    def test_without_the_hook_variable_nothing_is_skipped(self):
+        fixture = self.make_verify_fixture(self.counted())
+        self.baton(fixture, "verify", env=self.counter_env())
+        res = self.baton(fixture, "verify", env=self.counter_env())
+        self.assertNotIn(self.SKIP_LINE, res.stdout)
+        self.assertEqual(self.runs(), "tt")
+
+    def test_a_tier_1_pass_lets_the_hook_skip_on_the_same_content(self):
+        fixture = self.make_verify_fixture(self.counted())
+        self.assertEqual(self.baton(fixture, "verify", "--tier", "1", env=self.counter_env()).returncode, 0)
+        res = self.baton(fixture, "verify", "--tier", "1", env=self.counter_env(BATON_HOOK="1"))
+        self.assertIn(self.SKIP_LINE, res.stdout)
+        self.assertEqual(self.runs(), "")
 
 
 if __name__ == "__main__":
