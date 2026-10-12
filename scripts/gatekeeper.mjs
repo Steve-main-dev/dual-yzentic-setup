@@ -106,6 +106,18 @@ export function writeTests({ root, state, files, saveState = () => {} }) {
 }
 
 /**
+ * A failure is worth a diagnosis launch only when it is not readable as it is: the output is longer than
+ * BATON_DIAGNOSE_MIN_LINES non-empty lines (default 40, 0 always diagnoses), a browser run left its artifacts
+ * in the project root, or the command that failed was the e2e command.
+ */
+export function shouldDiagnose({ root, output, isE2e = false, env = process.env }) {
+  if (isE2e || FAILURE_FOLDERS.some(name => existsSync(resolve(root, name)))) return true;
+  const raw = (env.BATON_DIAGNOSE_MIN_LINES ?? '').trim();
+  const threshold = raw !== '' && Number.isFinite(Number(raw)) && Number(raw) >= 0 ? Number(raw) : 40;
+  return output.split('\n').filter(line => line.trim().length > 0).length > threshold;
+}
+
+/**
  * Ask Antigravity, read only, for a root-cause note on a failed test run.
  * Returns the note (null when the launch was not ok) and the files changed during the launch, which are never reverted.
  */

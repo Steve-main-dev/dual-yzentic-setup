@@ -11,7 +11,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import { isCosmeticFile, resolveChangeSet, fingerprintChanges } from './changes.mjs';
-import { gatekeeperDisabled, shouldWriteTests, writeTests, diagnoseFailure, writeHandoff } from './gatekeeper.mjs';
+import { gatekeeperDisabled, shouldWriteTests, writeTests, shouldDiagnose, diagnoseFailure, writeHandoff } from './gatekeeper.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -350,7 +350,7 @@ export async function main() {
       process.exit(0);
     } else {
       state.turn_count = (state.turn_count || 0) + 1;
-      const { note: diagnosis, outOfScope } = disabled
+      const { note: diagnosis, outOfScope } = disabled || !shouldDiagnose({ root, output: testOutput, isE2e: state.e2e === 'failed' })
         ? { note: null, outOfScope: [] }
         : diagnoseFailure({ root, state, output: testOutput, saveState });
       state.gatekeeper.out_of_scope = outOfScope;

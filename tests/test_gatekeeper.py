@@ -91,6 +91,7 @@ class TestGatekeeper(unittest.TestCase):
             "BATON_AGY_GRACE": "1",
             "STUB_MODE": mode,
             "STUB_ARGS_FILE": str(self.args_file),
+            "BATON_DIAGNOSE_MIN_LINES": "0",  # the default threshold would skip the diagnosis of a one-line failure
             **(env or {}),
         })
         argv = ["node", str(BATON), "verify", *flags, "--root", str(root)]
@@ -439,6 +440,49 @@ class TestGatekeeper(unittest.TestCase):
         state = self.state(root)
         self.assertEqual((state["status"], state["turn_count"]), ("verification_failed", 1))
         self.assertEqual(state["delegations"][0]["job"], "diagnose")
+
+    # A failure is diagnosed only when it is not readable as it is
+
+    def lines_failing(self, count):
+        return f"node -e \"console.error(Array.from({{length: {count}}}, (_, i) => 'line ' + i).join('\\n')); process.exit(1)\""
+
+    def failing_fixture(self, command, **kwargs):
+        return self.make_fixture(command, changes={"src/app.js": "module.exports = 1;\n", "tests/app.test.js": "// test\n"}, **kwargs)
+
+    def test_a_one_line_failure_is_not_diagnosed_by_default(self):
+        root = self.failing_fixture(FAIL)
+        res = self.baton(root, env={"BATON_DIAGNOSE_MIN_LINES": ""})
+        self.assertEqual(res.returncode, 1, res.stdout)
+        self.assertEqual(self.launches(), [])
+        self.assertIn(EXCERPT_HEADING, res.stderr)
+        self.assertIn("boom: expected 1 got 2", res.stderr)
+        self.assertNotIn(DIAGNOSIS_HEADING, res.stderr)
+        self.assertFalse((root / ".agents" / "sync" / "last-failure.log").exists())
+
+    def test_the_threshold_is_forty_non_empty_lines(self):
+        for count, launched in ((40, 0), (41, 1)):
+            with self.subTest(lines=count):
+                self.launches_reset()
+                root = self.failing_fixture(self.lines_failing(count))
+                self.baton(root, env={"BATON_DIAGNOSE_MIN_LINES": ""})
+                self.assertEqual(len(self.launches()), launched)
+
+    def test_an_artifact_folder_makes_a_short_failure_worth_diagnosing(self):
+        root = self.failing_fixture(FAIL)
+        (root / "playwright-report").mkdir()
+        self.baton(root, env={"BATON_DIAGNOSE_MIN_LINES": ""})
+        self.assertEqual(len(self.launches()), 1)
+
+    def test_a_failing_e2e_command_is_always_diagnosed(self):
+        root = self.failing_fixture(PASS, e2e=FAIL)
+        self.baton(root, "--e2e", env={"BATON_DIAGNOSE_MIN_LINES": ""})
+        self.assertEqual(len(self.launches()), 1)
+        self.assertEqual(self.state(root)["delegations"][0]["job"], "diagnose")
+
+    def test_a_zero_threshold_diagnoses_a_one_line_failure(self):
+        root = self.failing_fixture(FAIL)
+        self.baton(root, env={"BATON_DIAGNOSE_MIN_LINES": "0"})
+        self.assertEqual(len(self.launches()), 1)
 
     def test_the_diagnosis_prompt_names_the_artifact_folders_that_exist(self):
         root = self.make_fixture(FAIL, changes={"src/app.js": "module.exports = 1;\n", "tests/app.test.js": "// test\n"})
