@@ -42,7 +42,7 @@ Changes 1 to 4 are code (Tasks 1 to 4). Changes 5 to 7 are rules (Task 5). This 
 
 ### Task 1: End-to-end tests as a separate, opt-in command
 
-- [ ] **Status**
+- [x] **Status** (commit `1260b02`)
 
 **Files:**
 - Modify: `scripts/baton.mjs`, `scripts/gatekeeper.mjs`, `scripts/changes.mjs`, `scripts/tailor.mjs`
@@ -79,7 +79,7 @@ Changes 1 to 4 are code (Tasks 1 to 4). Changes 5 to 7 are rules (Task 5). This 
 
 ### Task 2: The commit hook does not repeat a passed run
 
-- [ ] **Status**
+- [x] **Status** (commit `f35c07f`)
 
 **Files:**
 - Modify: `scripts/changes.mjs`, `scripts/baton.mjs`, `scripts/install-hooks.mjs`, `.githooks/pre-commit` (regenerate with `node scripts/install-hooks.mjs`)
@@ -109,7 +109,7 @@ Changes 1 to 4 are code (Tasks 1 to 4). Changes 5 to 7 are rules (Task 5). This 
 
 ### Task 3: Diagnose only what is not readable as it is
 
-- [ ] **Status**
+- [x] **Status** (commit `dd00296`)
 
 **Files:**
 - Modify: `scripts/gatekeeper.mjs`, `scripts/baton.mjs`
@@ -132,7 +132,7 @@ Changes 1 to 4 are code (Tasks 1 to 4). Changes 5 to 7 are rules (Task 5). This 
 
 ### Task 4: A fast model for scout and diagnosis
 
-- [ ] **Status**
+- [x] **Status** (commit `cf93d4f`)
 
 **Files:**
 - Modify: `scripts/agy.mjs`
@@ -149,9 +149,50 @@ Changes 1 to 4 are code (Tasks 1 to 4). Changes 5 to 7 are rules (Task 5). This 
 
 ---
 
-### Task 5: Rules and documentation (planner)
+### Task 7: Fixes from real runs
 
 - [ ] **Status**
+
+Found by running the result of Tasks 1 to 4 for real on 2026-10-12. One grouped builder run, three commits.
+
+**Files:**
+- Create: `tests/run_parallel.py`, `tests/test_run_parallel.py`
+- Modify: `scripts/baton.mjs`, `scripts/gatekeeper.mjs`, `scripts/agy.mjs`, `scripts/scout.mjs`, `scripts/review.mjs`, `tests/repo_fixture.py`, `tests/stubs/agy_stub.mjs`, and the test files named below
+- Given: `tests/fixtures/node_test_failure.txt`, the real output of one failing `node --test` test (61 lines)
+
+**Decisions:**
+
+*Commit A: a diagnosis only when it earns its cost.*
+1. `BATON_DIAGNOSE_MIN_LINES` defaults to `150`. One failing `node --test` test printed 59 non-empty lines, so a threshold of 40 diagnosed nearly every failure. The boundary tests move to 150 and 151 lines.
+2. `distillDiagnostics` also keeps lines that match `not ok`, `actual`, `location`, or `✖`. For the given fixture the excerpt must contain the failing test's name (`clamps percent above 100`), `expected: 0`, `actual: -25`, and a `location` line, in at most 25 lines. Today's excerpt for it has none of the name, the actual value, or the location.
+
+*Commit B: this repository's own suite, faster.*
+3. `tests/run_parallel.py [tests_dir]` (standard library only; `tests_dir` defaults to the script's own directory) runs every `test_*.py` in that directory in its own process, at most 8 at a time, each as `<sys.executable> -m unittest discover -s <tests_dir> -t <parent of tests_dir> -p <file name>`. It prints the captured output of each failing module, ends with the single line `Ran <n> test modules in <s>s: <p> passed, <f> failed`, and exits 1 when any failed, 0 otherwise.
+4. The baton's default command, used when no `verify.test` applies and no scope is given, becomes `python3 tests/run_parallel.py`. Measured here: 190 s serially, 84 s with the files in parallel.
+5. `repo_fixture.make_template_repo(tmp, skills=True)`: with `skills=False` it creates no skill stub folders. Fixtures that do not exercise skills pass `skills=False`: those in `test_gatekeeper.py`, `test_e2e_baton_flow.py`, `test_review.py`, `test_scout.py`, `test_agy_launcher.py`, `test_changes.py`, `test_hooks.py`, and `test_sync_schema.py`. Report how long `test_gatekeeper.py` takes before and after.
+
+*Commit C: a review that has time to finish, and failures that say why.*
+6. The launch timeout default is per job: `review` gets 1200 seconds, every other job 600. `BATON_AGY_TIMEOUT` overrides both. Export `timeoutForJob(job)`.
+7. When the tool returns JSON whose `status` is not `SUCCESS`, `detail` starts with `status <STATUS>`. Add a stub mode `status_timeout` that prints `{"status":"TIMEOUT","response":"","usage":{"total_tokens":77}}`.
+8. Wherever scout, review, or the baton reports a launch that was not `ok`, the reason is followed by the first line of `detail` when there is one: `(<reason>: <first line>)`. A real review ran 590 seconds, used 265,009 tokens, and reported only `(failed)`.
+
+**Tests:**
+- `test_baton_runner.py`: the excerpt of the fixture meets decision 2; an output of 20 lines is still returned whole.
+- `test_gatekeeper.py`: 150 lines does not launch a diagnosis and 151 does; the skipped-launch message carries the detail's first line.
+- `test_run_parallel.py`: against a temp `tests` directory holding one passing and one failing module, the runner exits 1, prints the failing module's output and not the passing one's, and ends with `Ran 2 test modules` and `1 passed, 1 failed`; with two passing modules it exits 0.
+- `test_baton_verify_config.py`: the default command is `python3 tests/run_parallel.py`; a `.py` scope still resolves to `python3 -m unittest <scope>`.
+- `test_agy_launcher.py`: `timeoutForJob` for `review`, `scout`, and an unknown job, with and without `BATON_AGY_TIMEOUT`; the `--print-timeout` argument is `1200s` for a review launch; stub mode `status_timeout` gives reason `failed`, a `detail` starting `status TIMEOUT`, and `entry.total_tokens` 77.
+- `test_scout.py`, `test_review.py`: the unavailable line includes the detail's first line.
+
+**Verify:** `--scope` with `--no-gatekeeper` on each test file you touched.
+
+**Commits:** `fix(baton): raise the diagnosis threshold and make the excerpt readable`, `perf(tests): run the suite in parallel with lighter fixtures`, `fix(agy): give review a longer timeout and report why a launch failed`
+
+---
+
+### Task 5: Rules and documentation (planner)
+
+- [x] **Status** (commit `b345e46`)
 
 - **Scout on demand:** `CLAUDE.md` directive 4, the handbook, `README.md`, and `docs/ai/workflows.md`. Run it when the files are not known; skip it when the task or plan names them.
 - **One document, one approval:** a Tier 3 feature is designed in chat, then written as one `docs/specs/YYYY-MM-DD-<name>-plan.md` (design first, tasks after) with one approval. `AGENTS.md`, `CLAUDE.md`, the handbook, `workflows.md`, `architecture.md`, and the session hook text.
