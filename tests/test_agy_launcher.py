@@ -33,6 +33,8 @@ class TestAgyLauncher(unittest.TestCase):
         import {{ launchAgy, appendDelegation, processTimeoutMs }} from './scripts/agy.mjs';
         import {{ snapshotChanges, checkScope }} from './scripts/changes.mjs';
         delete process.env.BATON_AGY_MODEL;
+        delete process.env.BATON_AGY_MODEL_FAST;
+        delete process.env.BATON_AGY_MODEL_DEEP;
         delete process.env.BATON_AGY_TIMEOUT;
         delete process.env.BATON_AGY_GRACE;
         {sets}
@@ -67,6 +69,25 @@ class TestAgyLauncher(unittest.TestCase):
         self.launch(env={"BATON_AGY_MODEL": "gemini-test-model"})
         args = self.recorded_args()[0]
         self.assertEqual(args[args.index("--model") + 1], "gemini-test-model")
+
+    def test_model_for_each_job(self):
+        jobs = ["scout", "diagnose", "write_tests", "review", "unknown"]
+        cases = [
+            ({}, ["gemini-3.8-flash-low"] * 2 + ["gemini-3.8-flash-high"] * 3),
+            ({"BATON_AGY_MODEL_FAST": "fast-x"}, ["fast-x"] * 2 + ["gemini-3.8-flash-high"] * 3),
+            ({"BATON_AGY_MODEL_DEEP": "deep-x"}, ["gemini-3.8-flash-low"] * 2 + ["deep-x"] * 3),
+            ({"BATON_AGY_MODEL": "all-x", "BATON_AGY_MODEL_FAST": "fast-x", "BATON_AGY_MODEL_DEEP": "deep-x"}, ["all-x"] * 5),
+        ]
+        for env, expected in cases:
+            with self.subTest(env=env):
+                body = f"""
+                import {{ modelForJob }} from './scripts/agy.mjs';
+                console.log(JSON.stringify({json.dumps(jobs)}.map(modelForJob)));
+                """
+                self.assertEqual(self.snippet(body, env=env), expected)
+
+    def test_the_entry_records_the_model(self):
+        self.assertEqual(self.launch()["entry"]["model"], "gemini-3.8-flash-high")
 
     def test_timeout_defaults_and_env_override(self):
         self.launch(timeout=None)

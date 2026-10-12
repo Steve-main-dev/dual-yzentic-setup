@@ -10,7 +10,9 @@ import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-const DEFAULT_MODEL = 'gemini-3.8-flash-high';
+const DEFAULT_MODEL_DEEP = 'gemini-3.8-flash-high';
+const DEFAULT_MODEL_FAST = 'gemini-3.8-flash-low';
+const FAST_JOBS = ['scout', 'diagnose'];
 const DEFAULT_TIMEOUT_SECONDS = 600;
 const DEFAULT_KILL_GRACE_SECONDS = 15; // agy gets this long past its own --print-timeout before we kill it
 const DELEGATION_LIMIT = 20;
@@ -20,6 +22,16 @@ const DELEGATION_LIMIT = 20;
  */
 export const PLAIN_PATHS_RULE =
   'Reply in plain text. Refer to files by repo-relative path with forward slashes. Do not use Markdown links or absolute paths.';
+
+/**
+ * The model for a job: scout and diagnose are quick lookups and use the fast model (BATON_AGY_MODEL_FAST), every other
+ * job uses the deep one (BATON_AGY_MODEL_DEEP). BATON_AGY_MODEL, when set, overrides both.
+ */
+export function modelForJob(job) {
+  if (process.env.BATON_AGY_MODEL) return process.env.BATON_AGY_MODEL;
+  if (FAST_JOBS.includes(job)) return process.env.BATON_AGY_MODEL_FAST || DEFAULT_MODEL_FAST;
+  return process.env.BATON_AGY_MODEL_DEEP || DEFAULT_MODEL_DEEP;
+}
 
 /**
  * How long to let the agy process run before killing it: its own timeout plus BATON_AGY_GRACE seconds (default 15).
@@ -54,7 +66,7 @@ function firstLines(text, count) {
  */
 export function launchAgy({ job, prompt, allowEdits = false, timeoutSeconds, root = REPO_ROOT }) {
   const cmd = process.env.BATON_AGY_CMD || 'agy';
-  const model = process.env.BATON_AGY_MODEL || DEFAULT_MODEL;
+  const model = modelForJob(job);
   const seconds = timeoutSeconds ?? (Number(process.env.BATON_AGY_TIMEOUT) || DEFAULT_TIMEOUT_SECONDS);
 
   const agyArgs = ['--print', prompt, '--output-format', 'json', '--print-timeout', `${seconds}s`, '--model', model];
@@ -92,6 +104,7 @@ export function launchAgy({ job, prompt, allowEdits = false, timeoutSeconds, roo
   const duration = typeof parsed?.duration_seconds === 'number' ? parsed.duration_seconds : wallSeconds;
   const entry = {
     job: job ?? null,
+    model,
     ok,
     reason,
     seconds: Math.round(duration * 10) / 10,

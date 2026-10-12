@@ -64,6 +64,12 @@ class TestScout(unittest.TestCase):
         self.assertIn("Read only. Edit nothing. Run nothing.", prompt)
         self.assertTrue(prompt.endswith(PLAIN_PATHS_RULE), prompt)
 
+    def test_scout_uses_the_fast_model_and_records_it(self):
+        self.scout("add login")
+        args = self.recorded_args()[0]
+        self.assertEqual(args[args.index("--model") + 1], "gemini-3.8-flash-low")
+        self.assertEqual(self.sync_state()["delegations"][0]["model"], "gemini-3.8-flash-low")
+
     def test_a_blueprint_without_a_source_spec_names_only_the_plan(self):
         root = self.make_fixture(Path(self.tmp.name) / "plain")
         res = self.scout("add login", root=root)
