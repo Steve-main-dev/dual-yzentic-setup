@@ -52,9 +52,9 @@ Do not survey the repository, recent history, or the skills catalogue up front. 
 | :--- | :--- | :--- |
 | **Tier 3 work only** | `superpowers:using-superpowers` | Process skills apply to Tier 3. Tier 1 uses `fast-track`; Tier 2 uses a short design in chat |
 | **New subsystem or architectural change** | `superpowers:brainstorming` | Discovery of intent, requirements, and design, in chat |
-| **Tier 3 design and plan** | `superpowers:writing-plans` | One design-and-plan document in `docs/specs/`, one approval; tasks grouped into `builder` runs |
-| **Executing implementation plans** | `builder` agent (`.claude/agents/builder.md`) | A group of plan tasks per launch, on Sonnet, with a fresh context |
-| **Writing a test yourself** | `superpowers:test-driven-development` | Red-Green-Refactor, when the Gatekeeper was skipped or a plan task supplies the test |
+| **Tier 3 design and plan** | `superpowers:writing-plans` | The task format: each task names its tests. The approved chat design is saved unchanged in `docs/specs/`; one `builder` run per branch |
+| **Executing implementation plans** | `builder` agent (`.claude/agents/builder.md`) | All of a branch's plan tasks in one launch, on Sonnet, with a fresh context |
+| **Writing a test yourself** | `superpowers:test-driven-development` | Red-Green-Refactor, when the Gatekeeper was skipped or a plan task names the test |
 | **Bug fixing or troubleshooting** | `superpowers:systematic-debugging` | Root-cause investigation before proposing fixes (no guessing) |
 | **Pre-completion claim** | `superpowers:verification-before-completion` | Pre-completion evidence gate (verify tests before claiming complete) |
 

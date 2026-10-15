@@ -15,8 +15,10 @@ To prevent token waste and latency, all tasks are classified into three operatio
 | Tier | Scope | Required Process & Verification |
 | :--- | :--- | :--- |
 | **Tier 1: Express Lane** *(Micro / Cosmetic)* | Pure CSS/Tailwind tweaks, copy/text edits, icon swaps, single-file non-structural adjustments. | Use [`fast-track`](.agents/skills/fast-track/SKILL.md). Auto-detected by `npm run verify:agent` or explicitly via `-- --tier 1`. **Exempt from tests, full regression runs, and production build.** |
-| **Tier 2: Standard Bounded Lane** *(Component / Fix)* | Localized component logic, single API route, or isolated bug fix. | A short design agreed in chat; no spec or plan file. Verified via `npm run verify:agent` (the Gatekeeper writes missing tests), or `-- --tier 2 --scope <test file>` when the covering test already exists. |
-| **Tier 3: Architectural Deep Lane** *(Full Features)* | Multi-file features, database schema/migrations, authentication, breaking architectural changes. | Design agreed in chat → one design-and-plan document, one approval → `builder` runs → full suite via `npm run verify:agent -- --tier 3` → `npm run verify:agent -- --e2e` and the build command, when the blueprint defines them → `npm run review`. |
+| **Tier 2: Standard Lane** *(Features / Fixes)* | Any change, of any number of files, that touches no risky surface (below): components, pages, layout, pure logic, an isolated bug fix. | A design agreed in chat; no spec or plan file. Verified via `npm run verify:agent` (the Gatekeeper writes missing tests), or `-- --tier 2 --scope <test file>` when the covering test already exists. `npm run verify:agent -- --e2e` when a user-facing flow changed. No review. |
+| **Tier 3: Risky Surface Lane** *(Architecture)* | Any change that touches a risky surface: the shape of persisted data (schemas, migrations), sync or replication, domain rules shared across apps, API routes and contracts, authentication, or the interfaces between apps and packages. | A design agreed in chat that includes the task list, each task naming its tests; one approval → that design saved as the plan document → one `builder` run → full suite via `npm run verify:agent -- --tier 3` → `npm run verify:agent -- --e2e` and the build command, when the blueprint defines them → `npm run review` once → merge into local `main`. |
+
+Size does not set the tier; the surface does. The tier the baton detects only chooses which tests run.
 
 ---
 
@@ -30,14 +32,15 @@ To prevent token waste and latency, all tasks are classified into three operatio
    - Consult [`docs/ai/agent-handbook.md`](docs/ai/agent-handbook.md) to pick the domain skill a task needs. Load a skill only when the task needs it.
    - For Tier 1 micro-tasks, use only [`fast-track`](.agents/skills/fast-track/SKILL.md).
 2. **Gate 2: Design Before Code, Sized to the Tier**
-   - **Tier 2:** state the design in a few lines in chat and wait for the developer's approval. Do not write a spec or plan file.
-   - **Tier 3:** work out the design with the developer in chat, then write one design-and-plan document in [`docs/specs/`](docs/specs/), named `YYYY-MM-DD-<name>-plan.md` (design first, tasks after), and get one approval before editing code. Do not write a separate spec and plan. A project's kickoff spec, the one `tailor-setup` reads, is the exception: it is a `-design.md`.
+   - **Tier 2:** state the design in chat, as short as the change allows, and wait for the developer's approval. Do not write a spec or plan file.
+   - **Tier 3:** work out the design with the developer in chat, ending with the task list, each task naming the tests it adds. The developer's yes to that is the one approval. Then save the design as it was approved to [`docs/specs/`](docs/specs/), named `YYYY-MM-DD-<name>-plan.md` (design first, tasks after); do not rewrite it or ask again. Do not write a separate spec and plan. A project's kickoff spec, the one `tailor-setup` reads, is the exception: it is a `-design.md`.
+   - **Tier 3 finish:** run `npm run review` once. Re-grade each finding, fix what stands, and verify the fixes with `npm run verify:agent`; do not review again. Then merge the branch into local `main` (the developer's standing approval; never push without asking), so the next branch is reviewed on its own.
    - Log all planned work in [`docs/PLAN.md`](docs/PLAN.md).
 3. **Gate 3: Tests for Every Logic Change (Tier 2 & Tier 3)**
    - No logic change, mutation, or endpoint is complete until tests for it exist and pass.
-   - **Authorship:** the Gatekeeper writes them. `npm run verify:agent` launches it when source files changed and no test file did.
+   - **Authorship:** in Tier 3 the Builder writes the tests each plan task names, so the Gatekeeper is not launched. Otherwise the Gatekeeper writes them: `npm run verify:agent` launches it when source files changed and no test file did.
    - **Speed:** unit and component tests by default. An end-to-end test is written only for a user journey named in the spec, lives under `e2e/`, and runs only through `npm run verify:agent -- --e2e`.
-   - **Fallback:** when the baton reports the Gatekeeper was skipped (not installed, not logged in, out of quota, or disabled), or when a plan task supplies the test, the Builder writes the test first and watches it fail (`superpowers:test-driven-development`).
+   - **Fallback:** when the baton reports the Gatekeeper was skipped (not installed, not logged in, out of quota, or disabled), or when a plan task names the test, the Builder writes the test first and watches it fail (`superpowers:test-driven-development`).
 4. **Gate 4: Systematic Root-Cause Debugging**
    - Never guess or blindly patch bugs. Investigate root causes with evidence before touching implementation (`superpowers:systematic-debugging`).
 5. **Gate 5: Evidence Before Assertions**

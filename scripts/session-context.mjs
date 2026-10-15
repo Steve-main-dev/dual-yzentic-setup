@@ -54,9 +54,11 @@ export function buildContext(root = REPO_ROOT) {
   return [
     'Project session context (injected by .claude/settings.json):',
     blueprintLine(root),
-    'Process by tier: Tier 1 = fast-track only, no documents or agents. Tier 2 = a few lines of design in chat, '
-      + 'wait for a yes, no spec or plan file. Tier 3 = design in chat, one design-and-plan document with one approval, '
-      + 'builder runs, `npm run review`.',
+    'Process by tier (the surface sets the tier, not the size): Tier 1 = fast-track only, no documents or agents. '
+      + 'Tier 2 = no risky surface: design in chat, wait for a yes, no spec or plan file, no review. '
+      + 'Tier 3 = a risky surface (schema, sync, shared domain rules, API, auth, app interfaces): design in chat ending '
+      + 'with tasks that name their tests, one yes, save it unchanged as the plan, one builder run, '
+      + '`npm run review` once, merge into local main.',
     'Tests: never run a full suite directly; use `npm run verify:agent`. '
       + 'Start from the handoff below and open only the files it lists.',
     '',

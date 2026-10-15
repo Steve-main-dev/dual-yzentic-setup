@@ -56,12 +56,12 @@ npm run skill:disable <skill-name>
 session start   a hook injects .agents/sync/session.md and the blueprint status
 classify        Tier 1, 2, or 3
 scout           npm run scout -- "<task>"            (only when the files are unknown)
-build           Claude; Tier 3 runs one plan task per Sonnet builder agent
+build           Claude; Tier 3 runs its plan in one Sonnet builder run
 verify          npm run verify:agent
                   Gatekeeper writes missing tests -> baton runs them
                   -> on a long or browser failure, Gatekeeper writes a root-cause note
 e2e             npm run verify:agent -- --e2e        (Tier 3, once, before review)
-review          npm run review                       (Tier 3)
+review          npm run review                       (Tier 3, once; then merge into local main)
 commit          the pre-commit hook blocks a failing commit; it skips the run
                 when the same content already passed
 hand off        Claude rewrites .agents/sync/session.md; you start a new session
@@ -74,8 +74,10 @@ hand off        Claude rewrites .agents/sync/session.md; you start a new session
 | Tier | Scope | Process | Verification |
 | :--- | :--- | :--- | :--- |
 | **1: Express** | CSS, copy, Markdown, static assets | `fast-track`: edit and commit | No tests; passes in under a second |
-| **2: Bounded** | One component, one route, one bug | A few lines of design in chat, then build | The project's tests, or one file with `--scope` |
-| **3: Architectural** | Schemas, auth, multi-file features | One design-and-plan document, builder runs, review | The full suite, plus e2e once before review |
+| **2: Standard** | Any change that touches no risky surface, of any size | A design in chat, then build; no document, no review | The project's tests, or one file with `--scope`; e2e when a user-facing flow changed |
+| **3: Risky surface** | Schemas, sync, shared domain rules, API contracts, auth, interfaces between apps | The approved chat design (tasks name their tests) saved as the plan, one builder run, review once, merge into local `main` | The full suite, plus e2e once before review |
+
+The surface sets the tier, not the number of files.
 
 [`scripts/baton.mjs`](scripts/baton.mjs) picks the tier from the changed files. With a clean working tree it classifies the last commit. To override:
 

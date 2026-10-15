@@ -17,15 +17,17 @@ To balance engineering rigor with token efficiency and speed, tasks follow one o
 └────────────────────────────────────────────────────────────────────────┘
 
 ┌────────────────────────────────────────────────────────────────────────┐
-│ TIER 2: BOUNDED LANE (Component Features & Bugfixes)                   │
-│ Trigger: Single component logic, localized API route, targeted bug     │
-│ Flow: Short in-chat design -> Build -> npm run verify:agent -> Commit  │
-│ Rule: Gatekeeper writes missing tests; the test command then runs      │
+│ TIER 2: STANDARD LANE (Features & Fixes, any size)                     │
+│ Trigger: Any change that touches no risky surface                      │
+│ Flow: In-chat design -> Build -> npm run verify:agent -> Commit        │
+│ Rule: Gatekeeper writes missing tests; e2e if a user flow changed;     │
+│       no plan document and no review                                   │
 └────────────────────────────────────────────────────────────────────────┘
 
 ┌────────────────────────────────────────────────────────────────────────┐
-│ TIER 3: ARCHITECTURAL DEEP LANE (Major Features & Refactors)           │
-│ Trigger: Schema changes, auth, multi-file features, breaking changes   │
+│ TIER 3: RISKY SURFACE LANE (Architecture)                              │
+│ Trigger: Schemas, sync, shared domain rules, API contracts, auth,      │
+│          interfaces between apps. The surface sets the tier, not size. │
 │ Flow: Full 5-phase lifecycle (see below)                               │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -39,26 +41,27 @@ Major architectural and multi-step tasks progress through this pipeline:
    ├── Requirements discovery & edge-case mapping
    └── Agreement on the approach
 
-2. ONE DOCUMENT, ONE APPROVAL (superpowers:writing-plans for the task format)
-   ├── docs/specs/YYYY-MM-DD-<name>-plan.md: design first, tasks after
-   └── The developer approves once, before any code
+2. ONE APPROVAL, IN CHAT (superpowers:writing-plans for the task format)
+   ├── The chat design ends with the task list; each task names its tests
+   ├── The developer's yes is the one approval
+   └── Saved unchanged as docs/specs/YYYY-MM-DD-<name>-plan.md
 
-3. EXECUTION (builder agent; tasks grouped into as few runs as stay reviewable)
+3. EXECUTION (one builder run per branch; split only when too large to review)
    ├── npm run scout -- "<task>" only where the plan does not name the files
-   ├── Sonnet builder implements the tasks on a feature branch
+   ├── Sonnet builder writes each task's named tests, then implements it
    └── One commit per task; the pre-commit hook blocks a failing one
 
 4. VERIFICATION & QUALITY GATE (the baton)
-   ├── Gatekeeper writes tests for changes that have none, unit tests first
+   ├── The plan's tests are already written, so the Gatekeeper is not launched
    ├── Baton runs the fast suite: npm run verify:agent -- --tier 3
    ├── A long or browser failure gets a Gatekeeper root-cause note
    ├── End-to-end suite, once: npm run verify:agent -- --e2e
    └── The project's build command, when project.verify.build is set
 
 5. REVIEW & BRANCH FINISH
-   ├── npm run review (Gatekeeper reviews the diff against the plan)
-   ├── Builder re-grades findings and fixes what stands
-   └── Merge, then rewrite .agents/sync/session.md
+   ├── npm run review, once (Gatekeeper reviews the diff against the plan)
+   ├── Builder re-grades findings, fixes what stands, verifies; no second review
+   └── Merge into local main (standing approval), then rewrite .agents/sync/session.md
 ```
 
 ---

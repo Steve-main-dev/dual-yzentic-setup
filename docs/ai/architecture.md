@@ -21,13 +21,13 @@ All architectural changes progress through four formal stages:
 Requirement / Idea
        │
        ▼
-1. Design (agreed with the developer in chat)
+1. Design with the task list (agreed with the developer in chat)
        │
        ▼
-2. One Design-and-Plan Document (`docs/specs/YYYY-MM-DD-<name>-plan.md`)
+2. Human Review Gate (One Approval, in chat)
        │
        ▼
-3. Human Review Gate (One Approval)
+3. The approved design saved as the plan (`docs/specs/YYYY-MM-DD-<name>-plan.md`)
        │
        ▼
 4. Builder Delivery, Gatekeeper Tests & Verification Gate
